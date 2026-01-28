@@ -114,18 +114,44 @@ local HighlightFolder = Instance.new("Folder", CoreGui)
 HighlightFolder.Name = "HighlightStorage"
 
 ------------------------------------------------
--- // HIGHLIGHT LOGIC
+-- // TEAM LOGIC
 ------------------------------------------------
+local SuperTeam = {
+	["MPT"] = true,
+	["JANITOR"] = true,
+	["ORDERLY"] = true,
+	["MEDICAL"] = true,
+	["MANAGEMENT"] = true
+}
+
 local function getColor(plr)
+	if plr == lp then return Color3.fromRGB(255,255,255) end
 	if lp:IsFriendsWith(plr.UserId) then
 		return FriendColor
-	elseif plr.Team and plr.Team == lp.Team then
-		return TeamColor
+	end
+
+	local lpTeam = lp.Team
+	local plrTeam = plr.Team
+
+	if lpTeam and plrTeam then
+		local lpName = lpTeam.Name
+		local plrName = plrTeam.Name
+
+		if SuperTeam[lpName] and SuperTeam[plrName] then
+			return TeamColor
+		elseif lpName == "PATIENT" and plrName == "PATIENT" then
+			return TeamColor
+		else
+			return EnemyColor
+		end
 	else
 		return EnemyColor
 	end
 end
 
+------------------------------------------------
+-- // HIGHLIGHT LOGIC
+------------------------------------------------
 local function clearHighlight(plr)
 	if HighlightFolder:FindFirstChild(plr.Name) then
 		HighlightFolder[plr.Name]:Destroy()
@@ -150,22 +176,27 @@ local function createTag(plr, color)
 	local layout = Instance.new("UIListLayout", bb)
 	layout.VerticalAlignment = Enum.VerticalAlignment.Center
 
+	-- Friend label
 	if lp:IsFriendsWith(plr.UserId) then
 		local name = Instance.new("TextLabel", bb)
 		name.Size = UDim2.new(1,0,0,16)
 		name.BackgroundTransparency = 1
-		name.Text = plr.DisplayName
+		name.Text = plr.DisplayName.." (FRIEND)"
 		name.Font = Enum.Font.SourceSansBold
 		name.TextSize = 14
 		name.TextStrokeTransparency = 0.4
 		name.TextColor3 = color
 	end
 
+	-- Team label
 	if plr.Team then
 		local team = Instance.new("TextLabel", bb)
 		team.Size = UDim2.new(1,0,0,14)
 		team.BackgroundTransparency = 1
-		team.Text = plr.Team.Name
+		local lpTeam = lp.Team and lp.Team.Name or ""
+		local plrTeam = plr.Team.Name
+		local ally = ((SuperTeam[lpTeam] and SuperTeam[plrTeam]) or (lpTeam == "PATIENT" and plrTeam == "PATIENT"))
+		team.Text = plrTeam.." ("..(ally and "ALLY" or "ENEMY")..")"
 		team.Font = Enum.Font.SourceSans
 		team.TextSize = 12
 		team.TextStrokeTransparency = 0.5
@@ -190,16 +221,30 @@ local function applyHighlight(plr)
 	createTag(plr, color)
 end
 
+local function updateAllHighlights()
+	for _,p in ipairs(Players:GetPlayers()) do
+		if p ~= lp then
+			if HighlightEnabled then
+				applyHighlight(p)
+			else
+				clearHighlight(p)
+			end
+		end
+	end
+end
+
 ------------------------------------------------
 -- // PLAYER UPDATES
 ------------------------------------------------
 local function hookPlayer(plr)
 	plr.CharacterAdded:Connect(function()
 		task.wait(0.4)
-		applyHighlight(plr)
+		if HighlightEnabled then
+			applyHighlight(plr)
+		end
 	end)
 	plr:GetPropertyChangedSignal("Team"):Connect(function()
-		applyHighlight(plr)
+		updateAllHighlights() -- update all highlights when a team changes
 	end)
 end
 
@@ -207,8 +252,15 @@ for _,p in ipairs(Players:GetPlayers()) do
 	if p ~= lp then hookPlayer(p) end
 end
 
-Players.PlayerAdded:Connect(hookPlayer)
-Players.PlayerRemoving:Connect(clearHighlight)
+Players.PlayerAdded:Connect(function(plr)
+	hookPlayer(plr)
+	updateAllHighlights()
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+	clearHighlight(plr)
+	updateAllHighlights()
+end)
 
 ------------------------------------------------
 -- // TOGGLES
@@ -216,14 +268,7 @@ Players.PlayerRemoving:Connect(clearHighlight)
 local function toggleHighlight()
 	HighlightEnabled = not HighlightEnabled
 	HighlightBtn.Text = "Highlight (J): "..(HighlightEnabled and "ON" or "OFF")
-
-	for _,p in ipairs(Players:GetPlayers()) do
-		if HighlightEnabled then
-			applyHighlight(p)
-		else
-			clearHighlight(p)
-		end
-	end
+	updateAllHighlights()
 end
 
 local function toggleFOV()
@@ -232,7 +277,6 @@ local function toggleFOV()
 	camera.FieldOfView = FOVEnabled and CustomFOV or DefaultFOV
 end
 
--- LOCK TOGGLE FUNCTION (KEY + BUTTON SHARED)
 local function toggleLock()
 	if LockEnabled then
 		LockEnabled = false
@@ -284,7 +328,7 @@ FogBtn.MouseButton1Click:Connect(function()
 end)
 
 ------------------------------------------------
--- // KEYBINDS (CORRECT)
+-- // KEYBINDS
 ------------------------------------------------
 UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
