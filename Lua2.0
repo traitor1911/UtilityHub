@@ -1,0 +1,355 @@
+--// Services
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
+
+--// Player
+local lp = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local mouse = lp:GetMouse()
+
+------------------------------------------------
+-- // STATE
+------------------------------------------------
+local HighlightEnabled = false
+local FOVEnabled = false
+local LockEnabled = false
+local NoFogEnabled = false
+local GUIVisible = true
+
+local LockPart = "HumanoidRootPart"
+local LockedPlayer = nil
+
+local DefaultFOV = camera.FieldOfView
+local CustomFOV = DefaultFOV
+
+local DefaultLighting = {
+	FogEnd = Lighting.FogEnd,
+	FogStart = Lighting.FogStart,
+	ClockTime = Lighting.ClockTime,
+	Brightness = Lighting.Brightness,
+	GlobalShadows = Lighting.GlobalShadows
+}
+
+------------------------------------------------
+-- // COLORS
+------------------------------------------------
+local FriendColor = Color3.fromRGB(0,255,0)
+local TeamColor   = Color3.fromRGB(80,170,255)
+local EnemyColor  = Color3.fromRGB(255,80,80)
+
+------------------------------------------------
+-- // GUI
+------------------------------------------------
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "TraitorUtilityHub"
+ScreenGui.ResetOnSpawn = false
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0,360,0,440)
+Main.Position = UDim2.new(0.5,-180,0.5,-220)
+Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Main.Active = true
+Main.Draggable = true
+Main.BorderSizePixel = 0
+
+local function label(text,y,size)
+	local l = Instance.new("TextLabel", Main)
+	l.Position = UDim2.new(0,10,0,y)
+	l.Size = UDim2.new(1,-20,0,20)
+	l.BackgroundTransparency = 1
+	l.Text = text
+	l.TextColor3 = Color3.new(1,1,1)
+	l.Font = Enum.Font.SourceSansBold
+	l.TextSize = size
+	return l
+end
+
+local function button(text,y)
+	local b = Instance.new("TextButton", Main)
+	b.Position = UDim2.new(0,10,0,y)
+	b.Size = UDim2.new(1,-20,0,32)
+	b.Text = text
+	b.Font = Enum.Font.SourceSans
+	b.TextSize = 16
+	b.TextColor3 = Color3.new(1,1,1)
+	b.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	return b
+end
+
+label("Traitor's Utility Hub",5,18)
+
+------------------------------------------------
+-- // FOV
+------------------------------------------------
+label("FOV Changer (U)",40,14)
+
+local FOVButton = button("FOV: OFF",65)
+
+local FOVBox = Instance.new("TextBox", Main)
+FOVBox.Position = UDim2.new(0,10,0,105)
+FOVBox.Size = UDim2.new(0,90,0,24)
+FOVBox.PlaceholderText = tostring(DefaultFOV)
+FOVBox.Text = ""
+FOVBox.Font = Enum.Font.SourceSans
+FOVBox.TextSize = 14
+FOVBox.BackgroundColor3 = Color3.fromRGB(45,45,45)
+FOVBox.TextColor3 = Color3.new(1,1,1)
+FOVBox.ClearTextOnFocus = false
+
+------------------------------------------------
+-- // Buttons
+------------------------------------------------
+local HighlightBtn = button("Highlight (J): OFF",145)
+local LockBtn      = button("Lock On (Y): OFF",185)
+local LockPartBtn  = button("Lock Part: TORSO",225)
+local FogBtn       = button("No Fog: OFF",265)
+
+------------------------------------------------
+-- // HIGHLIGHT STORAGE
+------------------------------------------------
+local HighlightFolder = Instance.new("Folder", CoreGui)
+HighlightFolder.Name = "HighlightStorage"
+
+------------------------------------------------
+-- // HIGHLIGHT LOGIC
+------------------------------------------------
+local function getColor(plr)
+	if lp:IsFriendsWith(plr.UserId) then
+		return FriendColor
+	elseif plr.Team and plr.Team == lp.Team then
+		return TeamColor
+	else
+		return EnemyColor
+	end
+end
+
+local function clearHighlight(plr)
+	if HighlightFolder:FindFirstChild(plr.Name) then
+		HighlightFolder[plr.Name]:Destroy()
+	end
+	if plr.Character and plr.Character:FindFirstChild("HighlightTag") then
+		plr.Character.HighlightTag:Destroy()
+	end
+end
+
+local function createTag(plr, color)
+	local char = plr.Character
+	local head = char and char:FindFirstChild("Head")
+	if not head then return end
+
+	local bb = Instance.new("BillboardGui", char)
+	bb.Name = "HighlightTag"
+	bb.Adornee = head
+	bb.Size = UDim2.new(0,130,0,34)
+	bb.StudsOffset = Vector3.new(0,2.5,0)
+	bb.AlwaysOnTop = true
+
+	local layout = Instance.new("UIListLayout", bb)
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+	if lp:IsFriendsWith(plr.UserId) then
+		local name = Instance.new("TextLabel", bb)
+		name.Size = UDim2.new(1,0,0,16)
+		name.BackgroundTransparency = 1
+		name.Text = plr.DisplayName
+		name.Font = Enum.Font.SourceSansBold
+		name.TextSize = 14
+		name.TextStrokeTransparency = 0.4
+		name.TextColor3 = color
+	end
+
+	if plr.Team then
+		local team = Instance.new("TextLabel", bb)
+		team.Size = UDim2.new(1,0,0,14)
+		team.BackgroundTransparency = 1
+		team.Text = plr.Team.Name
+		team.Font = Enum.Font.SourceSans
+		team.TextSize = 12
+		team.TextStrokeTransparency = 0.5
+		team.TextColor3 = color
+	end
+end
+
+local function applyHighlight(plr)
+	if not HighlightEnabled or plr == lp or not plr.Character then return end
+	clearHighlight(plr)
+
+	local color = getColor(plr)
+
+	local h = Instance.new("Highlight")
+	h.Name = plr.Name
+	h.Adornee = plr.Character
+	h.FillColor = color
+	h.FillTransparency = 0.6
+	h.OutlineColor = Color3.new(1,1,1)
+	h.Parent = HighlightFolder
+
+	createTag(plr, color)
+end
+
+------------------------------------------------
+-- // PLAYER UPDATES
+------------------------------------------------
+local function hookPlayer(plr)
+	plr.CharacterAdded:Connect(function()
+		task.wait(0.4)
+		applyHighlight(plr)
+	end)
+	plr:GetPropertyChangedSignal("Team"):Connect(function()
+		applyHighlight(plr)
+	end)
+end
+
+for _,p in ipairs(Players:GetPlayers()) do
+	if p ~= lp then hookPlayer(p) end
+end
+
+Players.PlayerAdded:Connect(hookPlayer)
+Players.PlayerRemoving:Connect(clearHighlight)
+
+------------------------------------------------
+-- // TOGGLES
+------------------------------------------------
+local function toggleHighlight()
+	HighlightEnabled = not HighlightEnabled
+	HighlightBtn.Text = "Highlight (J): "..(HighlightEnabled and "ON" or "OFF")
+
+	for _,p in ipairs(Players:GetPlayers()) do
+		if HighlightEnabled then
+			applyHighlight(p)
+		else
+			clearHighlight(p)
+		end
+	end
+end
+
+local function toggleFOV()
+	FOVEnabled = not FOVEnabled
+	FOVButton.Text = "FOV: "..(FOVEnabled and "ON" or "OFF")
+	camera.FieldOfView = FOVEnabled and CustomFOV or DefaultFOV
+end
+
+-- LOCK TOGGLE FUNCTION (KEY + BUTTON SHARED)
+local function toggleLock()
+	if LockEnabled then
+		LockEnabled = false
+		LockedPlayer = nil
+	else
+		LockEnabled = true
+		LockedPlayer = getClosestPlayer()
+	end
+	LockBtn.Text = "Lock On (Y): "..(LockEnabled and "ON" or "OFF")
+end
+
+------------------------------------------------
+-- // BUTTON CONNECTIONS
+------------------------------------------------
+HighlightBtn.MouseButton1Click:Connect(toggleHighlight)
+FOVButton.MouseButton1Click:Connect(toggleFOV)
+LockBtn.MouseButton1Click:Connect(toggleLock)
+
+FOVBox.FocusLost:Connect(function()
+	local n = tonumber(FOVBox.Text)
+	if n and n >= 40 and n <= 200 then
+		CustomFOV = n
+		if FOVEnabled then
+			camera.FieldOfView = CustomFOV
+		end
+	end
+end)
+
+LockPartBtn.MouseButton1Click:Connect(function()
+	LockPart = (LockPart == "Head") and "HumanoidRootPart" or "Head"
+	LockPartBtn.Text = "Lock Part: "..(LockPart == "Head" and "HEAD" or "TORSO")
+end)
+
+FogBtn.MouseButton1Click:Connect(function()
+	NoFogEnabled = not NoFogEnabled
+	FogBtn.Text = "No Fog: "..(NoFogEnabled and "ON" or "OFF")
+
+	if NoFogEnabled then
+		Lighting.FogEnd = 100000
+		Lighting.FogStart = 0
+		Lighting.ClockTime = 14
+		Lighting.Brightness = 2
+		Lighting.GlobalShadows = false
+	else
+		for k,v in pairs(DefaultLighting) do
+			Lighting[k] = v
+		end
+	end
+end)
+
+------------------------------------------------
+-- // KEYBINDS (CORRECT)
+------------------------------------------------
+UserInputService.InputBegan:Connect(function(input,gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.J then
+		toggleHighlight()
+	elseif input.KeyCode == Enum.KeyCode.U then
+		toggleFOV()
+	elseif input.KeyCode == Enum.KeyCode.Y then
+		toggleLock()
+	elseif input.KeyCode == Enum.KeyCode.Equals then
+		GUIVisible = not GUIVisible
+		Main.Visible = GUIVisible
+	end
+end)
+
+------------------------------------------------
+-- // LOCK CAMERA
+------------------------------------------------
+local function getClosestPlayer()
+	local closest, shortest = nil, math.huge
+	for _,p in ipairs(Players:GetPlayers()) do
+		if p ~= lp and p.Character then
+			local part = p.Character:FindFirstChild(LockPart)
+			if part then
+				local pos = camera:WorldToScreenPoint(part.Position)
+				local dist = (Vector2.new(mouse.X,mouse.Y) - Vector2.new(pos.X,pos.Y)).Magnitude
+				if dist < shortest then
+					shortest = dist
+					closest = p
+				end
+			end
+		end
+	end
+	return closest
+end
+
+RunService.RenderStepped:Connect(function()
+	if LockEnabled then
+		if not LockedPlayer then
+			LockedPlayer = getClosestPlayer()
+		end
+		if LockedPlayer and LockedPlayer.Character then
+			local part = LockedPlayer.Character:FindFirstChild(LockPart)
+			if part then
+				camera.CFrame = CFrame.new(camera.CFrame.Position, part.Position)
+			end
+		end
+	end
+end)
+
+------------------------------------------------
+-- // LOAD SOUND NOTIFICATION
+------------------------------------------------
+task.spawn(function()
+	task.wait(2.5)
+	local notifSound = Instance.new("Sound", workspace)
+	notifSound.SoundId = "rbxassetid://92381587575059"
+	notifSound.Volume = 0.15
+	notifSound.PlaybackSpeed = 1
+	notifSound:Play()
+	
+	game.StarterGui:SetCore("SendNotification", {
+		Title = "THUB",
+		Text = "Utilities loaded successfully!\nMade by traitor_1",
+		Duration = 2.5,
+		Button1 = "Okay"
+	})
+end)
