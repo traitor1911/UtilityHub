@@ -166,6 +166,11 @@ local function createTag(plr, color)
 	local head = char and char:FindFirstChild("Head")
 	if not head then return end
 
+	-- Remove old tag if exists
+	if char:FindFirstChild("HighlightTag") then
+		char.HighlightTag:Destroy()
+	end
+
 	local bb = Instance.new("BillboardGui", char)
 	bb.Name = "HighlightTag"
 	bb.Adornee = head
@@ -224,10 +229,9 @@ end
 local function updateAllHighlights()
 	for _,p in ipairs(Players:GetPlayers()) do
 		if p ~= lp then
+			clearHighlight(p)  -- Always clear first
 			if HighlightEnabled then
-				applyHighlight(p)
-			else
-				clearHighlight(p)
+				applyHighlight(p)  -- Recreate highlight/tag with updated color
 			end
 		end
 	end
@@ -380,20 +384,17 @@ RunService.RenderStepped:Connect(function()
 end)
 
 ------------------------------------------------
--- // LOAD SOUND NOTIFICATION
+-- // LOAD SOUND NOTIFICATION INSTANTLY
 ------------------------------------------------
-task.spawn(function()
-	task.wait(2.5)
-	local notifSound = Instance.new("Sound", workspace)
-	notifSound.SoundId = "rbxassetid://92381587575059"
-	notifSound.Volume = 0.15
-	notifSound.PlaybackSpeed = 1
-	notifSound:Play()
-	
-	game.StarterGui:SetCore("SendNotification", {
-		Title = "THUB",
-		Text = "Utilities loaded successfully!\nMade by traitor_1",
-		Duration = 2.5,
-		Button1 = "Okay"
-	})
-end)
+local notifSound = Instance.new("Sound", workspace)
+notifSound.SoundId = "rbxassetid://92381587575059"
+notifSound.Volume = 0.15
+notifSound.PlaybackSpeed = 1
+notifSound:Play()
+
+game.StarterGui:SetCore("SendNotification", {
+	Title = "THUB",
+	Text = "Utilities loaded successfully!\nMade by traitor_1",
+	Duration = 2.5,
+	Button1 = "Okay"
+})
