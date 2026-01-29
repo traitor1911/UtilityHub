@@ -21,6 +21,7 @@ local connection = nil
 local keyBeganConnection = nil
 local keyEndedConnection = nil
 local dragDistance = 10 -- Initial distance from camera
+local highlight = nil -- For outlining grabbed parts
 
 -- Key states for holding
 local keysHeld = {
@@ -35,6 +36,15 @@ local function startDrag()
         dragging = true
         draggedPart = target
         dragDistance = (draggedPart.Position - camera.CFrame.Position).Magnitude
+        
+        -- Create highlight for the grabbed part
+        highlight = Instance.new("Highlight")
+        highlight.Adornee = draggedPart
+        highlight.FillColor = Color3.new(1, 1, 1)
+        highlight.OutlineColor = Color3.new(1, 1, 1)
+        highlight.FillTransparency = 1
+        highlight.OutlineTransparency = 0
+        highlight.Parent = draggedPart
         
         -- Create BodyPosition to control the part
         bodyPosition = Instance.new("BodyPosition")
@@ -83,6 +93,10 @@ end
 -- Function to stop dragging
 local function stopDrag()
     dragging = false
+    if highlight then
+        highlight:Destroy()
+        highlight = nil
+    end
     if bodyPosition then
         bodyPosition:Destroy()
         bodyPosition = nil
@@ -98,7 +112,7 @@ local function stopDrag()
     if keyBeganConnection then
         keyBeganConnection:Disconnect()
         keyBeganConnection = nil
-    end
+end
     if keyEndedConnection then
         keyEndedConnection:Disconnect()
         keyEndedConnection = nil
