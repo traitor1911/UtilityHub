@@ -1,0 +1,117 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+local camera = workspace.CurrentCamera
+
+-- Create the tool
+local tool = Instance.new("Tool")
+tool.Name = "Grab"
+tool.RequiresHandle = false
+tool.Parent = player.Backpack
+
+-- Variables for dragging
+local dragging = false
+local draggedPart = nil
+local bodyPosition = nil
+local bodyAngularVelocity = nil
+local connection = nil
+local keyBeganConnection = nil
+local keyEndedConnection = nil
+local dragDistance = 10 -- Initial distance from camera
+
+-- Key states for holding
+local keysHeld = {
+    [Enum.KeyCode.Q] = false,
+    [Enum.KeyCode.E] = false
+}
+
+-- Function to start dragging
+local function startDrag()
+    local target = mouse.Target
+    if target and not target.Anchored and target.Parent ~= player.Character then
+        dragging = true
+        draggedPart = target
+        dragDistance = (draggedPart.Position - camera.CFrame.Position).Magnitude
+        
+        -- Create BodyPosition to control the part
+        bodyPosition = Instance.new("BodyPosition")
+        bodyPosition.MaxForce = Vector3.new(4000, 4000, 4000)
+        bodyPosition.Position = draggedPart.Position
+        bodyPosition.Parent = draggedPart
+        
+        -- Create BodyAngularVelocity to prevent spinning
+        bodyAngularVelocity = Instance.new("BodyAngularVelocity")
+        bodyAngularVelocity.MaxTorque = Vector3.new(4000, 4000, 4000)
+        bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
+        bodyAngularVelocity.Parent = draggedPart
+        
+        -- Connect to RenderStepped for smooth dragging
+        connection = RunService.RenderStepped:Connect(function()
+            if dragging and draggedPart and bodyPosition then
+                -- Handle distance changes from held keys
+                if keysHeld[Enum.KeyCode.Q] then
+                    dragDistance = math.max(5, dragDistance - 0.5)
+                elseif keysHeld[Enum.KeyCode.E] then
+                    dragDistance = dragDistance + 0.5
+                end
+                
+                local unitRay = camera:ScreenPointToRay(mouse.X, mouse.Y)
+                bodyPosition.Position = unitRay.Origin + unitRay.Direction * dragDistance
+            end
+        end)
+        
+        -- Connect key input for distance control
+        keyBeganConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            if gameProcessed then return end
+            if input.KeyCode == Enum.KeyCode.Q or input.KeyCode == Enum.KeyCode.E then
+                keysHeld[input.KeyCode] = true
+            end
+        end)
+        
+        -- Connect key release
+        keyEndedConnection = UserInputService.InputEnded:Connect(function(input, gameProcessed)
+            if input.KeyCode == Enum.KeyCode.Q or input.KeyCode == Enum.KeyCode.E then
+                keysHeld[input.KeyCode] = false
+            end
+        end)
+    end
+end
+
+-- Function to stop dragging
+local function stopDrag()
+    dragging = false
+    if bodyPosition then
+        bodyPosition:Destroy()
+        bodyPosition = nil
+    end
+    if bodyAngularVelocity then
+        bodyAngularVelocity:Destroy()
+        bodyAngularVelocity = nil
+    end
+    if connection then
+        connection:Disconnect()
+        connection = nil
+    end
+    if keyBeganConnection then
+        keyBeganConnection:Disconnect()
+        keyBeganConnection = nil
+    end
+    if keyEndedConnection then
+        keyEndedConnection:Disconnect()
+        keyEndedConnection = nil
+end
+    -- Reset key states
+    keysHeld[Enum.KeyCode.Q] = false
+    keysHeld[Enum.KeyCode.E] = false
+    draggedPart = nil
+end
+
+-- Tool events
+tool.Activated:Connect(startDrag)
+tool.Deactivated:Connect(stopDrag)
+
+-- Clean up when tool is unequipped
+tool.Unequipped:Connect(stopDrag)
