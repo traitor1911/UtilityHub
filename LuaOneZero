@@ -1,0 +1,1389 @@
+-- Check if script is already running
+if game:GetService("CoreGui"):FindFirstChild("TraitorUtilityHub") then
+	game:GetService("CoreGui").TraitorUtilityHub:Destroy()
+end
+
+--// Services
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
+local ContextActionService = game:GetService("ContextActionService")
+
+--// Player
+local lp = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local mouse = lp:GetMouse()
+
+------------------------------------------------
+-- // STATE
+------------------------------------------------
+local HighlightEnabled = false
+local HealthBarsEnabled = false
+local FOVEnabled = false
+local LockEnabled = false
+local NoFogEnabled = false
+local GUIVisible = true
+local FullBrightEnabled = false
+local SeriousModeEnabled = false
+local AutoSwitchLockEnabled = false
+local MaliciousUnlocked = false
+local MaliciousGuiOpen = false
+local CFrameWalkEnabled = false
+local FastAnimationsEnabled = false
+local TargetGuiOpen = false
+local FeFlipEnabled = false
+
+local LockPart = "HumanoidRootPart"
+local LockedPlayer = nil
+local CFrameWalkSpeed = 50
+local AnimationSpeed = 15
+
+local DefaultFOV = camera.FieldOfView
+local CustomFOV = DefaultFOV
+
+local DefaultLighting = {
+	FogEnd = Lighting.FogEnd,
+	FogStart = Lighting.FogStart,
+	ClockTime = Lighting.ClockTime,
+	Brightness = Lighting.Brightness,
+	GlobalShadows = Lighting.GlobalShadows,
+	Ambient = Lighting.Ambient
+}
+
+local FullBrightSettings = {
+	Brightness = 1,
+	ClockTime = 12,
+	FogEnd = 786543,
+	GlobalShadows = false,
+	Ambient = Color3.fromRGB(178,178,178)
+}
+
+local SeriousModeMusic = nil
+local TargetedPlayers = {}
+
+-- feFlip variables
+local h = 0.0174533
+local FrontflipKey = Enum.KeyCode.Z
+local BackflipKey = Enum.KeyCode.X
+local AirjumpKey = Enum.KeyCode.C
+
+------------------------------------------------
+-- // COLORS
+------------------------------------------------
+local FriendColor = Color3.fromRGB(0,255,0)
+local AllyColor   = Color3.fromRGB(80,170,255)
+local EnemyColor  = Color3.fromRGB(255,80,80)
+
+-- Health-based colors
+local HealthColors = {
+	[1] = Color3.fromRGB(0,255,0), -- Green (100% health)
+	[0.75] = Color3.fromRGB(255,255,0), -- Yellow (75% health)
+	[0.5] = Color3.fromRGB(255,165,0), -- Orange (50% health)
+	[0.25] = Color3.fromRGB(255,80,80) -- Red (25% health)
+}
+
+------------------------------------------------
+-- // GUI
+------------------------------------------------
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "TraitorUtilityHub"
+ScreenGui.ResetOnSpawn = false
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0,360,0,560)
+Main.Position = UDim2.new(0.5,-180,0.5,-280)
+Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Main.Active = true
+Main.Draggable = true
+Main.BorderSizePixel = 0
+
+-- Target GUI (side panel)
+local TargetGui = Instance.new("Frame", ScreenGui)
+TargetGui.Size = UDim2.new(0,300,0,560)
+TargetGui.Position = UDim2.new(0.5,180,0.5,-280)
+TargetGui.BackgroundColor3 = Color3.fromRGB(35,35,35)
+TargetGui.Active = true
+TargetGui.Draggable = true
+TargetGui.BorderSizePixel = 0
+TargetGui.Visible = false
+
+-- Malicious GUI (hidden by default)
+local MaliciousGui = Instance.new("Frame", ScreenGui)
+MaliciousGui.Size = UDim2.new(0,360,0,520)
+MaliciousGui.Position = UDim2.new(0.5,180,0.5,-260)
+MaliciousGui.BackgroundColor3 = Color3.fromRGB(40,20,20)
+MaliciousGui.Active = true
+MaliciousGui.Draggable = true
+MaliciousGui.BorderSizePixel = 0
+	MaliciousGui.Visible = false
+local function label(text,y,size,parent)
+	parent = parent or Main
+	local l = Instance.new("TextLabel", parent)
+	l.Position = UDim2.new(0,10,0,y)
+	l.Size = UDim2.new(1,-20,0,20)
+	l.BackgroundTransparency = 1
+	l.Text = text
+	l.TextColor3 = Color3.new(1,1,1)
+	l.Font = Enum.Font.SourceSansBold
+	l.TextSize = size
+	return l
+	end
+
+local function button(text,y,parent)
+	parent = parent or Main
+	local b = Instance.new("TextButton", parent)
+	b.Position = UDim2.new(0,10,0,y)
+	b.Size = UDim2.new(1,-20,0,32)
+	b.Text = text
+	b.Font = Enum.Font.SourceSans
+	b.TextSize = 16
+	b.TextColor3 = Color3.new(1,1,1)
+	b.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	return b
+	end
+
+local function halfButton(text,y,isLeft,parent)
+	parent = parent or Main
+	local b = Instance.new("TextButton", parent)
+	b.Position = UDim2.new(isLeft and 0 or 0.5, isLeft and 10 or 5, 0, y)
+	b.Size = UDim2.new(0.5, isLeft and -15 or -10, 0, 32)
+	b.Text = text
+	b.Font = Enum.Font.SourceSans
+	b.TextSize = 14
+	b.TextColor3 = Color3.new(1,1,1)
+	b.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	return b
+	end
+
+label("Traitor's Utility Hub",5,18)
+label("Target Panel",5,18,TargetGui)
+label("Malicious Panel",5,18,MaliciousGui)
+
+-- Target GUI ScrollingFrame
+local TargetScrollFrame = Instance.new("ScrollingFrame", TargetGui)
+TargetScrollFrame.Position = UDim2.new(0,10,0,35)
+TargetScrollFrame.Size = UDim2.new(1,-20,1,-80)
+TargetScrollFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+TargetScrollFrame.BorderSizePixel = 0
+TargetScrollFrame.ScrollBarThickness = 8
+
+local TargetListLayout = Instance.new("UIListLayout", TargetScrollFrame)
+TargetListLayout.SortOrder = Enum.SortOrder.Name
+TargetListLayout.Padding = UDim.new(0,2)
+
+-- Target GUI close button
+local TargetCloseBtn = Instance.new("TextButton", TargetGui)
+TargetCloseBtn.Position = UDim2.new(0,5,1,-37)
+TargetCloseBtn.Size = UDim2.new(0,32,0,32)
+TargetCloseBtn.Text = "X"
+TargetCloseBtn.Font = Enum.Font.SourceSansBold
+TargetCloseBtn.TextSize = 18
+TargetCloseBtn.TextColor3 = Color3.new(1,1,1)
+TargetCloseBtn.BackgroundColor3 = Color3.fromRGB(180,50,50)
+------------------------------------------------
+-- // FOV
+------------------------------------------------
+local FOVButton = halfButton("FOV (U): OFF",65,true)
+
+local FOVBox = Instance.new("TextBox", Main)
+FOVBox.Position = UDim2.new(0.5,5,0,65)
+FOVBox.Size = UDim2.new(0.5,-10,0,32)
+FOVBox.PlaceholderText = tostring(DefaultFOV)
+FOVBox.Text = ""
+FOVBox.Font = Enum.Font.SourceSans
+FOVBox.TextSize = 14
+FOVBox.BackgroundColor3 = Color3.fromRGB(45,45,45)
+FOVBox.TextColor3 = Color3.new(1,1,1)
+FOVBox.ClearTextOnFocus = false
+------------------------------------------------
+-- // Buttons
+------------------------------------------------
+local HighlightBtn = halfButton("Highlight (J): OFF",105,true)
+local HealthBarsBtn = halfButton("Health Bars: OFF",105,false)
+local LockBtn      = button("Lock On (Y): OFF",145)
+local LockPartBtn  = button("Lock Part: TORSO",185)
+local AutoSwitchBtn = button("Auto Switch Lock: OFF",225)
+local FogBtn       = button("No Fog: OFF",265)
+local FullBrightBtn= button("FullBright: OFF",305)
+local SeriousBtn   = button("SERIOUS MODE: OFF",345)
+
+-- Target button
+local TargetBtn = Instance.new("TextButton", Main)
+TargetBtn.Position = UDim2.new(1,-110,1,-75)
+TargetBtn.Size = UDim2.new(0,100,0,32)
+TargetBtn.Text = "Target"
+TargetBtn.Font = Enum.Font.SourceSansBold
+TargetBtn.TextSize = 14
+TargetBtn.TextColor3 = Color3.new(1,1,1)
+TargetBtn.BackgroundColor3 = Color3.fromRGB(120,120,120)
+
+-- Malicious Panel Buttons
+local CFrameWalkBtn = button("CFrame Walk (C): OFF",65,MaliciousGui)
+CFrameWalkBtn.Size = UDim2.new(0,240,0,32)
+
+local CFrameWalkSpeedBox = Instance.new("TextBox", MaliciousGui)
+CFrameWalkSpeedBox.Position = UDim2.new(0,260,0,65)
+CFrameWalkSpeedBox.Size = UDim2.new(0,90,0,32)
+CFrameWalkSpeedBox.PlaceholderText = "50"
+CFrameWalkSpeedBox.Text = "50"
+CFrameWalkSpeedBox.Font = Enum.Font.SourceSans
+CFrameWalkSpeedBox.TextSize = 14
+CFrameWalkSpeedBox.BackgroundColor3 = Color3.fromRGB(45,45,45)
+CFrameWalkSpeedBox.TextColor3 = Color3.new(1,1,1)
+CFrameWalkSpeedBox.ClearTextOnFocus = false
+
+local FastAnimationsBtn = button("Fast Animations: OFF",105,MaliciousGui)
+FastAnimationsBtn.Size = UDim2.new(0,240,0,32)
+
+local AnimationSpeedBox = Instance.new("TextBox", MaliciousGui)
+AnimationSpeedBox.Position = UDim2.new(0,260,0,105)
+AnimationSpeedBox.Size = UDim2.new(0,90,0,32)
+AnimationSpeedBox.PlaceholderText = "15"
+AnimationSpeedBox.Text = "15"
+AnimationSpeedBox.Font = Enum.Font.SourceSans
+AnimationSpeedBox.TextSize = 14
+AnimationSpeedBox.BackgroundColor3 = Color3.fromRGB(45,45,45)
+AnimationSpeedBox.TextColor3 = Color3.new(1,1,1)
+AnimationSpeedBox.ClearTextOnFocus = false
+
+local GrabToolBtn = button("Grab Tool",145,MaliciousGui)
+
+local FeFlipBtn = button("feFlip: OFF",185,MaliciousGui)
+
+-- Malicious button
+local MaliciousBtn = Instance.new("TextButton", Main)
+MaliciousBtn.Position = UDim2.new(1,-110,1,-37)
+MaliciousBtn.Size = UDim2.new(0,100,0,32)
+MaliciousBtn.Text = "Malicious"
+MaliciousBtn.Font = Enum.Font.SourceSansBold
+MaliciousBtn.TextSize = 14
+MaliciousBtn.TextColor3 = Color3.new(1,1,1)
+MaliciousBtn.BackgroundColor3 = Color3.fromRGB(80,20,20)
+
+-- Close button
+local CloseBtn = Instance.new("TextButton", Main)
+CloseBtn.Position = UDim2.new(0,5,1,-37)
+CloseBtn.Size = UDim2.new(0,32,0,32)
+CloseBtn.Text = "X"
+CloseBtn.Font = Enum.Font.SourceSansBold
+CloseBtn.TextSize = 18
+CloseBtn.TextColor3 = Color3.new(1,1,1)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180,50,50)
+
+-- Malicious GUI close button
+local MaliciousCloseBtn = Instance.new("TextButton", MaliciousGui)
+MaliciousCloseBtn.Position = UDim2.new(0,5,1,-37)
+MaliciousCloseBtn.Size = UDim2.new(0,32,0,32)
+MaliciousCloseBtn.Text = "X"
+MaliciousCloseBtn.Font = Enum.Font.SourceSansBold
+MaliciousCloseBtn.TextSize = 18
+MaliciousCloseBtn.TextColor3 = Color3.new(1,1,1)
+MaliciousCloseBtn.BackgroundColor3 = Color3.fromRGB(180,50,50)
+
+-- Key input GUI
+local KeyInputGui = Instance.new("Frame", ScreenGui)
+KeyInputGui.Size = UDim2.new(0,300,0,150)
+KeyInputGui.Position = UDim2.new(0.5,-150,0.5,-75)
+KeyInputGui.BackgroundColor3 = Color3.fromRGB(50,50,50)
+KeyInputGui.BorderSizePixel = 2
+KeyInputGui.BorderColor3 = Color3.new(1,1,1)
+		KeyInputGui.Visible = false
+
+local KeyInputLabel = Instance.new("TextLabel", KeyInputGui)
+KeyInputLabel.Size = UDim2.new(1,0,0,30)
+KeyInputLabel.Position = UDim2.new(0,0,0,10)
+KeyInputLabel.BackgroundTransparency = 1
+KeyInputLabel.Text = "Enter Access Key:"
+KeyInputLabel.TextColor3 = Color3.new(1,1,1)
+KeyInputLabel.Font = Enum.Font.SourceSansBold
+KeyInputLabel.TextSize = 16
+
+local KeyInputBox = Instance.new("TextBox", KeyInputGui)
+KeyInputBox.Size = UDim2.new(1,-20,0,30)
+KeyInputBox.Position = UDim2.new(0,10,0,50)
+KeyInputBox.BackgroundColor3 = Color3.fromRGB(70,70,70)
+KeyInputBox.TextColor3 = Color3.new(1,1,1)
+KeyInputBox.Font = Enum.Font.SourceSans
+KeyInputBox.TextSize = 14
+		KeyInputBox.PlaceholderText = "Enter key here..."
+	KeyInputBox.Text = ""
+
+local KeySubmitBtn = Instance.new("TextButton", KeyInputGui)
+KeySubmitBtn.Size = UDim2.new(0,80,0,30)
+KeySubmitBtn.Position = UDim2.new(0,10,0,100)
+KeySubmitBtn.BackgroundColor3 = Color3.fromRGB(60,120,60)
+KeySubmitBtn.Text = "Submit"
+KeySubmitBtn.TextColor3 = Color3.new(1,1,1)
+KeySubmitBtn.Font = Enum.Font.SourceSans
+KeySubmitBtn.TextSize = 14
+
+local KeyCancelBtn = Instance.new("TextButton", KeyInputGui)
+KeyCancelBtn.Size = UDim2.new(0,80,0,30)
+KeyCancelBtn.Position = UDim2.new(1,-90,0,100)
+KeyCancelBtn.BackgroundColor3 = Color3.fromRGB(120,60,60)
+KeyCancelBtn.Text = "Cancel"
+KeyCancelBtn.TextColor3 = Color3.new(1,1,1)
+KeyCancelBtn.Font = Enum.Font.SourceSans
+KeyCancelBtn.TextSize = 14
+------------------------------------------------
+-- // HIGHLIGHT STORAGE
+------------------------------------------------
+local HighlightFolder = Instance.new("Folder", CoreGui)
+HighlightFolder.Name = "HighlightStorage"
+
+local HealthBarFolder = Instance.new("Folder", CoreGui)
+HealthBarFolder.Name = "HealthBarStorage"
+
+local TargetFolder = Instance.new("Folder", CoreGui)
+TargetFolder.Name = "TargetStorage"
+------------------------------------------------
+-- // CONNECTION STORAGE
+------------------------------------------------
+local Connections = {}
+------------------------------------------------
+-- // FEFLIP FUNCTIONS
+------------------------------------------------
+function zeezyFrontflip(act,inp,obj)
+	if inp == Enum.UserInputState.Begin and FeFlipEnabled then
+		lp.Character.Humanoid:ChangeState("Jumping")
+		wait()
+		lp.Character.Humanoid.Sit = true
+		for i = 1,360 do 
+			delay(i/720,function()
+			lp.Character.Humanoid.Sit = true
+				lp.Character.HumanoidRootPart.CFrame = lp.Character.HumanoidRootPart.CFrame * CFrame.Angles(-h,0,0)
+			end)
+		end
+		wait(0.55)
+		lp.Character.Humanoid.Sit = false
+	end
+end
+
+function zeezyBackflip(act,inp,obj)
+	if inp == Enum.UserInputState.Begin and FeFlipEnabled then
+		lp.Character.Humanoid:ChangeState("Jumping")
+		wait()
+		lp.Character.Humanoid.Sit = true
+		for i = 1,360 do
+			delay(i/720,function()
+			lp.Character.Humanoid.Sit = true
+				lp.Character.HumanoidRootPart.CFrame = lp.Character.HumanoidRootPart.CFrame * CFrame.Angles(h,0,0)
+			end)
+		end
+		wait(0.55)
+		lp.Character.Humanoid.Sit = false
+	end
+end
+
+function zeezyAirjump(act,inp,obj)
+	if inp == Enum.UserInputState.Begin and FeFlipEnabled then
+		lp.Character:FindFirstChildOfClass'Humanoid':ChangeState("Seated")
+		wait()
+		lp.Character:FindFirstChildOfClass'Humanoid':ChangeState("Jumping")	
+	end
+end
+------------------------------------------------
+-- // TARGET LOGIC
+------------------------------------------------
+local function createTargetDecal(plr)
+	if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
+	local char = plr.Character
+	local rootPart = char.HumanoidRootPart
+	
+	-- Create decal
+	local decal = Instance.new("Decal")
+	decal.Name = "TargetDecal"
+	decal.Texture = "rbxassetid://12555314308"
+	decal.Face = Enum.NormalId.Front
+	decal.Parent = rootPart
+	
+	-- Create back decal
+	local backDecal = decal:Clone()
+	backDecal.Face = Enum.NormalId.Back
+	backDecal.Parent = rootPart
+	
+	-- Create billboard GUI for text
+	local bb = Instance.new("BillboardGui")
+	bb.Name = "TargetLabel"
+	bb.Adornee = rootPart
+	bb.Size = UDim2.new(0,200,0,80)
+	bb.StudsOffset = Vector3.new(0,4,0)
+	bb.AlwaysOnTop = true
+	bb.Parent = char
+	
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size = UDim2.new(1,0,0,24)
+	textLabel.Position = UDim2.new(0,0,0,0)
+	textLabel.BackgroundTransparency = 1
+	textLabel.Text = "TARGET"
+	textLabel.Font = Enum.Font.SourceSansBold
+	textLabel.TextSize = 24
+	textLabel.TextColor3 = Color3.fromRGB(255,0,0)
+	textLabel.TextStrokeTransparency = 0
+	textLabel.TextStrokeColor3 = Color3.new(0,0,0)
+	textLabel.Parent = bb
+	
+	-- Display name label
+	local displayNameLabel = Instance.new("TextLabel")
+	displayNameLabel.Size = UDim2.new(1,0,0,18)
+	displayNameLabel.Position = UDim2.new(0,0,0,24)
+	displayNameLabel.BackgroundTransparency = 1
+	displayNameLabel.Text = plr.DisplayName
+	displayNameLabel.Font = Enum.Font.SourceSansBold
+	displayNameLabel.TextSize = 16
+	displayNameLabel.TextColor3 = Color3.fromRGB(255,255,255)
+	displayNameLabel.TextStrokeTransparency = 0
+	displayNameLabel.TextStrokeColor3 = Color3.new(0,0,0)
+	displayNameLabel.Parent = bb
+	
+	-- Username label
+	local usernameLabel = Instance.new("TextLabel")
+	usernameLabel.Size = UDim2.new(1,0,0,16)
+	usernameLabel.Position = UDim2.new(0,0,0,42)
+	usernameLabel.BackgroundTransparency = 1
+	usernameLabel.Text = "@" .. plr.Name
+	usernameLabel.Font = Enum.Font.SourceSans
+	usernameLabel.TextSize = 14
+	usernameLabel.TextColor3 = Color3.fromRGB(200,200,200)
+	usernameLabel.TextStrokeTransparency = 0
+	usernameLabel.TextStrokeColor3 = Color3.new(0,0,0)
+	usernameLabel.Parent = bb
+end
+
+local function removeTargetDecal(plr)
+	if plr.Character then
+				local rootPart = plr.Character:FindFirstChild("HumanoidRootPart")
+		if rootPart then
+			for _, decal in pairs(rootPart:GetChildren()) do
+				if decal.Name == "TargetDecal" then
+					decal:Destroy()
+				end
+			end
+		end
+		
+		local targetLabel = plr.Character:FindFirstChild("TargetLabel")
+		if targetLabel then
+			targetLabel:Destroy()
+	end
+	end
+end
+
+local function toggleTarget(plr)
+	if TargetedPlayers[plr.Name] then
+		TargetedPlayers[plr.Name] = nil
+		removeTargetDecal(plr)
+	else
+		TargetedPlayers[plr.Name] = true
+		createTargetDecal(plr)
+	end
+	updateTargetList()
+end
+
+local function updateTargetList()
+	-- Clear existing buttons
+	for _, child in pairs(TargetScrollFrame:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+	
+	-- Create new buttons for each player
+	for _, plr in pairs(Players:GetPlayers()) do
+		if plr ~= lp then
+			local btn = Instance.new("TextButton")
+			btn.Size = UDim2.new(1,-10,0,30)
+			btn.BackgroundColor3 = TargetedPlayers[plr.Name] and Color3.fromRGB(80,40,40) or Color3.fromRGB(50,50,50)
+			btn.BorderSizePixel = 0
+			btn.Text = plr.DisplayName .. " @" .. plr.Name
+			btn.TextColor3 = Color3.new(1,1,1)
+			btn.Font = Enum.Font.SourceSans
+			btn.TextSize = 14
+			btn.TextXAlignment = Enum.TextXAlignment.Left
+			btn.Parent = TargetScrollFrame
+			
+			btn.MouseButton1Click:Connect(function()
+				toggleTarget(plr)
+end)
+		end
+	end
+	-- Update scroll frame canvas size
+	TargetScrollFrame.CanvasSize = UDim2.new(0,0,0,TargetListLayout.AbsoluteContentSize.Y)
+end
+local function showTargetGui()
+	TargetGuiOpen = not TargetGuiOpen
+	TargetGui.Visible = TargetGuiOpen
+	if TargetGuiOpen then
+		updateTargetList()
+	end
+end
+------------------------------------------------
+-- // HIGHLIGHT LOGIC
+------------------------------------------------
+local function getHealthColor(humanoid)
+	if not humanoid then return Color3.fromRGB(255,255,255) end
+	local healthPercent = humanoid.Health / humanoid.MaxHealth
+	
+	if healthPercent >= 0.75 then
+		return HealthColors[1] -- Green
+	elseif healthPercent >= 0.5 then
+		return HealthColors[0.75] -- Yellow
+	elseif healthPercent >= 0.25 then
+		return HealthColors[0.5] -- Orange
+	else
+		return HealthColors[0.25] -- Red
+	end
+end
+
+local function getColor(plr)
+	if lp:IsFriendsWith(plr.UserId) then
+		return FriendColor
+	end
+	local teamName = plr.Team and plr.Team.Name or ""
+	local lpTeamName = lp.Team and lp.Team.Name or ""
+	
+	-- Super teams: ORDERLY, MPT, JANITOR, MANAGEMENT, MEDICAL vs PATIENT
+	local superTeams = {ORDERLY=true, MPT=true, JANITOR=true, MANAGEMENT=true, MEDICAL=true}
+	
+	-- If both are in super teams, they're allies
+	if superTeams[teamName] and superTeams[lpTeamName] then
+		return AllyColor
+	-- If both are patients, they're allies
+	elseif teamName == "PATIENT" and lpTeamName == "PATIENT" then
+		return AllyColor
+	-- If one is super team and other is patient, they're enemies
+	elseif (superTeams[teamName] and lpTeamName == "PATIENT") or (teamName == "PATIENT" and superTeams[lpTeamName]) then
+		return EnemyColor
+	-- Same team = ally
+	elseif teamName == lpTeamName and teamName ~= "" then
+		return AllyColor
+	else
+		-- Different teams = enemy
+		return EnemyColor
+	end
+end
+
+local function clearHighlight(plr)
+	if HighlightFolder:FindFirstChild(plr.Name) then
+		HighlightFolder[plr.Name]:Destroy()
+	end
+	if plr.Character and plr.Character:FindFirstChild("HighlightTag") then
+		plr.Character.HighlightTag:Destroy()
+	end
+end
+
+local function clearHealthBar(plr)
+	if HealthBarFolder:FindFirstChild(plr.Name) then
+		HealthBarFolder[plr.Name]:Destroy()
+	end
+	if plr.Character and plr.Character:FindFirstChild("HealthBarGui") then
+		plr.Character.HealthBarGui:Destroy()
+	end
+end
+
+local function createHealthBar(plr)
+	local char = plr.Character
+	local humanoid = char and char:FindFirstChild("Humanoid")
+	local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+	if not rootPart or not humanoid then return end
+
+	clearHealthBar(plr)
+
+	local healthPercent = humanoid.Health / humanoid.MaxHealth
+	local currentHealth = math.floor(humanoid.Health)
+
+	local bb = Instance.new("BillboardGui", char)
+	bb.Name = "HealthBarGui"
+	bb.Adornee = rootPart
+	bb.Size = UDim2.new(0,4,0,100)
+	bb.StudsOffset = Vector3.new(3,0,0)
+	bb.AlwaysOnTop = true
+
+	-- Health number at top
+	local healthText = Instance.new("TextLabel", bb)
+	healthText.Size = UDim2.new(0,30,0,15)
+	healthText.Position = UDim2.new(0,-13,0,-20)
+	healthText.BackgroundTransparency = 1
+	healthText.Text = tostring(currentHealth)
+	healthText.Font = Enum.Font.SourceSansBold
+	healthText.TextSize = 12
+	healthText.TextStrokeTransparency = 0.3
+	healthText.TextColor3 = Color3.new(1,1,1)
+
+	-- Background bar
+	local bgBar = Instance.new("Frame", bb)
+	bgBar.Size = UDim2.new(1,0,1,0)
+	bgBar.Position = UDim2.new(0,0,0,0)
+	bgBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
+	bgBar.BorderSizePixel = 1
+	bgBar.BorderColor3 = Color3.new(0,0,0)
+
+	-- Health fill bar
+	local healthBar = Instance.new("Frame", bgBar)
+	healthBar.Size = UDim2.new(1,0,healthPercent,0)
+	healthBar.Position = UDim2.new(0,0,1-healthPercent,0)
+	healthBar.BackgroundColor3 = getHealthColor(humanoid)
+	healthBar.BorderSizePixel = 0
+
+	-- Store references for updates
+	bb:SetAttribute("HealthBar", true)
+	bb:SetAttribute("PlayerName", plr.Name)
+
+	return bb
+end
+
+local function createTag(plr, color)
+	local char = plr.Character
+	local head = char and char:FindFirstChild("Head")
+	if not head then return end
+
+	local bb = Instance.new("BillboardGui", char)
+	bb.Name = "HighlightTag"
+	bb.Adornee = head
+	bb.Size = UDim2.new(0,100,0,40)
+	bb.StudsOffset = Vector3.new(0,2.5,0)
+	bb.AlwaysOnTop = true
+
+	local layout = Instance.new("UIListLayout", bb)
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+	-- Display name ONLY for friends
+	if lp:IsFriendsWith(plr.UserId) then
+		local name = Instance.new("TextLabel", bb)
+		name.Size = UDim2.new(1,0,0,14)
+		name.BackgroundTransparency = 1
+		name.Text = plr.DisplayName
+		name.Font = Enum.Font.SourceSansBold
+		name.TextSize = 12
+		name.TextStrokeTransparency = 0.4
+		name.TextColor3 = color
+	end
+
+	-- Team name always
+	if plr.Team then
+		local team = Instance.new("TextLabel", bb)
+		team.Size = UDim2.new(1,0,0,12)
+		team.BackgroundTransparency = 1
+		team.Text = plr.Team.Name
+		team.Font = Enum.Font.SourceSans
+		team.TextSize = 10
+		team.TextStrokeTransparency = 0.5
+		team.TextColor3 = color
+	end
+end
+
+local function applyHighlight(plr)
+	if not HighlightEnabled or plr == lp or not plr.Character then return end
+	
+	-- Check if player is dead
+	local humanoid = plr.Character:FindFirstChild("Humanoid")
+	if humanoid and humanoid.Health <= 0 then return end
+	
+	clearHighlight(plr)
+
+	local color = getColor(plr)
+
+	local h = Instance.new("Highlight")
+	h.Name = plr.Name
+	h.Adornee = plr.Character
+	h.FillColor = color
+	h.FillTransparency = 0.6
+	h.OutlineColor = Color3.new(1,1,1)
+	h.Parent = HighlightFolder
+
+	createTag(plr, color)
+end
+
+local function applyHealthBar(plr)
+	if not HealthBarsEnabled or plr == lp or not plr.Character then return end
+	
+	-- Check if player is dead
+	local humanoid = plr.Character:FindFirstChild("Humanoid")
+	if humanoid and humanoid.Health <= 0 then return end
+	
+	createHealthBar(plr)
+end
+
+local function updateHealthBar(plr)
+	if not HealthBarsEnabled or plr == lp or not plr.Character then return end
+	
+	local char = plr.Character
+	local humanoid = char and char:FindFirstChild("Humanoid")
+	local healthBarGui = char and char:FindFirstChild("HealthBarGui")
+	
+	if not humanoid or not healthBarGui then return end
+	
+	local healthPercent = humanoid.Health / humanoid.MaxHealth
+	local currentHealth = math.floor(humanoid.Health)
+	
+	-- Update health text
+	local healthText = healthBarGui:FindFirstChild("TextLabel")
+	if healthText then
+		healthText.Text = tostring(currentHealth)
+	end
+	
+	-- Update health bar
+	local bgBar = healthBarGui:FindFirstChild("Frame")
+	if bgBar then
+		local healthBar = bgBar:FindFirstChild("Frame")
+		if healthBar then
+			healthBar.Size = UDim2.new(1,0,healthPercent,0)
+			healthBar.Position = UDim2.new(0,0,1-healthPercent,0)
+			healthBar.BackgroundColor3 = getHealthColor(humanoid)
+		end
+	end
+end
+------------------------------------------------
+-- // PLAYER UPDATES
+------------------------------------------------
+local function hookPlayer(plr)
+	local conn1 = plr.CharacterAdded:Connect(function(char)
+		task.wait(0.4)
+		if HighlightEnabled then
+			applyHighlight(plr)
+		end
+		if HealthBarsEnabled then
+			applyHealthBar(plr)
+		end
+		if TargetedPlayers[plr.Name] then
+			createTargetDecal(plr)
+		end
+end)
+	table.insert(Connections, conn1)
+	local conn2 = plr:GetPropertyChangedSignal("Team"):Connect(function()
+		task.wait(0.1) -- Small delay to ensure team change is processed
+		if HighlightEnabled then
+			applyHighlight(plr)
+		end
+	end)
+	table.insert(Connections, conn2)
+
+	-- Hook health changes for real-time updates
+	local conn3 = plr.CharacterAdded:Connect(function(char)
+		local humanoid = char:WaitForChild("Humanoid")
+		local conn4 = humanoid.HealthChanged:Connect(function()
+			if HighlightEnabled then
+				applyHighlight(plr)
+			end
+			if HealthBarsEnabled then
+				updateHealthBar(plr)
+			end
+		end)
+		table.insert(Connections, conn4)
+		local conn5 = humanoid.Died:Connect(function()
+			clearHighlight(plr)
+			clearHealthBar(plr)
+			removeTargetDecal(plr)
+		end)
+		table.insert(Connections, conn5)
+	end)
+	table.insert(Connections, conn3)
+end
+for _,p in ipairs(Players:GetPlayers()) do
+	if p ~= lp then hookPlayer(p) end
+end
+
+local conn6 = Players.PlayerAdded:Connect(function(plr)
+	hookPlayer(plr)
+	if TargetGuiOpen then
+		updateTargetList()
+	end
+end)
+table.insert(Connections, conn6)
+local conn7 = Players.PlayerRemoving:Connect(function(plr)
+	clearHighlight(plr)
+	clearHealthBar(plr)
+	removeTargetDecal(plr)
+	TargetedPlayers[plr.Name] = nil
+	if TargetGuiOpen then
+		updateTargetList()
+	end
+end)
+table.insert(Connections, conn7)
+
+------------------------------------------------
+-- // CFRAME WALK LOGIC
+------------------------------------------------
+local function CFrameWalkControl()
+	while CFrameWalkEnabled do
+		RunService.RenderStepped:Wait()
+		local character = lp.Character
+		if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid") then
+			local humanoid = character.Humanoid
+			local rootPart = character.HumanoidRootPart
+			local moveDirection = humanoid.MoveDirection
+			if moveDirection.Magnitude > 0 then
+				rootPart.CFrame = rootPart.CFrame + moveDirection * CFrameWalkSpeed / 10
+			end
+		end
+	end
+end
+
+------------------------------------------------
+-- // FAST ANIMATIONS LOGIC
+------------------------------------------------
+local function FastAnimationsControl()
+	while FastAnimationsEnabled do
+		task.wait()
+		local character = lp.Character
+		if character then
+			local humanoid = character:FindFirstChildOfClass("Humanoid") or character:FindFirstChildOfClass("AnimationController")
+			if humanoid then
+				for _, track in next, humanoid:GetPlayingAnimationTracks() do
+					track:AdjustSpeed(AnimationSpeed)
+				end
+			end
+		end
+	end
+end
+
+------------------------------------------------
+-- // GRAB TOOL LOGIC
+------------------------------------------------
+local function loadGrabTool()
+	local success, err = pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/traitor1911/UtilityHub/refs/heads/main/feGrabTwo"))()
+	end)
+	
+	if success then
+		game.StarterGui:SetCore("SendNotification", {
+			Title = "Grab Tool Loaded",
+			Text = "Q - Retract | E - Extend",
+			Duration = 3
+		})
+	else
+		game.StarterGui:SetCore("SendNotification", {
+			Title = "Grab Tool Error",
+			Text = "Failed to load grab tool",
+			Duration = 2
+		})
+	end
+end
+------------------------------------------------
+-- // TOGGLES
+------------------------------------------------
+local function toggleHighlight()
+	HighlightEnabled = not HighlightEnabled
+	HighlightBtn.Text = "Highlight (J): "..(HighlightEnabled and "ON" or "OFF")
+	for _,p in ipairs(Players:GetPlayers()) do
+		if HighlightEnabled then
+			applyHighlight(p)
+		else
+			clearHighlight(p)
+		end
+	end
+end
+
+local function toggleHealthBars()
+	HealthBarsEnabled = not HealthBarsEnabled
+	HealthBarsBtn.Text = "Health Bars: "..(HealthBarsEnabled and "ON" or "OFF")
+	for _,p in ipairs(Players:GetPlayers()) do
+		if HealthBarsEnabled then
+			applyHealthBar(p)
+		else
+			clearHealthBar(p)
+		end
+	end
+end
+
+local function toggleFOV()
+	FOVEnabled = not FOVEnabled
+	FOVButton.Text = "FOV (U): "..(FOVEnabled and "ON" or "OFF")
+	if FOVEnabled then
+		camera.FieldOfView = CustomFOV
+	else
+		camera.FieldOfView = DefaultFOV
+	end
+end
+
+local function toggleLock()
+	LockEnabled = not LockEnabled
+	if not LockEnabled then
+		LockedPlayer = nil
+	end
+	LockBtn.Text = "Lock On (Y): "..(LockEnabled and "ON" or "OFF")
+end
+
+local function toggleAutoSwitchLock()
+	AutoSwitchLockEnabled = not AutoSwitchLockEnabled
+	AutoSwitchBtn.Text = "Auto Switch Lock: "..(AutoSwitchLockEnabled and "ON" or "OFF")
+end
+
+local function toggleNoFog()
+	NoFogEnabled = not NoFogEnabled
+	FogBtn.Text = "No Fog: "..(NoFogEnabled and "ON" or "OFF")
+	if not NoFogEnabled then
+		for k,v in pairs(DefaultLighting) do
+			Lighting[k] = v
+		end
+	end
+end
+
+local function toggleFullBright()
+	FullBrightEnabled = not FullBrightEnabled
+	FullBrightBtn.Text = "FullBright: "..(FullBrightEnabled and "ON" or "OFF")
+	if not FullBrightEnabled then
+		for k,v in pairs(DefaultLighting) do
+			Lighting[k] = v
+		end
+	end
+end
+
+local function toggleSeriousMode()
+	SeriousModeEnabled = not SeriousModeEnabled
+	SeriousBtn.Text = "SERIOUS MODE: "..(SeriousModeEnabled and "ON" or "OFF")
+	
+	-- Send notification
+	game.StarterGui:SetCore("SendNotification", {
+		Title = "SERIOUS MODE",
+		Text = SeriousModeEnabled and "ON" or "OFF",
+		Image = "rbxassetid://9368762755",
+		Duration = 2
+	})
+	
+	if SeriousModeEnabled then
+		if SeriousModeMusic then
+			SeriousModeMusic:Destroy()
+		end
+		SeriousModeMusic = Instance.new("Sound", workspace)
+		SeriousModeMusic.SoundId = "rbxassetid://138118304933431"
+		SeriousModeMusic.Volume = 0.5
+		SeriousModeMusic.Looped = true
+		SeriousModeMusic:Play()
+	else
+		if SeriousModeMusic then
+			SeriousModeMusic:Destroy()
+			SeriousModeMusic = nil
+		end
+	end
+end
+local function toggleCFrameWalk()
+	CFrameWalkEnabled = not CFrameWalkEnabled
+	CFrameWalkBtn.Text = "CFrame Walk (C): "..(CFrameWalkEnabled and "ON" or "OFF")
+	if CFrameWalkEnabled then
+		CFrameWalkControl()
+	end
+end
+local function toggleFastAnimations()
+	FastAnimationsEnabled = not FastAnimationsEnabled
+	FastAnimationsBtn.Text = "Fast Animations: "..(FastAnimationsEnabled and "ON" or "OFF")
+	if FastAnimationsEnabled then
+		FastAnimationsControl()
+	end
+end
+
+local function toggleFeFlip()
+	FeFlipEnabled = not FeFlipEnabled
+	FeFlipBtn.Text = "feFlip: "..(FeFlipEnabled and "ON" or "OFF")
+	
+	if FeFlipEnabled then
+		-- Bind the feFlip actions
+		ContextActionService:BindAction("zeezyFrontflip",zeezyFrontflip,false,FrontflipKey)
+		ContextActionService:BindAction("zeezyBackflip",zeezyBackflip,false,BackflipKey)
+		ContextActionService:BindAction("zeezyAirjump",zeezyAirjump,false,AirjumpKey)
+		
+		game.StarterGui:SetCore("SendNotification", {
+			Title = "feFlip Enabled",
+			Text = "Z - Frontflip | X - Backflip | C - Airjump",
+			Duration = 3
+		})
+	else
+		-- Unbind the feFlip actions
+		ContextActionService:UnbindAction("zeezyFrontflip")
+		ContextActionService:UnbindAction("zeezyBackflip")
+		ContextActionService:UnbindAction("zeezyAirjump")
+		
+		game.StarterGui:SetCore("SendNotification", {
+			Title = "feFlip Disabled",
+			Text = "Keybinds disabled",
+			Duration = 2
+		})
+	end
+end
+
+local function showMaliciousGui()
+	if MaliciousUnlocked then
+		MaliciousGui.Visible = not MaliciousGui.Visible
+		MaliciousGuiOpen = MaliciousGui.Visible
+	else
+		KeyInputGui.Visible = true
+		KeyInputBox.Text = ""
+		KeyInputBox:CaptureFocus()
+	end
+end
+------------------------------------------------
+-- // BUTTON CONNECTIONS
+------------------------------------------------
+local conn8 = HighlightBtn.MouseButton1Click:Connect(toggleHighlight)
+table.insert(Connections, conn8)
+local conn29 = HealthBarsBtn.MouseButton1Click:Connect(toggleHealthBars)
+table.insert(Connections, conn29)
+local conn9 = FOVButton.MouseButton1Click:Connect(toggleFOV)
+table.insert(Connections, conn9)
+local conn10 = LockBtn.MouseButton1Click:Connect(toggleLock)
+table.insert(Connections, conn10)
+local conn11 = LockPartBtn.MouseButton1Click:Connect(function()
+	LockPart = (LockPart == "Head") and "HumanoidRootPart" or "Head"
+	LockPartBtn.Text = "Lock Part: "..(LockPart == "Head" and "HEAD" or "TORSO")
+end)
+table.insert(Connections, conn11)
+local conn12 = AutoSwitchBtn.MouseButton1Click:Connect(toggleAutoSwitchLock)
+table.insert(Connections, conn12)
+local conn13 = FogBtn.MouseButton1Click:Connect(toggleNoFog)
+table.insert(Connections, conn13)
+local conn14 = FullBrightBtn.MouseButton1Click:Connect(toggleFullBright)
+table.insert(Connections, conn14)
+local conn15 = SeriousBtn.MouseButton1Click:Connect(toggleSeriousMode)
+table.insert(Connections, conn15)
+local conn16 = FOVBox.FocusLost:Connect(function()
+	local n = tonumber(FOVBox.Text)
+	if n and n >= 40 and n <= 200 then
+		CustomFOV = n
+		if FOVEnabled then
+			camera.FieldOfView = CustomFOV
+		end
+		FOVBox.Text = tostring(n)
+	else
+		FOVBox.Text = tostring(CustomFOV)
+	end
+end)
+table.insert(Connections, conn16)
+
+-- Target button connection
+local conn30 = TargetBtn.MouseButton1Click:Connect(showTargetGui)
+table.insert(Connections, conn30)
+
+-- Target GUI close button connection
+local conn31 = TargetCloseBtn.MouseButton1Click:Connect(function()
+	TargetGui.Visible = false
+	TargetGuiOpen = false
+end)
+table.insert(Connections, conn31)
+
+-- Malicious button connection
+local conn20 = MaliciousBtn.MouseButton1Click:Connect(showMaliciousGui)
+table.insert(Connections, conn20)
+
+-- CFrame Walk button connection
+local conn24 = CFrameWalkBtn.MouseButton1Click:Connect(toggleCFrameWalk)
+table.insert(Connections, conn24)
+
+-- CFrame Walk speed box connection
+local conn25 = CFrameWalkSpeedBox.FocusLost:Connect(function()
+	local n = tonumber(CFrameWalkSpeedBox.Text)
+	if n and n > 0 and n <= 500 then
+		CFrameWalkSpeed = n
+		CFrameWalkSpeedBox.Text = tostring(n)
+	else
+		CFrameWalkSpeedBox.Text = tostring(CFrameWalkSpeed)
+	end
+end)
+table.insert(Connections, conn25)
+
+-- Fast Animations button connection
+local conn26 = FastAnimationsBtn.MouseButton1Click:Connect(toggleFastAnimations)
+table.insert(Connections, conn26)
+
+-- Animation Speed box connection
+local conn27 = AnimationSpeedBox.FocusLost:Connect(function()
+	local n = tonumber(AnimationSpeedBox.Text)
+	if n and n > 0 and n <= 100 then
+		AnimationSpeed = n
+		AnimationSpeedBox.Text = tostring(n)
+	else
+		AnimationSpeedBox.Text = tostring(AnimationSpeed)
+	end
+end)
+table.insert(Connections, conn27)
+
+-- Grab Tool button connection
+local conn28 = GrabToolBtn.MouseButton1Click:Connect(loadGrabTool)
+table.insert(Connections, conn28)
+
+-- feFlip button connection
+local conn32 = FeFlipBtn.MouseButton1Click:Connect(toggleFeFlip)
+table.insert(Connections, conn32)
+
+-- Key input connections
+local conn21 = KeySubmitBtn.MouseButton1Click:Connect(function()
+	if KeyInputBox.Text == "TraitorTHUB1337" then
+		MaliciousUnlocked = true
+		KeyInputGui.Visible = false
+		MaliciousGui.Visible = true
+		MaliciousGuiOpen = true
+		MaliciousBtn.BackgroundColor3 = Color3.fromRGB(20,80,20)
+		game.StarterGui:SetCore("SendNotification", {
+			Title = "Access Granted",
+			Text = "Malicious panel unlocked!",
+			Duration = 2
+		})
+	else
+		KeyInputBox.Text = ""
+		KeyInputBox.PlaceholderText = "Invalid key!"
+		task.wait(1)
+		KeyInputBox.PlaceholderText = "Enter key here..."
+	end
+end)
+table.insert(Connections, conn21)
+local conn22 = KeyCancelBtn.MouseButton1Click:Connect(function()
+	KeyInputGui.Visible = false
+	KeyInputBox.Text = ""
+end)
+table.insert(Connections, conn22)
+
+local conn23 = MaliciousCloseBtn.MouseButton1Click:Connect(function()
+	MaliciousGui.Visible = false
+	MaliciousGuiOpen = false
+	-- Disable malicious features when GUI is closed
+	CFrameWalkEnabled = false
+	FastAnimationsEnabled = false
+	FeFlipEnabled = false
+	CFrameWalkBtn.Text = "CFrame Walk (C): OFF"
+	FastAnimationsBtn.Text = "Fast Animations: OFF"
+	FeFlipBtn.Text = "feFlip: OFF"
+	-- Unbind feFlip actions
+	ContextActionService:UnbindAction("zeezyFrontflip")
+	ContextActionService:UnbindAction("zeezyBackflip")
+	ContextActionService:UnbindAction("zeezyAirjump")
+end)
+table.insert(Connections, conn23)
+
+local conn17 = CloseBtn.MouseButton1Click:Connect(function()
+	-- Reset all states
+	FOVEnabled = false
+	LockEnabled = false
+	HighlightEnabled = false
+	HealthBarsEnabled = false
+	NoFogEnabled = false
+	FullBrightEnabled = false
+	SeriousModeEnabled = false
+	CFrameWalkEnabled = false
+	FastAnimationsEnabled = false
+	FeFlipEnabled = false
+
+	-- Reset camera FOV
+	camera.FieldOfView = DefaultFOV
+
+	-- Reset lighting
+	for k,v in pairs(DefaultLighting) do
+		Lighting[k] = v
+	end
+
+	-- Remove highlights and health bars
+	for _,p in ipairs(Players:GetPlayers()) do
+		clearHighlight(p)
+		clearHealthBar(p)
+		removeTargetDecal(p)
+	end
+
+	-- Stop music
+	if SeriousModeMusic then
+		SeriousModeMusic:Destroy()
+	end
+
+	-- Unbind feFlip actions
+	ContextActionService:UnbindAction("zeezyFrontflip")
+	ContextActionService:UnbindAction("zeezyBackflip")
+	ContextActionService:UnbindAction("zeezyAirjump")
+
+	-- Disconnect all connections
+	for _, connection in ipairs(Connections) do
+		if connection then
+			connection:Disconnect()
+		end
+	end
+
+	-- Disconnect main loop
+	if RenderSteppedConn then
+		RenderSteppedConn:Disconnect()
+	end
+
+	-- Disconnect refresh loop
+	if RefreshLoop then
+		RefreshLoop:Disconnect()
+	end
+
+	-- Destroy highlight folder
+	if HighlightFolder then
+		HighlightFolder:Destroy()
+	end
+
+	-- Destroy health bar folder
+	if HealthBarFolder then
+		HealthBarFolder:Destroy()
+	end
+
+	-- Destroy target folder
+	if TargetFolder then
+		TargetFolder:Destroy()
+	end
+
+	-- Destroy GUI
+	ScreenGui:Destroy()
+end)
+table.insert(Connections, conn17)
+
+------------------------------------------------
+-- // KEYBINDS
+------------------------------------------------
+local conn18 = UserInputService.InputBegan:Connect(function(input,gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.J then
+		toggleHighlight()
+	elseif input.KeyCode == Enum.KeyCode.U then
+		toggleFOV()
+	elseif input.KeyCode == Enum.KeyCode.Y then
+		toggleLock()
+	elseif input.KeyCode == Enum.KeyCode.C and MaliciousUnlocked and MaliciousGuiOpen then
+		toggleCFrameWalk()
+	elseif input.KeyCode == Enum.KeyCode.Minus then
+		LockPart = (LockPart == "Head") and "HumanoidRootPart" or "Head"
+		LockPartBtn.Text = "Lock Part: "..(LockPart == "Head" and "HEAD" or "TORSO")
+	elseif input.KeyCode == Enum.KeyCode.Equals then
+		GUIVisible = not GUIVisible
+		Main.Visible = GUIVisible
+		if MaliciousUnlocked then
+			MaliciousGui.Visible = GUIVisible and MaliciousGuiOpen
+		end
+		TargetGui.Visible = GUIVisible and TargetGuiOpen
+	elseif input.KeyCode == Enum.KeyCode.Return and KeyInputGui.Visible then
+		KeySubmitBtn.MouseButton1Click:Fire()
+	end
+end)
+table.insert(Connections, conn18)
+-- Auto switch lock on mouse click
+local conn19 = mouse.Button1Down:Connect(function()
+	if AutoSwitchLockEnabled then
+		LockPart = (LockPart == "Head") and "HumanoidRootPart" or "Head"
+		LockPartBtn.Text = "Lock Part: "..(LockPart == "Head" and "HEAD" or "TORSO")
+	end
+end)
+table.insert(Connections, conn19)
+
+------------------------------------------------
+-- // LOCK CAMERA + FOV + NOFOG + FULLBRIGHT LOOP
+------------------------------------------------
+local function getClosestPlayer()
+	local closest, shortest = nil, math.huge
+	for _,p in ipairs(Players:GetPlayers()) do
+		if p ~= lp and p.Character then
+			local part = p.Character:FindFirstChild(LockPart)
+			if part then
+				local pos = camera:WorldToScreenPoint(part.Position)
+				local dist = (Vector2.new(mouse.X,mouse.Y) - Vector2.new(pos.X,pos.Y)).Magnitude
+				if dist < shortest then
+					shortest = dist
+					closest = p
+				end
+			end
+		end
+	end
+	return closest
+end
+
+local RenderSteppedConn
+RenderSteppedConn = RunService.RenderStepped:Connect(function()
+	-- LOCK CAMERA
+	if LockEnabled then
+		if not LockedPlayer 
+		   or not LockedPlayer.Character 
+		   or not LockedPlayer.Character:FindFirstChild(LockPart) then
+			LockedPlayer = getClosestPlayer()
+		end
+
+		if LockedPlayer and LockedPlayer.Character then
+			local part = LockedPlayer.Character:FindFirstChild(LockPart)
+			if part then
+				camera.CFrame = CFrame.new(camera.CFrame.Position, part.Position)
+			end
+		end
+	end
+
+	-- FOV enforcement - improved to handle scoped weapons
+	if FOVEnabled then
+		if camera.FieldOfView ~= CustomFOV then
+			camera.FieldOfView = CustomFOV
+		end
+	end
+
+	-- NoFog enforcement
+	if NoFogEnabled then
+		Lighting.FogEnd = 100000
+		Lighting.FogStart = 0
+		Lighting.ClockTime = 14
+		Lighting.Brightness = 2
+		Lighting.GlobalShadows = false
+	end
+
+	-- FullBright enforcement
+	if FullBrightEnabled then
+		Lighting.Brightness = FullBrightSettings.Brightness
+		Lighting.ClockTime = FullBrightSettings.ClockTime
+		Lighting.FogEnd = FullBrightSettings.FogEnd
+		Lighting.GlobalShadows = FullBrightSettings.GlobalShadows
+		Lighting.Ambient = FullBrightSettings.Ambient
+	end
+end)
+
+-- Periodic highlight and health bar refresh
+local RefreshLoop
+RefreshLoop = task.spawn(function()
+	while true do
+		task.wait(5) -- Refresh every 5 seconds
+		if HighlightEnabled then
+			for _,p in ipairs(Players:GetPlayers()) do
+				if p ~= lp and p.Character then
+					local humanoid = p.Character:FindFirstChild("Humanoid")
+					if humanoid and humanoid.Health > 0 then
+						-- Only refresh if highlight is missing
+						if not HighlightFolder:FindFirstChild(p.Name) then
+							applyHighlight(p)
+						end
+					end
+				end
+			end
+		end
+		if HealthBarsEnabled then
+			for _,p in ipairs(Players:GetPlayers()) do
+				if p ~= lp and p.Character then
+					local humanoid = p.Character:FindFirstChild("Humanoid")
+					if humanoid and humanoid.Health > 0 then
+						-- Only refresh if health bar is missing
+						if not p.Character:FindFirstChild("HealthBarGui") then
+							applyHealthBar(p)
+						end
+					end
+				end
+			end
+		end
+		-- Refresh target decals
+		for playerName, _ in pairs(TargetedPlayers) do
+			local plr = Players:FindFirstChild(playerName)
+			if plr and plr.Character then
+				local rootPart = plr.Character:FindFirstChild("HumanoidRootPart")
+				if rootPart and not rootPart:FindFirstChild("TargetDecal") then
+					createTargetDecal(plr)
+				end
+			end
+		end
+	end
+end)
+
+------------------------------------------------
+-- // LOAD SOUND NOTIFICATION
+------------------------------------------------
+task.spawn(function()
+	local notifSound = Instance.new("Sound", workspace)
+	notifSound.SoundId = "rbxassetid://92381587575059"
+	notifSound.Volume = 0.15
+	notifSound.PlaybackSpeed = 1
+	notifSound:Play()
+	
+	game.StarterGui:SetCore("SendNotification", {
+		Title = "THUB",
+		Text = "Utilities loaded successfully!\nMade by traitor_1",
+		Duration = 2.5,
+		Button1 = "Okay"
+	})
+end)
