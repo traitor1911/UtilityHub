@@ -1,0 +1,455 @@
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DecayingTraitorGUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- GUI visibility state
+local guiVisible = true
+
+-- Create main frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 350, 0, 500)
+mainFrame.Position = UDim2.new(0, 10, 0, 10)
+mainFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+-- Create title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundColor3 = Color3.new(0.05, 0.05, 0.05)
+title.Text = "Decaying Traitor"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
+title.Parent = mainFrame
+
+-- Create master control frame
+local masterFrame = Instance.new("Frame")
+masterFrame.Size = UDim2.new(1, 0, 0, 30)
+masterFrame.Position = UDim2.new(0, 0, 0, 30)
+masterFrame.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
+masterFrame.BorderSizePixel = 0
+masterFrame.Parent = mainFrame
+
+local masterLabel = Instance.new("TextLabel")
+masterLabel.Size = UDim2.new(0.7, 0, 1, 0)
+masterLabel.Position = UDim2.new(0, 0, 0, 0)
+masterLabel.BackgroundTransparency = 1
+masterLabel.Text = "Master Controls"
+masterLabel.TextColor3 = Color3.new(1, 1, 1)
+masterLabel.TextScaled = true
+masterLabel.Font = Enum.Font.SourceSansBold
+masterLabel.Parent = masterFrame
+
+local enableAllMasterButton = Instance.new("TextButton")
+enableAllMasterButton.Size = UDim2.new(0.15, 0, 0.8, 0)
+enableAllMasterButton.Position = UDim2.new(0.7, 0, 0.1, 0)
+enableAllMasterButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+enableAllMasterButton.Text = "All"
+enableAllMasterButton.TextColor3 = Color3.new(1, 1, 1)
+enableAllMasterButton.TextScaled = true
+enableAllMasterButton.Font = Enum.Font.SourceSansBold
+enableAllMasterButton.Parent = masterFrame
+
+local disableAllMasterButton = Instance.new("TextButton")
+disableAllMasterButton.Size = UDim2.new(0.15, 0, 0.8, 0)
+disableAllMasterButton.Position = UDim2.new(0.85, 0, 0.1, 0)
+disableAllMasterButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+disableAllMasterButton.Text = "None"
+disableAllMasterButton.TextColor3 = Color3.new(1, 1, 1)
+disableAllMasterButton.TextScaled = true
+disableAllMasterButton.Font = Enum.Font.SourceSansBold
+disableAllMasterButton.Parent = masterFrame
+
+-- Create scroll frame
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, 0, 1, -60)
+scrollFrame.Position = UDim2.new(0, 0, 0, 60)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.ScrollBarThickness = 8
+scrollFrame.Parent = mainFrame
+
+-- Weapon mappings organized by categories
+local weaponCategories = {
+    ["Melee"] = {
+        ["BBat"] = "Bat",
+        ["PFork"] = "Pitchfork",
+        ["LPipe"] = "Pipe",
+        ["CHammer"] = "Hammer",
+        ["NSword"] = "Sword",
+        ["NKnuckles"] = "Fist",
+        ["MilAxe"] = "Axe",
+        ["CCleaver"] = "Cleaver",
+        ["THawk"] = "Tomahawk",
+        ["FAxe"] = "Axe + Riot",
+        ["QHammer"] = "Decimator",
+        ["KaramB"] = "Karambit",
+        ["IPick"] = "IcePick",
+        ["Shovel"] = "Shovel",
+        ["CKnife"] = "Knife",
+        ["CBar"] = "Crowbar",
+        ["SCKnife"] = "Knife",
+        ["PBaton"] = "Baton",
+        ["Rake"] = "Rake",
+        ["SHammer"] = "Hammer",
+        ["GhostKnife"] = "Hidden",
+        ["SClaw"] = "Sickler",
+        ["KitKnife"] = "Hanger"
+    },
+    ["Pistols"] = {
+        ["RVolver"] = "Magnum",
+        ["MPistol"] = "Pistol",
+        ["STIPistol"] = "Pistol",
+        ["Pistol"] = "Pistol",
+        ["Ruger"] = "Pistol"
+    },
+    ["Rifles"] = {
+        ["SubAK"] = "AK",
+        ["SKS"] = "DMR",
+        ["SVD"] = "DMR",
+        ["HRifle"] = "DMR",
+        ["HuntingR"] = "DMR"
+    },
+    ["SMGs"] = {
+        ["SubMCX"] = "SMG",
+        ["SubMG"] = "SMG"
+    },
+    ["Shotguns"] = {
+        ["MShotgun"] = "Shotgun",
+        ["DoubleShotgun"] = "Shotgun"
+    },
+    ["Snipers"] = {
+        ["AWMSniper"] = "Sniper",
+["IntSniper"] = "Sniper",
+        ["Intervention"] = "Sniper"
+    },
+    ["Heavy"] = {
+        ["FNLMG"] = "Machine"
+    }
+}
+-- Storage for highlights and toggles
+local highlights = {}
+local toggles = {}
+local billboards = {}
+local categoryButtons = {}
+local groupHighlights = {}
+
+-- Function to toggle all weapons in a category
+local function toggleCategory(categoryName, enabled)
+    for weaponName, _ in pairs(weaponCategories[categoryName]) do
+        if toggles[weaponName] then
+            toggles[weaponName].enabled = enabled
+            if enabled then
+                toggles[weaponName].button.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+            else
+                toggles[weaponName].button.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+            end
+        end
+    end
+                    updateHighlights()
+                end
+
+-- Function to toggle all categories
+local function toggleAllCategories(enabled)
+    for categoryName, _ in pairs(weaponCategories) do
+        toggleCategory(categoryName, enabled)
+            end
+    end
+
+-- Function to create category header
+local function createCategoryHeader(categoryName, index)
+    local headerFrame = Instance.new("Frame")
+    headerFrame.Size = UDim2.new(1, -10, 0, 30)
+    headerFrame.Position = UDim2.new(0, 5, 0, (index - 1) * 35)
+    headerFrame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    headerFrame.BorderSizePixel = 0
+    headerFrame.Parent = scrollFrame
+    
+    local headerLabel = Instance.new("TextLabel")
+    headerLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    headerLabel.Position = UDim2.new(0, 0, 0, 0)
+    headerLabel.BackgroundTransparency = 1
+    headerLabel.Text = categoryName
+    headerLabel.TextColor3 = Color3.new(1, 1, 1)
+    headerLabel.TextScaled = true
+    headerLabel.Font = Enum.Font.SourceSansBold
+    headerLabel.Parent = headerFrame
+    
+    local enableAllButton = Instance.new("TextButton")
+    enableAllButton.Size = UDim2.new(0.15, 0, 0.8, 0)
+    enableAllButton.Position = UDim2.new(0.7, 0, 0.1, 0)
+    enableAllButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+    enableAllButton.Text = "All"
+    enableAllButton.TextColor3 = Color3.new(1, 1, 1)
+    enableAllButton.TextScaled = true
+    enableAllButton.Font = Enum.Font.SourceSansBold
+    enableAllButton.Parent = headerFrame
+    
+    local disableAllButton = Instance.new("TextButton")
+    disableAllButton.Size = UDim2.new(0.15, 0, 0.8, 0)
+    disableAllButton.Position = UDim2.new(0.85, 0, 0.1, 0)
+    disableAllButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    disableAllButton.Text = "None"
+    disableAllButton.TextColor3 = Color3.new(1, 1, 1)
+    disableAllButton.TextScaled = true
+    disableAllButton.Font = Enum.Font.SourceSansBold
+    disableAllButton.Parent = headerFrame
+    
+    enableAllButton.MouseButton1Click:Connect(function()
+        toggleCategory(categoryName, true)
+end)
+
+    disableAllButton.MouseButton1Click:Connect(function()
+        toggleCategory(categoryName, false)
+    end)
+
+    return 35
+end
+
+-- Function to create toggle button
+local function createToggle(weaponName, displayName, index)
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Size = UDim2.new(1, -20, 0, 25)
+    toggleFrame.Position = UDim2.new(0, 15, 0, (index - 1) * 35)
+    toggleFrame.BackgroundTransparency = 1
+    toggleFrame.Parent = scrollFrame
+    
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(0, 20, 0, 20)
+    toggleButton.Position = UDim2.new(0, 0, 0, 2.5)
+    toggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    toggleButton.Text = ""
+    toggleButton.Parent = toggleFrame
+    
+    local toggleLabel = Instance.new("TextLabel")
+    toggleLabel.Size = UDim2.new(1, -25, 1, 0)
+    toggleLabel.Position = UDim2.new(0, 25, 0, 0)
+    toggleLabel.BackgroundTransparency = 1
+    toggleLabel.Text = weaponName .. " - " .. displayName
+    toggleLabel.TextColor3 = Color3.new(1, 1, 1)
+    toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    toggleLabel.TextScaled = true
+    toggleLabel.Font = Enum.Font.SourceSans
+    toggleLabel.Parent = toggleFrame
+    
+    toggles[weaponName] = {button = toggleButton, enabled = false}
+    
+    toggleButton.MouseButton1Click:Connect(function()
+        toggles[weaponName].enabled = not toggles[weaponName].enabled
+        if toggles[weaponName].enabled then
+            toggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+    else
+            toggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+end
+                    updateHighlights()
+    end)
+
+    return 35
+        end
+
+-- Create toggles for all weapons organized by categories
+local currentIndex = 1
+for categoryName, weapons in pairs(weaponCategories) do
+    currentIndex = currentIndex + createCategoryHeader(categoryName, currentIndex) / 35
+    for weaponName, displayName in pairs(weapons) do
+        currentIndex = currentIndex + createToggle(weaponName, displayName, currentIndex) / 35
+    end
+    currentIndex = currentIndex + 0.5 -- Add spacing between categories
+    end
+
+-- Update scroll frame canvas size
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, currentIndex * 35)
+
+-- Connect master buttons
+enableAllMasterButton.MouseButton1Click:Connect(function()
+    toggleAllCategories(true)
+end)
+
+disableAllMasterButton.MouseButton1Click:Connect(function()
+    toggleAllCategories(false)
+end)
+
+-- Function to create billboard gui
+local function createBillboard(character, weaponName)
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 100, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = math.huge
+    billboard.Parent = humanoidRootPart
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    
+    -- Find display name from categories
+    local displayName = weaponName
+    for categoryName, weapons in pairs(weaponCategories) do
+        if weapons[weaponName] then
+            displayName = weapons[weaponName]
+            break
+        end
+    end
+    
+    textLabel.Text = displayName
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.TextStrokeTransparency = 0
+    textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    textLabel.Parent = billboard
+
+    -- Update billboard size based on distance
+    local camera = workspace.CurrentCamera
+    local runService = game:GetService("RunService")
+    
+    local connection
+    connection = runService.Heartbeat:Connect(function()
+        if humanoidRootPart.Parent and camera then
+            local distance = (camera.CFrame.Position - humanoidRootPart.Position).Magnitude
+            local scale = math.max(0.5, math.min(2, 100 / distance))
+            billboard.Size = UDim2.new(0, 100 * scale, 0, 50 * scale)
+        else
+            connection:Disconnect()
+        end
+    end)
+    
+    return billboard
+end
+
+-- Function to check if character has weapon
+local function getCharacterWeapon(character)
+    for _, weapons in pairs(weaponCategories) do
+        for weaponName, _ in pairs(weapons) do
+            if character:FindFirstChild(weaponName) then
+                return weaponName
+        end
+        end
+    end
+    return nil
+end
+
+-- Function to apply highlight
+local function applyHighlight(character)
+    if character and character:IsA("Model") then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            local plr = game.Players:GetPlayerFromCharacter(character)
+            if not plr then
+                local weaponName = getCharacterWeapon(character)
+                if weaponName and not highlights[character] then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Parent = character
+
+                    local billboard = createBillboard(character, weaponName)
+                    
+                    highlights[character] = {
+                        highlight = highlight,
+                        billboard = billboard,
+                        weaponName = weaponName
+                    }
+                    
+                    updateHighlights()
+    end
+    end
+end
+    end
+end
+-- Function to update highlights based on toggles
+function updateHighlights()
+    for character, data in pairs(highlights) do
+        if character.Parent and toggles[data.weaponName] then
+            data.highlight.Enabled = toggles[data.weaponName].enabled
+            if data.billboard then
+                data.billboard.Enabled = toggles[data.weaponName].enabled
+            end
+        else
+            if data.highlight then data.highlight:Destroy() end
+            if data.billboard then data.billboard:Destroy() end
+            highlights[character] = nil
+        end
+    end
+            end
+-- Function to remove highlight when character is removed
+local function removeHighlight(character)
+    if highlights[character] then
+        if highlights[character].highlight then
+            highlights[character].highlight:Destroy()
+        end
+        if highlights[character].billboard then
+            highlights[character].billboard:Destroy()
+        end
+        highlights[character] = nil
+    end
+end
+
+-- Function to toggle GUI visibility
+local function toggleGUI()
+    guiVisible = not guiVisible
+    screenGui.Enabled = guiVisible
+end
+
+-- Function to recreate GUI when screen changes
+local function recreateGUI()
+    if screenGui.Parent == nil then
+        screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    end
+end
+
+-- Connect keybind for toggling GUI
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.Minus then
+        toggleGUI()
+    end
+end)
+
+-- Monitor for screen changes
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    wait(1)
+    recreateGUI()
+end)
+
+-- Monitor for model spawning
+workspace.DescendantAdded:Connect(function(descendant)
+    if descendant:IsA("Model") then
+        wait(0.1) -- Wait for model to fully load
+        applyHighlight(descendant)
+    elseif descendant:IsA("Humanoid") then
+        wait(0.1)
+        local character = descendant.Parent
+        if character then
+            applyHighlight(character)
+            
+            -- Connect to humanoid died event
+            descendant.Died:Connect(function()
+                wait(0.1)
+                removeHighlight(character)
+            end)
+        end
+    end
+end)
+
+-- Monitor for character removal
+workspace.DescendantRemoving:Connect(function(item)
+    if item:IsA("Model") then
+        if highlights[item] then
+            removeHighlight(item)
+        end
+        end
+end)
+
+-- Initial scan
+for _, item in pairs(workspace:GetDescendants()) do
+    if item:IsA("Model") then
+        applyHighlight(item)
+    end
+end
