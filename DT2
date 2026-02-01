@@ -1,4 +1,5 @@
 -- Create ScreenGui
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DecayingTraitorGUI"
 screenGui.ResetOnSpawn = false
@@ -38,7 +39,7 @@ masterFrame.BorderSizePixel = 0
 masterFrame.Parent = mainFrame
 
 local masterLabel = Instance.new("TextLabel")
-masterLabel.Size = UDim2.new(0.7, 0, 1, 0)
+masterLabel.Size = UDim2.new(0.5, 0, 1, 0)
 masterLabel.Position = UDim2.new(0, 0, 0, 0)
 masterLabel.BackgroundTransparency = 1
 masterLabel.Text = "Master Controls"
@@ -46,6 +47,16 @@ masterLabel.TextColor3 = Color3.new(1, 1, 1)
 masterLabel.TextScaled = true
 masterLabel.Font = Enum.Font.SourceSansBold
 masterLabel.Parent = masterFrame
+
+local playerToggleButton = Instance.new("TextButton")
+playerToggleButton.Size = UDim2.new(0.2, 0, 0.8, 0)
+playerToggleButton.Position = UDim2.new(0.5, 0, 0.1, 0)
+playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+playerToggleButton.Text = "Players"
+playerToggleButton.TextColor3 = Color3.new(1, 1, 1)
+playerToggleButton.TextScaled = true
+playerToggleButton.Font = Enum.Font.SourceSansBold
+playerToggleButton.Parent = masterFrame
 
 local enableAllMasterButton = Instance.new("TextButton")
 enableAllMasterButton.Size = UDim2.new(0.15, 0, 0.8, 0)
@@ -97,7 +108,7 @@ local weaponCategories = {
         ["SCKnife"] = "Knife",
         ["PBaton"] = "Baton",
         ["Rake"] = "Rake",
-        ["SHammer"] = "Hammer",
+        ["SHammer"] = "Sledgehammer",
         ["GhostKnife"] = "Hidden",
         ["SClaw"] = "Sickler",
         ["KitKnife"] = "Hanger"
@@ -131,14 +142,20 @@ local weaponCategories = {
     },
     ["Heavy"] = {
         ["FNLMG"] = "Machine"
-    }
+    },
+    ["Misc"] = {
+        ["NoWeapon"] = "Unknown NPC"
 }
+}
+
 -- Storage for highlights and toggles
 local highlights = {}
 local toggles = {}
 local billboards = {}
 local categoryButtons = {}
 local groupHighlights = {}
+local playerHighlights = {}
+local showPlayers = false
 
 -- Function to toggle all weapons in a category
 local function toggleCategory(categoryName, enabled)
@@ -161,6 +178,17 @@ local function toggleAllCategories(enabled)
         toggleCategory(categoryName, enabled)
             end
     end
+
+-- Function to toggle player highlights
+local function togglePlayerHighlights()
+    showPlayers = not showPlayers
+    if showPlayers then
+        playerToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+    else
+        playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    end
+    updatePlayerHighlights()
+end
 
 -- Function to create category header
 local function createCategoryHeader(categoryName, index)
@@ -275,6 +303,11 @@ disableAllMasterButton.MouseButton1Click:Connect(function()
     toggleAllCategories(false)
 end)
 
+-- Connect player toggle button
+playerToggleButton.MouseButton1Click:Connect(function()
+    togglePlayerHighlights()
+end)
+
 -- Function to create billboard gui
 local function createBillboard(character, weaponName)
     local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
@@ -293,7 +326,7 @@ local function createBillboard(character, weaponName)
     
     -- Find display name from categories
     local displayName = weaponName
-    for categoryName, weapons in pairs(weaponCategories) do
+    for catName, weapons in pairs(weaponCategories) do
         if weapons[weaponName] then
             displayName = weapons[weaponName]
             break
@@ -308,7 +341,7 @@ local function createBillboard(character, weaponName)
     textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
     textLabel.Parent = billboard
 
-    -- Update billboard size based on distance
+    -- Update billboard size and transparency based on distance
     local camera = workspace.CurrentCamera
     local runService = game:GetService("RunService")
     
@@ -316,8 +349,12 @@ local function createBillboard(character, weaponName)
     connection = runService.Heartbeat:Connect(function()
         if humanoidRootPart.Parent and camera then
             local distance = (camera.CFrame.Position - humanoidRootPart.Position).Magnitude
-            local scale = math.max(0.5, math.min(2, 100 / distance))
+            local scale = math.max(0.3, math.min(1.5, 50 / distance))
+            local transparency = math.max(0.1, math.min(0.8, distance / 150))
+            
             billboard.Size = UDim2.new(0, 100 * scale, 0, 50 * scale)
+            textLabel.TextTransparency = transparency
+            textLabel.TextStrokeTransparency = transparency
         else
             connection:Disconnect()
         end
@@ -326,11 +363,55 @@ local function createBillboard(character, weaponName)
     return billboard
 end
 
+-- Function to create player billboard gui
+local function createPlayerBillboard(character, playerName)
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 80, 0, 30)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = math.huge
+    billboard.Parent = humanoidRootPart
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = playerName
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.TextStrokeTransparency = 0
+    textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    textLabel.Parent = billboard
+
+    -- Update billboard size and transparency based on distance
+    local camera = workspace.CurrentCamera
+    local runService = game:GetService("RunService")
+    
+    local connection
+    connection = runService.Heartbeat:Connect(function()
+        if humanoidRootPart.Parent and camera then
+            local distance = (camera.CFrame.Position - humanoidRootPart.Position).Magnitude
+            local scale = math.max(0.3, math.min(1.2, 40 / distance))
+            local transparency = math.max(0.1, math.min(0.8, distance / 150))
+            
+            billboard.Size = UDim2.new(0, 80 * scale, 0, 30 * scale)
+            textLabel.TextTransparency = transparency
+            textLabel.TextStrokeTransparency = transparency
+        else
+            connection:Disconnect()
+        end
+    end)
+    
+    return billboard
+end
 -- Function to check if character has weapon
 local function getCharacterWeapon(character)
     for _, weapons in pairs(weaponCategories) do
         for weaponName, _ in pairs(weapons) do
-            if character:FindFirstChild(weaponName) then
+            if weaponName ~= "NoWeapon" and character:FindFirstChild(weaponName) then
                 return weaponName
         end
         end
@@ -346,24 +427,63 @@ local function applyHighlight(character)
             local plr = game.Players:GetPlayerFromCharacter(character)
             if not plr then
                 local weaponName = getCharacterWeapon(character)
-                if weaponName and not highlights[character] then
+                local actualWeaponName = weaponName or "NoWeapon"
+                if not highlights[character] then
                     local highlight = Instance.new("Highlight")
                     highlight.Parent = character
 
-                    local billboard = createBillboard(character, weaponName)
+                    -- Set highlight color based on weapon type
+                    if weaponName then
+                        highlight.FillColor = Color3.new(1, 1, 0) -- Yellow for detected weapons
+                        highlight.OutlineColor = Color3.new(1, 1, 1) -- White outline for weapons
+        else
+                        highlight.FillColor = Color3.new(1, 0, 0) -- Red for no weapon
+                        highlight.OutlineColor = Color3.new(1, 0, 0) -- Red outline for no weapon
+    end
+
+                    local billboard = createBillboard(character, actualWeaponName)
                     
                     highlights[character] = {
                         highlight = highlight,
                         billboard = billboard,
-                        weaponName = weaponName
+                        weaponName = actualWeaponName
                     }
                     
                     updateHighlights()
-    end
+            end
+        end
+        end
     end
 end
+
+-- Function to apply player highlight
+local function applyPlayerHighlight(character)
+    if character and character:IsA("Model") then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            local plr = game.Players:GetPlayerFromCharacter(character)
+            if plr and plr ~= game.Players.LocalPlayer then
+                if not playerHighlights[character] then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Parent = character
+                    highlight.FillColor = Color3.new(0, 0.8, 0.8) -- Teal color
+                    highlight.OutlineColor = Color3.new(0, 1, 1) -- Bright teal outline
+                    
+                    local billboard = createPlayerBillboard(character, plr.DisplayName)
+                    
+                    playerHighlights[character] = {
+                        highlight = highlight,
+                        billboard = billboard,
+                        player = plr
+                    }
+                    
+                    updatePlayerHighlights()
+                end
+            end
+        end
     end
 end
+
 -- Function to update highlights based on toggles
 function updateHighlights()
     for character, data in pairs(highlights) do
@@ -371,14 +491,31 @@ function updateHighlights()
             data.highlight.Enabled = toggles[data.weaponName].enabled
             if data.billboard then
                 data.billboard.Enabled = toggles[data.weaponName].enabled
+end
+        else
+            if data.highlight then data.highlight:Destroy() end
+            if data.billboard then data.billboard:Destroy() end
+        highlights[character] = nil
+    end
+end
+        end
+
+-- Function to update player highlights
+function updatePlayerHighlights()
+    for character, data in pairs(playerHighlights) do
+        if character.Parent and data.player then
+            data.highlight.Enabled = showPlayers
+            if data.billboard then
+                data.billboard.Enabled = showPlayers
             end
         else
             if data.highlight then data.highlight:Destroy() end
             if data.billboard then data.billboard:Destroy() end
-            highlights[character] = nil
+            playerHighlights[character] = nil
         end
     end
-            end
+end
+
 -- Function to remove highlight when character is removed
 local function removeHighlight(character)
     if highlights[character] then
@@ -387,8 +524,21 @@ local function removeHighlight(character)
         end
         if highlights[character].billboard then
             highlights[character].billboard:Destroy()
-        end
+end
         highlights[character] = nil
+    end
+end
+
+-- Function to remove player highlight when character is removed
+local function removePlayerHighlight(character)
+    if playerHighlights[character] then
+        if playerHighlights[character].highlight then
+            playerHighlights[character].highlight:Destroy()
+        end
+        if playerHighlights[character].billboard then
+            playerHighlights[character].billboard:Destroy()
+        end
+        playerHighlights[character] = nil
     end
 end
 
@@ -396,7 +546,7 @@ end
 local function toggleGUI()
     guiVisible = not guiVisible
     screenGui.Enabled = guiVisible
-end
+        end
 
 -- Function to recreate GUI when screen changes
 local function recreateGUI()
@@ -409,7 +559,7 @@ end
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.Minus then
         toggleGUI()
-    end
+        end
 end)
 
 -- Monitor for screen changes
@@ -423,19 +573,22 @@ workspace.DescendantAdded:Connect(function(descendant)
     if descendant:IsA("Model") then
         wait(0.1) -- Wait for model to fully load
         applyHighlight(descendant)
+        applyPlayerHighlight(descendant)
     elseif descendant:IsA("Humanoid") then
         wait(0.1)
         local character = descendant.Parent
         if character then
             applyHighlight(character)
+            applyPlayerHighlight(character)
             
             -- Connect to humanoid died event
             descendant.Died:Connect(function()
                 wait(0.1)
                 removeHighlight(character)
+                removePlayerHighlight(character)
             end)
-        end
     end
+end
 end)
 
 -- Monitor for character removal
@@ -444,12 +597,25 @@ workspace.DescendantRemoving:Connect(function(item)
         if highlights[item] then
             removeHighlight(item)
         end
+        if playerHighlights[item] then
+            removePlayerHighlight(item)
         end
+    end
+end)
+
+-- Monitor for player leaving
+game.Players.PlayerRemoving:Connect(function(player)
+    for character, data in pairs(playerHighlights) do
+        if data.player == player then
+            removePlayerHighlight(character)
+        end
+    end
 end)
 
 -- Initial scan
 for _, item in pairs(workspace:GetDescendants()) do
     if item:IsA("Model") then
         applyHighlight(item)
+        applyPlayerHighlight(item)
     end
 end
