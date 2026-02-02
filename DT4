@@ -106,6 +106,19 @@ scrollFrame.BackgroundTransparency = 1
 scrollFrame.ScrollBarThickness = 8
 scrollFrame.Parent = mainFrame
 
+-- Ammo categories
+local ammoCategories = {
+    ["Ammo"] = {
+        ["Shells"] = "Shells",
+        ["Small ammo"] = "Small ammo",
+        ["Long ammo"] = "Long ammo",
+        ["Short ammo"] = "Short ammo",
+        ["Heavy ammo"] = "Heavy ammo",
+        ["Medium ammo"] = "Medium ammo",
+        ["Light ammo"] = "Light ammo"
+    }
+}
+
 -- Weapon mappings organized by categories
 local weaponCategories = {
     ["Melee"] = {
@@ -177,13 +190,15 @@ local groupHighlights = {}
 local playerHighlights = {}
 local crateHighlights = {}
 local workbenchHighlights = {}
+local ammoHighlights = {}
 local showPlayers = false
 local showCrates = false
 local showWorkbenches = false
 
 -- Function to toggle all weapons in a category
 local function toggleCategory(categoryName, enabled)
-    for weaponName, _ in pairs(weaponCategories[categoryName]) do
+    local categories = categoryName == "Ammo" and ammoCategories or weaponCategories
+    for weaponName, _ in pairs(categories[categoryName]) do
         if toggles[weaponName] then
             toggles[weaponName].enabled = enabled
             if enabled then
@@ -193,15 +208,22 @@ local function toggleCategory(categoryName, enabled)
             end
         end
     end
-                    updateHighlights()
-                end
+    if categoryName == "Ammo" then
+        updateAmmoHighlights()
+    else
+        updateHighlights()
+    end
+end
 
 -- Function to toggle all categories
 local function toggleAllCategories(enabled)
+    for categoryName, _ in pairs(ammoCategories) do
+        toggleCategory(categoryName, enabled)
+    end
     for categoryName, _ in pairs(weaponCategories) do
         toggleCategory(categoryName, enabled)
-            end
     end
+end
 
 -- Function to toggle player highlights
 local function togglePlayerHighlights()
@@ -211,30 +233,28 @@ local function togglePlayerHighlights()
     else
         playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
     end
-    updatePlayerHighlights()
-end
-
+                    updatePlayerHighlights()
+                end
 -- Function to toggle crate highlights
 local function toggleCrateHighlights()
     showCrates = not showCrates
     if showCrates then
         crateToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-    else
+        else
         crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
     end
     updateCrateHighlights()
 end
-
 -- Function to toggle workbench highlights
 local function toggleWorkbenchHighlights()
     showWorkbenches = not showWorkbenches
     if showWorkbenches then
         workbenchToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-    else
+        else
         workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-    end
+        end
     updateWorkbenchHighlights()
-end
+    end
 
 -- Function to create category header
 local function createCategoryHeader(categoryName, index)
@@ -278,16 +298,16 @@ local function createCategoryHeader(categoryName, index)
     enableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, true)
 end)
-    
+
     disableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, false)
-    end)
+end)
 
     return 35
-end
+    end
 
 -- Function to create toggle button
-local function createToggle(weaponName, displayName, index)
+local function createToggle(weaponName, displayName, index, isAmmo)
     local toggleFrame = Instance.new("Frame")
     toggleFrame.Size = UDim2.new(1, -20, 0, 25)
     toggleFrame.Position = UDim2.new(0, 15, 0, (index - 1) * 35)
@@ -312,7 +332,7 @@ local function createToggle(weaponName, displayName, index)
     toggleLabel.Font = Enum.Font.SourceSans
     toggleLabel.Parent = toggleFrame
     
-    toggles[weaponName] = {button = toggleButton, enabled = false}
+    toggles[weaponName] = {button = toggleButton, enabled = false, isAmmo = isAmmo or false}
     
     toggleButton.MouseButton1Click:Connect(function()
         toggles[weaponName].enabled = not toggles[weaponName].enabled
@@ -321,22 +341,33 @@ local function createToggle(weaponName, displayName, index)
     else
             toggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 end
-                    updateHighlights()
-    end)
+        if isAmmo then
+            updateAmmoHighlights()
+        else
+            updateHighlights()
+        end
+end)
 
     return 35
         end
 
--- Create toggles for all weapons organized by categories
+-- Create toggles for ammo first, then weapons organized by categories
 local currentIndex = 1
+for categoryName, ammo in pairs(ammoCategories) do
+    currentIndex = currentIndex + createCategoryHeader(categoryName, currentIndex) / 35
+    for ammoName, displayName in pairs(ammo) do
+        currentIndex = currentIndex + createToggle(ammoName, displayName, currentIndex, true) / 35
+    end
+    currentIndex = currentIndex + 0.5 -- Add spacing between categories
+end
+
 for categoryName, weapons in pairs(weaponCategories) do
     currentIndex = currentIndex + createCategoryHeader(categoryName, currentIndex) / 35
     for weaponName, displayName in pairs(weapons) do
-        currentIndex = currentIndex + createToggle(weaponName, displayName, currentIndex) / 35
+        currentIndex = currentIndex + createToggle(weaponName, displayName, currentIndex, false) / 35
     end
     currentIndex = currentIndex + 0.5 -- Add spacing between categories
-    end
-
+end
 -- Update scroll frame canvas size
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, currentIndex * 35)
 
@@ -628,6 +659,33 @@ local function applyWorkbenchHighlight(object)
     end
 end
 
+-- Function to apply ammo highlight
+local function applyAmmoHighlight(object)
+    if object and object:IsA("Model") then
+        for ammoName, displayName in pairs(ammoCategories["Ammo"]) do
+            if object.Name == ammoName then
+                if not ammoHighlights[object] then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Parent = object
+                    highlight.FillColor = Color3.new(0, 1, 0) -- Green color
+                    highlight.OutlineColor = Color3.new(0, 0.8, 0) -- Dark green outline
+                    
+                    local billboard = createObjectBillboard(object, displayName)
+                    
+                    ammoHighlights[object] = {
+                        highlight = highlight,
+                        billboard = billboard,
+                        ammoName = ammoName
+                    }
+                    
+                    updateAmmoHighlights()
+                end
+                break
+            end
+        end
+    end
+end
+
 -- Function to update highlights based on toggles
 function updateHighlights()
     for character, data in pairs(highlights) do
@@ -692,6 +750,22 @@ function updateWorkbenchHighlights()
     end
 end
 
+-- Function to update ammo highlights
+function updateAmmoHighlights()
+    for object, data in pairs(ammoHighlights) do
+        if object.Parent and toggles[data.ammoName] then
+            data.highlight.Enabled = toggles[data.ammoName].enabled
+            if data.billboard then
+                data.billboard.Enabled = toggles[data.ammoName].enabled
+            end
+        else
+            if data.highlight then data.highlight:Destroy() end
+            if data.billboard then data.billboard:Destroy() end
+            ammoHighlights[object] = nil
+        end
+    end
+end
+
 -- Function to remove highlight when character is removed
 local function removeHighlight(character)
     if highlights[character] then
@@ -744,6 +818,19 @@ local function removeWorkbenchHighlight(object)
     end
 end
 
+-- Function to remove ammo highlight when object is removed
+local function removeAmmoHighlight(object)
+    if ammoHighlights[object] then
+        if ammoHighlights[object].highlight then
+            ammoHighlights[object].highlight:Destroy()
+        end
+        if ammoHighlights[object].billboard then
+            ammoHighlights[object].billboard:Destroy()
+        end
+        ammoHighlights[object] = nil
+    end
+end
+
 -- Function to toggle GUI visibility
 local function toggleGUI()
     guiVisible = not guiVisible
@@ -778,6 +865,7 @@ workspace.DescendantAdded:Connect(function(descendant)
         applyPlayerHighlight(descendant)
         applyCrateHighlight(descendant)
         applyWorkbenchHighlight(descendant)
+        applyAmmoHighlight(descendant)
     elseif descendant:IsA("Humanoid") then
         wait(0.1)
         local character = descendant.Parent
@@ -810,6 +898,9 @@ workspace.DescendantRemoving:Connect(function(item)
         if workbenchHighlights[item] then
             removeWorkbenchHighlight(item)
         end
+        if ammoHighlights[item] then
+            removeAmmoHighlight(item)
+        end
     end
 end)
 
@@ -829,5 +920,6 @@ for _, item in pairs(workspace:GetDescendants()) do
         applyPlayerHighlight(item)
         applyCrateHighlight(item)
         applyWorkbenchHighlight(item)
+        applyAmmoHighlight(item)
     end
 end
