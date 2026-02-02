@@ -39,7 +39,7 @@ masterFrame.BorderSizePixel = 0
 masterFrame.Parent = mainFrame
 
 local masterLabel = Instance.new("TextLabel")
-masterLabel.Size = UDim2.new(0.3, 0, 1, 0)
+masterLabel.Size = UDim2.new(0.25, 0, 1, 0)
 masterLabel.Position = UDim2.new(0, 0, 0, 0)
 masterLabel.BackgroundTransparency = 1
 masterLabel.Text = "Master Controls"
@@ -49,8 +49,8 @@ masterLabel.Font = Enum.Font.SourceSansBold
 masterLabel.Parent = masterFrame
 
 local playerToggleButton = Instance.new("TextButton")
-playerToggleButton.Size = UDim2.new(0.12, 0, 0.8, 0)
-playerToggleButton.Position = UDim2.new(0.3, 0, 0.1, 0)
+playerToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
+playerToggleButton.Position = UDim2.new(0.25, 0, 0.1, 0)
 playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 playerToggleButton.Text = "Players"
 playerToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -59,8 +59,8 @@ playerToggleButton.Font = Enum.Font.SourceSansBold
 playerToggleButton.Parent = masterFrame
 
 local crateToggleButton = Instance.new("TextButton")
-crateToggleButton.Size = UDim2.new(0.12, 0, 0.8, 0)
-crateToggleButton.Position = UDim2.new(0.42, 0, 0.1, 0)
+crateToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
+crateToggleButton.Position = UDim2.new(0.35, 0, 0.1, 0)
 crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 crateToggleButton.Text = "Crates"
 crateToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -69,14 +69,24 @@ crateToggleButton.Font = Enum.Font.SourceSansBold
 crateToggleButton.Parent = masterFrame
 
 local workbenchToggleButton = Instance.new("TextButton")
-workbenchToggleButton.Size = UDim2.new(0.12, 0, 0.8, 0)
-workbenchToggleButton.Position = UDim2.new(0.54, 0, 0.1, 0)
+workbenchToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
+workbenchToggleButton.Position = UDim2.new(0.45, 0, 0.1, 0)
 workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 workbenchToggleButton.Text = "Workbench"
 workbenchToggleButton.TextColor3 = Color3.new(1, 1, 1)
 workbenchToggleButton.TextScaled = true
 workbenchToggleButton.Font = Enum.Font.SourceSansBold
 workbenchToggleButton.Parent = masterFrame
+
+local headshotToggleButton = Instance.new("TextButton")
+headshotToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
+headshotToggleButton.Position = UDim2.new(0.55, 0, 0.1, 0)
+headshotToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+headshotToggleButton.Text = "Headshot"
+headshotToggleButton.TextColor3 = Color3.new(1, 1, 1)
+headshotToggleButton.TextScaled = true
+headshotToggleButton.Font = Enum.Font.SourceSansBold
+headshotToggleButton.Parent = masterFrame
 
 local enableAllMasterButton = Instance.new("TextButton")
 enableAllMasterButton.Size = UDim2.new(0.15, 0, 0.8, 0)
@@ -191,9 +201,11 @@ local playerHighlights = {}
 local crateHighlights = {}
 local workbenchHighlights = {}
 local ammoHighlights = {}
+local headshotBoxes = {}
 local showPlayers = false
 local showCrates = false
 local showWorkbenches = false
+local showHeadshotBoxes = false
 
 -- Function to toggle all weapons in a category
 local function toggleCategory(categoryName, enabled)
@@ -256,6 +268,17 @@ local function toggleWorkbenchHighlights()
     updateWorkbenchHighlights()
     end
 
+-- Function to toggle headshot boxes
+local function toggleHeadshotBoxes()
+    showHeadshotBoxes = not showHeadshotBoxes
+    if showHeadshotBoxes then
+        headshotToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+    else
+        headshotToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    end
+    updateHeadshotBoxes()
+end
+
 -- Function to create category header
 local function createCategoryHeader(categoryName, index)
     local headerFrame = Instance.new("Frame")
@@ -305,7 +328,7 @@ end)
 
     return 35
     end
-
+    
 -- Function to create toggle button
 local function createToggle(weaponName, displayName, index, isAmmo)
     local toggleFrame = Instance.new("Frame")
@@ -342,14 +365,14 @@ local function createToggle(weaponName, displayName, index, isAmmo)
             toggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 end
         if isAmmo then
-            updateAmmoHighlights()
+                    updateAmmoHighlights()
         else
             updateHighlights()
-        end
+    end
 end)
 
     return 35
-        end
+end
 
 -- Create toggles for ammo first, then weapons organized by categories
 local currentIndex = 1
@@ -365,9 +388,9 @@ for categoryName, weapons in pairs(weaponCategories) do
     currentIndex = currentIndex + createCategoryHeader(categoryName, currentIndex) / 35
     for weaponName, displayName in pairs(weapons) do
         currentIndex = currentIndex + createToggle(weaponName, displayName, currentIndex, false) / 35
-    end
+        end
     currentIndex = currentIndex + 0.5 -- Add spacing between categories
-end
+            end
 -- Update scroll frame canvas size
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, currentIndex * 35)
 
@@ -383,7 +406,7 @@ end)
 -- Connect player toggle button
 playerToggleButton.MouseButton1Click:Connect(function()
     togglePlayerHighlights()
-end)
+            end)
 
 -- Connect crate toggle button
 crateToggleButton.MouseButton1Click:Connect(function()
@@ -393,6 +416,11 @@ end)
 -- Connect workbench toggle button
 workbenchToggleButton.MouseButton1Click:Connect(function()
     toggleWorkbenchHighlights()
+end)
+
+-- Connect headshot toggle button
+headshotToggleButton.MouseButton1Click:Connect(function()
+    toggleHeadshotBoxes()
 end)
 
 -- Function to create billboard gui
@@ -417,9 +445,8 @@ local function createBillboard(character, weaponName)
         if weapons[weaponName] then
             displayName = weapons[weaponName]
             break
-        end
     end
-    
+end
     textLabel.Text = displayName
     textLabel.TextColor3 = Color3.new(1, 1, 1)
     textLabel.TextScaled = true
@@ -536,6 +563,28 @@ local function createObjectBillboard(object, text)
             connection:Disconnect()
         end
     end)
+    
+    return billboard
+end
+
+-- Function to create headshot box
+local function createHeadshotBox(character)
+    local head = character:FindFirstChild("Head")
+    if not head then return end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(2, 0, 2, 0)
+    billboard.StudsOffset = Vector3.new(0, 0, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = math.huge
+    billboard.Parent = head
+    
+    local box = Instance.new("Frame")
+    box.Size = UDim2.new(1, 0, 1, 0)
+    box.BackgroundColor3 = Color3.new(0, 0, 1)
+    box.BackgroundTransparency = 0.5
+    box.BorderSizePixel = 0
+    box.Parent = billboard
     
     return billboard
 end
@@ -686,6 +735,27 @@ local function applyAmmoHighlight(object)
     end
 end
 
+-- Function to apply headshot box
+local function applyHeadshotBox(character)
+    if character and character:IsA("Model") then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            local plr = game.Players:GetPlayerFromCharacter(character)
+            if not plr then
+                if not headshotBoxes[character] then
+                    local box = createHeadshotBox(character)
+                    if box then
+                        headshotBoxes[character] = {
+                            box = box
+                        }
+                        updateHeadshotBoxes()
+                    end
+                end
+            end
+        end
+    end
+end
+
 -- Function to update highlights based on toggles
 function updateHighlights()
     for character, data in pairs(highlights) do
@@ -766,6 +836,18 @@ function updateAmmoHighlights()
     end
 end
 
+-- Function to update headshot boxes
+function updateHeadshotBoxes()
+    for character, data in pairs(headshotBoxes) do
+        if character.Parent then
+            data.box.Enabled = showHeadshotBoxes
+        else
+            if data.box then data.box:Destroy() end
+            headshotBoxes[character] = nil
+        end
+    end
+end
+
 -- Function to remove highlight when character is removed
 local function removeHighlight(character)
     if highlights[character] then
@@ -831,6 +913,16 @@ local function removeAmmoHighlight(object)
     end
 end
 
+-- Function to remove headshot box when character is removed
+local function removeHeadshotBox(character)
+    if headshotBoxes[character] then
+        if headshotBoxes[character].box then
+            headshotBoxes[character].box:Destroy()
+        end
+        headshotBoxes[character] = nil
+    end
+end
+
 -- Function to toggle GUI visibility
 local function toggleGUI()
     guiVisible = not guiVisible
@@ -866,18 +958,21 @@ workspace.DescendantAdded:Connect(function(descendant)
         applyCrateHighlight(descendant)
         applyWorkbenchHighlight(descendant)
         applyAmmoHighlight(descendant)
+        applyHeadshotBox(descendant)
     elseif descendant:IsA("Humanoid") then
         wait(0.1)
         local character = descendant.Parent
         if character then
             applyHighlight(character)
             applyPlayerHighlight(character)
+            applyHeadshotBox(character)
             
             -- Connect to humanoid died event
             descendant.Died:Connect(function()
                 wait(0.1)
                 removeHighlight(character)
                 removePlayerHighlight(character)
+                removeHeadshotBox(character)
             end)
     end
 end
@@ -901,6 +996,9 @@ workspace.DescendantRemoving:Connect(function(item)
         if ammoHighlights[item] then
             removeAmmoHighlight(item)
         end
+        if headshotBoxes[item] then
+            removeHeadshotBox(item)
+        end
     end
 end)
 
@@ -921,5 +1019,6 @@ for _, item in pairs(workspace:GetDescendants()) do
         applyCrateHighlight(item)
         applyWorkbenchHighlight(item)
         applyAmmoHighlight(item)
+        applyHeadshotBox(item)
     end
 end
