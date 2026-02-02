@@ -110,12 +110,12 @@ scrollFrame.Parent = mainFrame
 local ammoCategories = {
     ["Ammo"] = {
         ["Shells"] = "Shells",
-        ["Small ammo"] = "Small ammo",
-        ["Long ammo"] = "Long ammo",
-        ["Short ammo"] = "Short ammo",
-        ["Heavy ammo"] = "Heavy ammo",
-        ["Medium ammo"] = "Medium ammo",
-        ["Light ammo"] = "Light ammo"
+        ["Small Ammo"] = "Small Ammo",
+        ["Long Ammo"] = "Long Ammo",
+        ["Short Ammo"] = "Short Ammo",
+        ["Heavy Ammo"] = "Heavy Ammo",
+        ["Medium Ammo"] = "Medium Ammo",
+        ["Light Ammo"] = "Light Ammo"
     }
 }
 
