@@ -39,7 +39,7 @@ masterFrame.BorderSizePixel = 0
 masterFrame.Parent = mainFrame
 
 local masterLabel = Instance.new("TextLabel")
-masterLabel.Size = UDim2.new(0.5, 0, 1, 0)
+masterLabel.Size = UDim2.new(0.3, 0, 1, 0)
 masterLabel.Position = UDim2.new(0, 0, 0, 0)
 masterLabel.BackgroundTransparency = 1
 masterLabel.Text = "Master Controls"
@@ -49,14 +49,34 @@ masterLabel.Font = Enum.Font.SourceSansBold
 masterLabel.Parent = masterFrame
 
 local playerToggleButton = Instance.new("TextButton")
-playerToggleButton.Size = UDim2.new(0.2, 0, 0.8, 0)
-playerToggleButton.Position = UDim2.new(0.5, 0, 0.1, 0)
+playerToggleButton.Size = UDim2.new(0.12, 0, 0.8, 0)
+playerToggleButton.Position = UDim2.new(0.3, 0, 0.1, 0)
 playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 playerToggleButton.Text = "Players"
 playerToggleButton.TextColor3 = Color3.new(1, 1, 1)
 playerToggleButton.TextScaled = true
 playerToggleButton.Font = Enum.Font.SourceSansBold
 playerToggleButton.Parent = masterFrame
+
+local crateToggleButton = Instance.new("TextButton")
+crateToggleButton.Size = UDim2.new(0.12, 0, 0.8, 0)
+crateToggleButton.Position = UDim2.new(0.42, 0, 0.1, 0)
+crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+crateToggleButton.Text = "Crates"
+crateToggleButton.TextColor3 = Color3.new(1, 1, 1)
+crateToggleButton.TextScaled = true
+crateToggleButton.Font = Enum.Font.SourceSansBold
+crateToggleButton.Parent = masterFrame
+
+local workbenchToggleButton = Instance.new("TextButton")
+workbenchToggleButton.Size = UDim2.new(0.12, 0, 0.8, 0)
+workbenchToggleButton.Position = UDim2.new(0.54, 0, 0.1, 0)
+workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+workbenchToggleButton.Text = "Workbench"
+workbenchToggleButton.TextColor3 = Color3.new(1, 1, 1)
+workbenchToggleButton.TextScaled = true
+workbenchToggleButton.Font = Enum.Font.SourceSansBold
+workbenchToggleButton.Parent = masterFrame
 
 local enableAllMasterButton = Instance.new("TextButton")
 enableAllMasterButton.Size = UDim2.new(0.15, 0, 0.8, 0)
@@ -155,7 +175,11 @@ local billboards = {}
 local categoryButtons = {}
 local groupHighlights = {}
 local playerHighlights = {}
+local crateHighlights = {}
+local workbenchHighlights = {}
 local showPlayers = false
+local showCrates = false
+local showWorkbenches = false
 
 -- Function to toggle all weapons in a category
 local function toggleCategory(categoryName, enabled)
@@ -188,6 +212,28 @@ local function togglePlayerHighlights()
         playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
     end
     updatePlayerHighlights()
+end
+
+-- Function to toggle crate highlights
+local function toggleCrateHighlights()
+    showCrates = not showCrates
+    if showCrates then
+        crateToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+    else
+        crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    end
+    updateCrateHighlights()
+end
+
+-- Function to toggle workbench highlights
+local function toggleWorkbenchHighlights()
+    showWorkbenches = not showWorkbenches
+    if showWorkbenches then
+        workbenchToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+    else
+        workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    end
+    updateWorkbenchHighlights()
 end
 
 -- Function to create category header
@@ -232,7 +278,7 @@ local function createCategoryHeader(categoryName, index)
     enableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, true)
 end)
-
+    
     disableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, false)
     end)
@@ -306,6 +352,16 @@ end)
 -- Connect player toggle button
 playerToggleButton.MouseButton1Click:Connect(function()
     togglePlayerHighlights()
+end)
+
+-- Connect crate toggle button
+crateToggleButton.MouseButton1Click:Connect(function()
+    toggleCrateHighlights()
+end)
+
+-- Connect workbench toggle button
+workbenchToggleButton.MouseButton1Click:Connect(function()
+    toggleWorkbenchHighlights()
 end)
 
 -- Function to create billboard gui
@@ -407,6 +463,52 @@ local function createPlayerBillboard(character, playerName)
     
     return billboard
 end
+
+-- Function to create object billboard gui
+local function createObjectBillboard(object, text)
+    local primaryPart = object.PrimaryPart or object:FindFirstChildOfClass("Part")
+    if not primaryPart then return end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 80, 0, 30)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = math.huge
+    billboard.Parent = primaryPart
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.TextStrokeTransparency = 0
+    textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    textLabel.Parent = billboard
+
+    -- Update billboard size and transparency based on distance
+    local camera = workspace.CurrentCamera
+    local runService = game:GetService("RunService")
+    
+    local connection
+    connection = runService.Heartbeat:Connect(function()
+        if primaryPart.Parent and camera then
+            local distance = (camera.CFrame.Position - primaryPart.Position).Magnitude
+            local scale = math.max(0.3, math.min(1.2, 40 / distance))
+            local transparency = math.max(0.1, math.min(0.8, distance / 150))
+            
+            billboard.Size = UDim2.new(0, 80 * scale, 0, 30 * scale)
+            textLabel.TextTransparency = transparency
+            textLabel.TextStrokeTransparency = transparency
+        else
+            connection:Disconnect()
+        end
+    end)
+    
+    return billboard
+end
+
 -- Function to check if character has weapon
 local function getCharacterWeapon(character)
     for _, weapons in pairs(weaponCategories) do
@@ -484,6 +586,48 @@ local function applyPlayerHighlight(character)
     end
 end
 
+-- Function to apply crate highlight
+local function applyCrateHighlight(object)
+    if object and object:IsA("Model") and object.Name == "Crate" then
+        if not crateHighlights[object] then
+            local highlight = Instance.new("Highlight")
+            highlight.Parent = object
+            highlight.FillColor = Color3.new(0.8, 0.4, 0) -- Orange color
+            highlight.OutlineColor = Color3.new(1, 0.5, 0) -- Bright orange outline
+            
+            local billboard = createObjectBillboard(object, "Crate")
+            
+            crateHighlights[object] = {
+                highlight = highlight,
+                billboard = billboard
+            }
+            
+            updateCrateHighlights()
+        end
+    end
+end
+
+-- Function to apply workbench highlight
+local function applyWorkbenchHighlight(object)
+    if object and object:IsA("Model") and object.Name == "Workbench" then
+        if not workbenchHighlights[object] then
+            local highlight = Instance.new("Highlight")
+            highlight.Parent = object
+            highlight.FillColor = Color3.new(0.6, 0.3, 0.8) -- Purple color
+            highlight.OutlineColor = Color3.new(0.8, 0.4, 1) -- Bright purple outline
+            
+            local billboard = createObjectBillboard(object, "Workbench")
+            
+            workbenchHighlights[object] = {
+                highlight = highlight,
+                billboard = billboard
+            }
+            
+            updateWorkbenchHighlights()
+        end
+    end
+end
+
 -- Function to update highlights based on toggles
 function updateHighlights()
     for character, data in pairs(highlights) do
@@ -516,6 +660,38 @@ function updatePlayerHighlights()
     end
 end
 
+-- Function to update crate highlights
+function updateCrateHighlights()
+    for object, data in pairs(crateHighlights) do
+        if object.Parent then
+            data.highlight.Enabled = showCrates
+            if data.billboard then
+                data.billboard.Enabled = showCrates
+            end
+        else
+            if data.highlight then data.highlight:Destroy() end
+            if data.billboard then data.billboard:Destroy() end
+            crateHighlights[object] = nil
+        end
+    end
+end
+
+-- Function to update workbench highlights
+function updateWorkbenchHighlights()
+    for object, data in pairs(workbenchHighlights) do
+        if object.Parent then
+            data.highlight.Enabled = showWorkbenches
+            if data.billboard then
+                data.billboard.Enabled = showWorkbenches
+            end
+        else
+            if data.highlight then data.highlight:Destroy() end
+            if data.billboard then data.billboard:Destroy() end
+            workbenchHighlights[object] = nil
+        end
+    end
+end
+
 -- Function to remove highlight when character is removed
 local function removeHighlight(character)
     if highlights[character] then
@@ -539,6 +715,32 @@ local function removePlayerHighlight(character)
             playerHighlights[character].billboard:Destroy()
         end
         playerHighlights[character] = nil
+    end
+end
+
+-- Function to remove crate highlight when object is removed
+local function removeCrateHighlight(object)
+    if crateHighlights[object] then
+        if crateHighlights[object].highlight then
+            crateHighlights[object].highlight:Destroy()
+        end
+        if crateHighlights[object].billboard then
+            crateHighlights[object].billboard:Destroy()
+        end
+        crateHighlights[object] = nil
+    end
+end
+
+-- Function to remove workbench highlight when object is removed
+local function removeWorkbenchHighlight(object)
+    if workbenchHighlights[object] then
+        if workbenchHighlights[object].highlight then
+            workbenchHighlights[object].highlight:Destroy()
+        end
+        if workbenchHighlights[object].billboard then
+            workbenchHighlights[object].billboard:Destroy()
+        end
+        workbenchHighlights[object] = nil
     end
 end
 
@@ -574,6 +776,8 @@ workspace.DescendantAdded:Connect(function(descendant)
         wait(0.1) -- Wait for model to fully load
         applyHighlight(descendant)
         applyPlayerHighlight(descendant)
+        applyCrateHighlight(descendant)
+        applyWorkbenchHighlight(descendant)
     elseif descendant:IsA("Humanoid") then
         wait(0.1)
         local character = descendant.Parent
@@ -600,6 +804,12 @@ workspace.DescendantRemoving:Connect(function(item)
         if playerHighlights[item] then
             removePlayerHighlight(item)
         end
+        if crateHighlights[item] then
+            removeCrateHighlight(item)
+        end
+        if workbenchHighlights[item] then
+            removeWorkbenchHighlight(item)
+        end
     end
 end)
 
@@ -617,5 +827,7 @@ for _, item in pairs(workspace:GetDescendants()) do
     if item:IsA("Model") then
         applyHighlight(item)
         applyPlayerHighlight(item)
+        applyCrateHighlight(item)
+        applyWorkbenchHighlight(item)
     end
 end
