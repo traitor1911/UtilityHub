@@ -48,7 +48,7 @@ masterLabel.Font = Enum.Font.SourceSansBold
 masterLabel.Parent = masterFrame
 
 local playerToggleButton = Instance.new("TextButton")
-playerToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
+playerToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
 playerToggleButton.Position = UDim2.new(0.15, 0, 0.1, 0)
 playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 playerToggleButton.Text = "Players"
@@ -58,8 +58,8 @@ playerToggleButton.Font = Enum.Font.SourceSansBold
 playerToggleButton.Parent = masterFrame
 
 local crateToggleButton = Instance.new("TextButton")
-crateToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
-crateToggleButton.Position = UDim2.new(0.25, 0, 0.1, 0)
+crateToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
+crateToggleButton.Position = UDim2.new(0.23, 0, 0.1, 0)
 crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 crateToggleButton.Text = "Crates"
 crateToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -68,8 +68,8 @@ crateToggleButton.Font = Enum.Font.SourceSansBold
 crateToggleButton.Parent = masterFrame
 
 local workbenchToggleButton = Instance.new("TextButton")
-workbenchToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
-workbenchToggleButton.Position = UDim2.new(0.35, 0, 0.1, 0)
+workbenchToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
+workbenchToggleButton.Position = UDim2.new(0.31, 0, 0.1, 0)
 workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 workbenchToggleButton.Text = "Workbench"
 workbenchToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -78,8 +78,8 @@ workbenchToggleButton.Font = Enum.Font.SourceSansBold
 workbenchToggleButton.Parent = masterFrame
 
 local headshotToggleButton = Instance.new("TextButton")
-headshotToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
-headshotToggleButton.Position = UDim2.new(0.45, 0, 0.1, 0)
+headshotToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
+headshotToggleButton.Position = UDim2.new(0.39, 0, 0.1, 0)
 headshotToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 headshotToggleButton.Text = "Headshot"
 headshotToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -88,8 +88,8 @@ headshotToggleButton.Font = Enum.Font.SourceSansBold
 headshotToggleButton.Parent = masterFrame
 
 local healthToggleButton = Instance.new("TextButton")
-healthToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
-healthToggleButton.Position = UDim2.new(0.55, 0, 0.1, 0)
+healthToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
+healthToggleButton.Position = UDim2.new(0.47, 0, 0.1, 0)
 healthToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 healthToggleButton.Text = "Health"
 healthToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -98,8 +98,8 @@ healthToggleButton.Font = Enum.Font.SourceSansBold
 healthToggleButton.Parent = masterFrame
 
 local aimToggleButton = Instance.new("TextButton")
-aimToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-aimToggleButton.Position = UDim2.new(0.65, 0, 0.1, 0)
+aimToggleButton.Size = UDim2.new(0.06, 0, 0.8, 0)
+aimToggleButton.Position = UDim2.new(0.55, 0, 0.1, 0)
 aimToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 aimToggleButton.Text = "Aim"
 aimToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -107,9 +107,19 @@ aimToggleButton.TextScaled = true
 aimToggleButton.Font = Enum.Font.SourceSansBold
 aimToggleButton.Parent = masterFrame
 
+local autoLockToggleButton = Instance.new("TextButton")
+autoLockToggleButton.Size = UDim2.new(0.06, 0, 0.8, 0)
+autoLockToggleButton.Position = UDim2.new(0.61, 0, 0.1, 0)
+autoLockToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+autoLockToggleButton.Text = "Auto"
+autoLockToggleButton.TextColor3 = Color3.new(1, 1, 1)
+autoLockToggleButton.TextScaled = true
+autoLockToggleButton.Font = Enum.Font.SourceSansBold
+autoLockToggleButton.Parent = masterFrame
+
 local enableAllMasterButton = Instance.new("TextButton")
 enableAllMasterButton.Size = UDim2.new(0.12, 0, 0.8, 0)
-enableAllMasterButton.Position = UDim2.new(0.73, 0, 0.1, 0)
+enableAllMasterButton.Position = UDim2.new(0.67, 0, 0.1, 0)
 enableAllMasterButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
 enableAllMasterButton.Text = "All"
 enableAllMasterButton.TextColor3 = Color3.new(1, 1, 1)
@@ -119,7 +129,7 @@ enableAllMasterButton.Parent = masterFrame
 
 local disableAllMasterButton = Instance.new("TextButton")
 disableAllMasterButton.Size = UDim2.new(0.12, 0, 0.8, 0)
-disableAllMasterButton.Position = UDim2.new(0.85, 0, 0.1, 0)
+disableAllMasterButton.Position = UDim2.new(0.79, 0, 0.1, 0)
 disableAllMasterButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 disableAllMasterButton.Text = "None"
 disableAllMasterButton.TextColor3 = Color3.new(1, 1, 1)
@@ -285,6 +295,8 @@ local showWorkbenches = false
 local showHeadshotBoxes = false
 local showHealth = false
 local aimAssistEnabled = false
+local autoLockEnabled = false
+local autoSwitchEnabled = false
 
 -- Aim assist variables
 local Players = game:GetService("Players")
@@ -297,107 +309,7 @@ local targetLock = false
 local lockedHead = nil
 local lockedHumanoid = nil
 
--- Function to toggle all weapons in a category
-local function toggleCategory(categoryName, enabled)
-    local categories = categoryName == "Ammo" and ammoCategories or weaponCategories
-    for weaponName, _ in pairs(categories[categoryName]) do
-        if toggles[weaponName] then
-            toggles[weaponName].enabled = enabled
-            if enabled then
-                toggles[weaponName].button.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
-                toggles[weaponName].button.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
-        end
-end
-    if categoryName == "Ammo" then
-                    updateAmmoHighlights()
-    elseif categoryName == "Weapons" then
-                    updateWeaponHighlights()
-        else
-        updateHighlights()
-        end
-    end
-
--- Function to toggle all categories
-local function toggleAllCategories(enabled)
-    for categoryName, _ in pairs(ammoCategories) do
-        toggleCategory(categoryName, enabled)
-end
-    for categoryName, _ in pairs(weaponCategories) do
-        toggleCategory(categoryName, enabled)
-            end
-        end
--- Function to toggle player highlights
-local function togglePlayerHighlights()
-    showPlayers = not showPlayers
-    if showPlayers then
-        playerToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
-        playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
-    updatePlayerHighlights()
-    end
--- Function to toggle crate highlights
-local function toggleCrateHighlights()
-    showCrates = not showCrates
-    if showCrates then
-        crateToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
-        crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
-    updateCrateHighlights()
-    end
--- Function to toggle workbench highlights
-local function toggleWorkbenchHighlights()
-    showWorkbenches = not showWorkbenches
-    if showWorkbenches then
-        workbenchToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
-        workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
-    updateWorkbenchHighlights()
-    end
-
--- Function to toggle headshot boxes
-local function toggleHeadshotBoxes()
-    showHeadshotBoxes = not showHeadshotBoxes
-    if showHeadshotBoxes then
-        headshotToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
-        headshotToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
-    updateHeadshotBoxes()
-    end
-
--- Function to toggle health display
-local function toggleHealthDisplay()
-    showHealth = not showHealth
-    if showHealth then
-        healthToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
-        healthToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
-    updateHealthDisplay()
-    end
-
--- Function to toggle aim assist
-local function toggleAimAssist()
-    aimAssistEnabled = not aimAssistEnabled
-    if aimAssistEnabled then
-        aimToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
-        aimToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        -- Unlock if currently locked
-        if targetLock then
-            targetLock = false
-            lockedHead = nil
-            lockedHumanoid = nil
-            end
-        end
-    end
-
--- Find NPC head closest to mouse
+-- Find NPC head closest to mouse (infinite range)
 local function getClosestHeadToMouse()
     local closestHead = nil
     local closestHum = nil
@@ -429,12 +341,135 @@ end
     return closestHead, closestHum
         end
 
--- Unlock helper
+-- Lock helper
+local function acquireTarget()
+            lockedHead, lockedHumanoid = getClosestHeadToMouse()
+            end
+
 local function unlock()
     targetLock = false
     lockedHead = nil
     lockedHumanoid = nil
         end
+
+-- Function to toggle all weapons in a category
+local function toggleCategory(categoryName, enabled)
+    local categories = categoryName == "Ammo" and ammoCategories or weaponCategories
+    for weaponName, _ in pairs(categories[categoryName]) do
+        if toggles[weaponName] then
+            toggles[weaponName].enabled = enabled
+            if enabled then
+                toggles[weaponName].button.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        else
+                toggles[weaponName].button.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    end
+        end
+    end
+    if categoryName == "Ammo" then
+                    updateAmmoHighlights()
+    elseif categoryName == "Weapons" then
+                    updateWeaponHighlights()
+        else
+        updateHighlights()
+        end
+        end
+
+-- Function to toggle all categories
+local function toggleAllCategories(enabled)
+    for categoryName, _ in pairs(ammoCategories) do
+        toggleCategory(categoryName, enabled)
+        end
+    for categoryName, _ in pairs(weaponCategories) do
+        toggleCategory(categoryName, enabled)
+        end
+        end
+-- Function to toggle player highlights
+local function togglePlayerHighlights()
+    showPlayers = not showPlayers
+    if showPlayers then
+        playerToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        else
+        playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+        end
+    updatePlayerHighlights()
+        end
+-- Function to toggle crate highlights
+local function toggleCrateHighlights()
+    showCrates = not showCrates
+    if showCrates then
+        crateToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        else
+        crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    end
+    updateCrateHighlights()
+        end
+-- Function to toggle workbench highlights
+local function toggleWorkbenchHighlights()
+    showWorkbenches = not showWorkbenches
+    if showWorkbenches then
+        workbenchToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        else
+        workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    end
+    updateWorkbenchHighlights()
+    end
+
+-- Function to toggle headshot boxes
+local function toggleHeadshotBoxes()
+    showHeadshotBoxes = not showHeadshotBoxes
+    if showHeadshotBoxes then
+        headshotToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        else
+        headshotToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+end
+    updateHeadshotBoxes()
+    end
+-- Function to toggle health display
+local function toggleHealthDisplay()
+    showHealth = not showHealth
+    if showHealth then
+        healthToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        else
+        healthToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+        end
+    updateHealthDisplay()
+    end
+
+-- Function to toggle aim assist
+local function toggleAimAssist()
+    aimAssistEnabled = not aimAssistEnabled
+    if aimAssistEnabled then
+        aimToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        else
+        aimToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+        -- Unlock if currently locked
+        if targetLock then
+            targetLock = false
+            lockedHead = nil
+            lockedHumanoid = nil
+            end
+        end
+    end
+
+-- Function to toggle auto lock
+local function toggleAutoLock()
+    autoLockEnabled = not autoLockEnabled
+    if autoLockEnabled then
+        autoLockToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+    else
+        autoLockToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    end
+end
+
+-- Function to toggle auto switch
+local function toggleAutoSwitch()
+    autoSwitchEnabled = not autoSwitchEnabled
+        if autoSwitchEnabled then
+        autoLockToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        else
+        autoLockToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+        end
+    end
 
 -- Function to create category header
 local function createCategoryHeader(categoryName, index)
@@ -474,10 +509,9 @@ local function createCategoryHeader(categoryName, index)
     disableAllButton.TextScaled = true
     disableAllButton.Font = Enum.Font.SourceSansBold
     disableAllButton.Parent = headerFrame
-    
     enableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, true)
-    end)
+end)
 
     disableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, false)
@@ -540,19 +574,18 @@ for categoryName, ammo in pairs(ammoCategories) do
         currentIndex = currentIndex + createToggle(ammoName, displayName, currentIndex, true, false) / 35
     end
     currentIndex = currentIndex + 0.5 -- Add spacing between categories
-end
+    end
 
 for categoryName, weapons in pairs(weaponCategories) do
     currentIndex = currentIndex + createCategoryHeader(categoryName, currentIndex) / 35
     for weaponName, displayName in pairs(weapons) do
         local isWeapon = categoryName == "Weapons"
         currentIndex = currentIndex + createToggle(weaponName, displayName, currentIndex, false, isWeapon) / 35
-    end
-    currentIndex = currentIndex + 0.5 -- Add spacing between categories
 end
+    currentIndex = currentIndex + 0.5 -- Add spacing between categories
+    end
 -- Update scroll frame canvas size
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, currentIndex * 35)
-
 -- Connect master buttons
 enableAllMasterButton.MouseButton1Click:Connect(function()
     toggleAllCategories(true)
@@ -575,7 +608,7 @@ end)
 -- Connect workbench toggle button
 workbenchToggleButton.MouseButton1Click:Connect(function()
     toggleWorkbenchHighlights()
-end)
+            end)
 
 -- Connect headshot toggle button
 headshotToggleButton.MouseButton1Click:Connect(function()
@@ -590,6 +623,11 @@ end)
 -- Connect aim toggle button
 aimToggleButton.MouseButton1Click:Connect(function()
     toggleAimAssist()
+end)
+
+-- Connect auto lock toggle button
+autoLockToggleButton.MouseButton1Click:Connect(function()
+    toggleAutoSwitch()
 end)
 
 -- Function to create billboard gui
@@ -639,9 +677,8 @@ end    textLabel.Text = displayName
             textLabel.TextStrokeTransparency = transparency
         else
             connection:Disconnect()
-        end
+end
     end)
-    
     return billboard
 end
 
@@ -1269,16 +1306,29 @@ local function recreateGUI()
     end
 end
 
--- Camera follow + death check
+-- Camera follow + auto switch
 RunService.RenderStepped:Connect(function()
-    if not targetLock or not lockedHead or not lockedHumanoid then
-        return
-    end
+    if not targetLock then return end
 
-    -- auto unlock if dead or basically dead
-    if lockedHumanoid.Health <= 1 or not lockedHead.Parent then
-        unlock()
-        return
+    -- if no target or dead → grab next automatically (only if auto switch is enabled)
+    if not lockedHead
+        or not lockedHumanoid
+        or lockedHumanoid.Health <= 1
+        or not lockedHead.Parent then
+
+        if autoSwitchEnabled then
+            acquireTarget()
+
+            if not lockedHead then
+                -- nobody left alive
+                unlock()
+                return
+            end
+        else
+            -- auto switch disabled, just unlock
+            unlock()
+            return
+        end
     end
 
     camera.CFrame = CFrame.new(
@@ -1289,21 +1339,23 @@ end)
 
 -- Connect keybind for toggling GUI
 UIS.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.Minus then
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.Equals then
         toggleGUI()
     end
     
-    -- Y toggle for aim assist
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.Y and aimAssistEnabled then
+    -- Y toggle for aim assist (only works when Auto button is toggled)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.Y and aimAssistEnabled and autoSwitchEnabled then
         if targetLock then
             unlock()
         else
-            lockedHead, lockedHumanoid = getClosestHeadToMouse()
-
-            if lockedHead then
-                targetLock = true
-            end
+            targetLock = true
+            acquireTarget()
         end
+    end
+    
+    -- Minus key toggle for auto switch
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.Minus then
+        toggleAutoSwitch()
     end
 end)
 
