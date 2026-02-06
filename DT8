@@ -38,7 +38,7 @@ masterFrame.BorderSizePixel = 0
 masterFrame.Parent = mainFrame
 
 local masterLabel = Instance.new("TextLabel")
-masterLabel.Size = UDim2.new(0.25, 0, 1, 0)
+masterLabel.Size = UDim2.new(0.15, 0, 1, 0)
 masterLabel.Position = UDim2.new(0, 0, 0, 0)
 masterLabel.BackgroundTransparency = 1
 masterLabel.Text = "Master Controls"
@@ -49,7 +49,7 @@ masterLabel.Parent = masterFrame
 
 local playerToggleButton = Instance.new("TextButton")
 playerToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
-playerToggleButton.Position = UDim2.new(0.25, 0, 0.1, 0)
+playerToggleButton.Position = UDim2.new(0.15, 0, 0.1, 0)
 playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 playerToggleButton.Text = "Players"
 playerToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -59,7 +59,7 @@ playerToggleButton.Parent = masterFrame
 
 local crateToggleButton = Instance.new("TextButton")
 crateToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
-crateToggleButton.Position = UDim2.new(0.35, 0, 0.1, 0)
+crateToggleButton.Position = UDim2.new(0.25, 0, 0.1, 0)
 crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 crateToggleButton.Text = "Crates"
 crateToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -69,7 +69,7 @@ crateToggleButton.Parent = masterFrame
 
 local workbenchToggleButton = Instance.new("TextButton")
 workbenchToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
-workbenchToggleButton.Position = UDim2.new(0.45, 0, 0.1, 0)
+workbenchToggleButton.Position = UDim2.new(0.35, 0, 0.1, 0)
 workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 workbenchToggleButton.Text = "Workbench"
 workbenchToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -79,7 +79,7 @@ workbenchToggleButton.Parent = masterFrame
 
 local headshotToggleButton = Instance.new("TextButton")
 headshotToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
-headshotToggleButton.Position = UDim2.new(0.55, 0, 0.1, 0)
+headshotToggleButton.Position = UDim2.new(0.45, 0, 0.1, 0)
 headshotToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 headshotToggleButton.Text = "Headshot"
 headshotToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -87,9 +87,29 @@ headshotToggleButton.TextScaled = true
 headshotToggleButton.Font = Enum.Font.SourceSansBold
 headshotToggleButton.Parent = masterFrame
 
+local healthToggleButton = Instance.new("TextButton")
+healthToggleButton.Size = UDim2.new(0.1, 0, 0.8, 0)
+healthToggleButton.Position = UDim2.new(0.55, 0, 0.1, 0)
+healthToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+healthToggleButton.Text = "Health"
+healthToggleButton.TextColor3 = Color3.new(1, 1, 1)
+healthToggleButton.TextScaled = true
+healthToggleButton.Font = Enum.Font.SourceSansBold
+healthToggleButton.Parent = masterFrame
+
+local aimToggleButton = Instance.new("TextButton")
+aimToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
+aimToggleButton.Position = UDim2.new(0.65, 0, 0.1, 0)
+aimToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+aimToggleButton.Text = "Aim"
+aimToggleButton.TextColor3 = Color3.new(1, 1, 1)
+aimToggleButton.TextScaled = true
+aimToggleButton.Font = Enum.Font.SourceSansBold
+aimToggleButton.Parent = masterFrame
+
 local enableAllMasterButton = Instance.new("TextButton")
-enableAllMasterButton.Size = UDim2.new(0.15, 0, 0.8, 0)
-enableAllMasterButton.Position = UDim2.new(0.7, 0, 0.1, 0)
+enableAllMasterButton.Size = UDim2.new(0.12, 0, 0.8, 0)
+enableAllMasterButton.Position = UDim2.new(0.73, 0, 0.1, 0)
 enableAllMasterButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
 enableAllMasterButton.Text = "All"
 enableAllMasterButton.TextColor3 = Color3.new(1, 1, 1)
@@ -98,7 +118,7 @@ enableAllMasterButton.Font = Enum.Font.SourceSansBold
 enableAllMasterButton.Parent = masterFrame
 
 local disableAllMasterButton = Instance.new("TextButton")
-disableAllMasterButton.Size = UDim2.new(0.15, 0, 0.8, 0)
+disableAllMasterButton.Size = UDim2.new(0.12, 0, 0.8, 0)
 disableAllMasterButton.Position = UDim2.new(0.85, 0, 0.1, 0)
 disableAllMasterButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 disableAllMasterButton.Text = "None"
@@ -158,7 +178,36 @@ local weaponCategories = {
         ["DBarrel"] = "Scrap",
         ["APack"] = "Armor",
         ["SPShotgun"] = "SPAS",
-        ["SubAK"] = "Scrap, AK"
+        ["SubAK"] = "Scrap, AK",
+        ["AAShotgun"] = "AA12",
+        ["TSMG"] = "Tommy Gun",
+        ["FNLMG"] = "M60M60M60",
+        ["SubMPX"] = "Worse MCX",
+        ["SubMCX"] = "MCX",
+        ["SUPAK"] = "AKM",
+        ["SubPP"] = "Scrap",
+        ["KShotgun"] = "Pump Shotty",
+        ["Mac"] = "Scrap",
+        ["HRifle"] = "Gun",
+        ["Pistol"] = "Scrap",
+        ["DEFStim"] = "I4S",
+        ["SubScar"] = "Scar-",
+        ["SubVector"] = "Kriss",
+        ["DoubleShotgun"] = "Shit",
+        ["Tourni"] = "Artery",
+        ["HKMR"] = "Scrap",
+        ["Deagle"] = "Scrap",
+        ["FAMAS"] = "French Scrap",
+        ["CRVolver"] = "Scrap",
+        ["EBR"] = "Scrap",
+        ["CPBow"] = "Mint",
+        ["SSnare"] = "Mega Scrap",
+        ["MPistol"] = "Scrap",
+        ["PMine"] = "Prox",
+        ["ImpN"] = "ImpactG",
+        ["FAid"] = "IFAK Med",
+        ["SUPMPistol"] = "Scrap",
+        ["AdrStim"] = "Hemostatic"
     },
     ["Melee"] = {
         ["BBat"] = "Bat",
@@ -228,10 +277,25 @@ local workbenchHighlights = {}
 local ammoHighlights = {}
 local weaponHighlights = {}
 local headshotBoxes = {}
+local healthGuis = {}
+local healthConnections = {}
 local showPlayers = false
 local showCrates = false
 local showWorkbenches = false
 local showHeadshotBoxes = false
+local showHealth = false
+local aimAssistEnabled = false
+
+-- Aim assist variables
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+    local camera = workspace.CurrentCamera
+local mouse = player:GetMouse()
+local targetLock = false
+local lockedHead = nil
+local lockedHumanoid = nil
 
 -- Function to toggle all weapons in a category
 local function toggleCategory(categoryName, enabled)
@@ -241,73 +305,136 @@ local function toggleCategory(categoryName, enabled)
             toggles[weaponName].enabled = enabled
             if enabled then
                 toggles[weaponName].button.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-            else
+        else
                 toggles[weaponName].button.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-            end
+        end
+        end
+end
+    if categoryName == "Ammo" then
+                    updateAmmoHighlights()
+    elseif categoryName == "Weapons" then
+                    updateWeaponHighlights()
+        else
+        updateHighlights()
         end
     end
-    if categoryName == "Ammo" then
-        updateAmmoHighlights()
-    elseif categoryName == "Weapons" then
-        updateWeaponHighlights()
-    else
-        updateHighlights()
-    end
-end
 
 -- Function to toggle all categories
 local function toggleAllCategories(enabled)
     for categoryName, _ in pairs(ammoCategories) do
         toggleCategory(categoryName, enabled)
-    end
+end
     for categoryName, _ in pairs(weaponCategories) do
         toggleCategory(categoryName, enabled)
-    end
-end
-
+            end
+        end
 -- Function to toggle player highlights
 local function togglePlayerHighlights()
     showPlayers = not showPlayers
     if showPlayers then
         playerToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-    else
+        else
         playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-    end
+        end
     updatePlayerHighlights()
-end
-
+    end
 -- Function to toggle crate highlights
 local function toggleCrateHighlights()
     showCrates = not showCrates
     if showCrates then
         crateToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-    else
+        else
         crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-    end
+        end
     updateCrateHighlights()
-end
-
+    end
 -- Function to toggle workbench highlights
 local function toggleWorkbenchHighlights()
     showWorkbenches = not showWorkbenches
     if showWorkbenches then
         workbenchToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-    else
+        else
         workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-    end
+        end
     updateWorkbenchHighlights()
-end
+    end
 
 -- Function to toggle headshot boxes
 local function toggleHeadshotBoxes()
     showHeadshotBoxes = not showHeadshotBoxes
     if showHeadshotBoxes then
         headshotToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-    else
+        else
         headshotToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-    end
+        end
     updateHeadshotBoxes()
+    end
+
+-- Function to toggle health display
+local function toggleHealthDisplay()
+    showHealth = not showHealth
+    if showHealth then
+        healthToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        else
+        healthToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+        end
+    updateHealthDisplay()
+    end
+
+-- Function to toggle aim assist
+local function toggleAimAssist()
+    aimAssistEnabled = not aimAssistEnabled
+    if aimAssistEnabled then
+        aimToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        else
+        aimToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+        -- Unlock if currently locked
+        if targetLock then
+            targetLock = false
+            lockedHead = nil
+            lockedHumanoid = nil
+            end
+        end
+    end
+
+-- Find NPC head closest to mouse
+local function getClosestHeadToMouse()
+    local closestHead = nil
+    local closestHum = nil
+    local shortest = math.huge
+
+    local mousePos = Vector2.new(mouse.X, mouse.Y)
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj ~= player.Character then
+            local hum = obj:FindFirstChildWhichIsA("Humanoid")
+            local head = obj:FindFirstChild("Head")
+
+            if hum and head and hum.Health > 1 and not Players:GetPlayerFromCharacter(obj) then
+                local screenPos, onScreen = camera:WorldToScreenPoint(head.Position)
+
+                if onScreen then
+                    local dist = (mousePos - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+
+                    if dist < shortest then
+                        shortest = dist
+                        closestHead = head
+                        closestHum = hum
 end
+        end
+        end
+    end
+end
+
+    return closestHead, closestHum
+        end
+
+-- Unlock helper
+local function unlock()
+    targetLock = false
+    lockedHead = nil
+    lockedHumanoid = nil
+        end
 
 -- Function to create category header
 local function createCategoryHeader(categoryName, index)
@@ -354,11 +481,11 @@ local function createCategoryHeader(categoryName, index)
 
     disableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, false)
-    end)
+end)
 
     return 35
-end
-    
+        end
+
 -- Function to create toggle button
 local function createToggle(weaponName, displayName, index, isAmmo, isWeapon)
     local toggleFrame = Instance.new("Frame")
@@ -386,25 +513,24 @@ local function createToggle(weaponName, displayName, index, isAmmo, isWeapon)
     toggleLabel.Parent = toggleFrame
     
     toggles[weaponName] = {button = toggleButton, enabled = false, isAmmo = isAmmo or false, isWeapon = isWeapon or false}
-    
     toggleButton.MouseButton1Click:Connect(function()
         toggles[weaponName].enabled = not toggles[weaponName].enabled
         if toggles[weaponName].enabled then
             toggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
         else
             toggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
+    end
         if isAmmo then
-            updateAmmoHighlights()
+                    updateAmmoHighlights()
         elseif isWeapon then
-            updateWeaponHighlights()
+                    updateWeaponHighlights()
         else
             updateHighlights()
         end
-    end)
+end)
 
     return 35
-end
+        end
 
 -- Create toggles for ammo first, then weapons organized by categories
 local currentIndex = 1
@@ -424,7 +550,6 @@ for categoryName, weapons in pairs(weaponCategories) do
     end
     currentIndex = currentIndex + 0.5 -- Add spacing between categories
 end
-
 -- Update scroll frame canvas size
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, currentIndex * 35)
 
@@ -457,6 +582,16 @@ headshotToggleButton.MouseButton1Click:Connect(function()
     toggleHeadshotBoxes()
 end)
 
+-- Connect health toggle button
+healthToggleButton.MouseButton1Click:Connect(function()
+    toggleHealthDisplay()
+end)
+
+-- Connect aim toggle button
+aimToggleButton.MouseButton1Click:Connect(function()
+    toggleAimAssist()
+end)
+
 -- Function to create billboard gui
 local function createBillboard(character, weaponName)
     local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
@@ -479,9 +614,8 @@ local function createBillboard(character, weaponName)
         if weapons[weaponName] then
             displayName = weapons[weaponName]
             break
-        end
     end
-    textLabel.Text = displayName
+end    textLabel.Text = displayName
     textLabel.TextColor3 = Color3.new(1, 1, 1)
     textLabel.TextScaled = true
     textLabel.Font = Enum.Font.SourceSansBold
@@ -599,6 +733,61 @@ local function createObjectBillboard(object, text)
     end)
     
     return billboard
+end
+
+-- Function to create health billboard gui
+local function createHealthBillboard(character)
+    local humanoid = character:FindFirstChild("Humanoid")
+    local head = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not head then return end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 100, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 4, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = math.huge
+    billboard.Parent = head
+    
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 0.3
+    textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+    textLabel.Text = tostring(math.floor(humanoid.Health))
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.TextStrokeTransparency = 0
+    textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    textLabel.Parent = billboard
+
+    -- Update billboard size and transparency based on distance
+    local camera = workspace.CurrentCamera
+    local runService = game:GetService("RunService")
+    
+    local connection
+    connection = runService.Heartbeat:Connect(function()
+        if head.Parent and camera then
+            local distance = (camera.CFrame.Position - head.Position).Magnitude
+            local scale = math.max(0.3, math.min(1.2, 40 / distance))
+            local transparency = math.max(0.1, math.min(0.8, distance / 150))
+            
+            billboard.Size = UDim2.new(0, 100 * scale, 0, 50 * scale)
+            textLabel.TextTransparency = transparency
+            textLabel.TextStrokeTransparency = transparency
+            textLabel.BackgroundTransparency = math.max(0.3, transparency)
+        else
+            connection:Disconnect()
+        end
+    end)
+    
+    -- Update health display
+    local healthConnection = humanoid.HealthChanged:Connect(function()
+        if textLabel.Parent then
+            textLabel.Text = tostring(math.floor(humanoid.Health))
+        end
+    end)
+    
+    return billboard, healthConnection
 end
 
 -- Function to create headshot box
@@ -817,6 +1006,30 @@ local function applyHeadshotBox(character)
     end
 end
 
+-- Function to apply health display
+local function applyHealthDisplay(character)
+    if character and character:IsA("Model") then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            local plr = game.Players:GetPlayerFromCharacter(character)
+            if not plr then
+                if not healthGuis[character] then
+                    local billboard, connection = createHealthBillboard(character)
+                    if billboard then
+                        healthGuis[character] = {
+                            billboard = billboard
+                        }
+                        if connection then
+                            healthConnections[character] = connection
+                        end
+                        updateHealthDisplay()
+                    end
+                end
+            end
+        end
+    end
+end
+
 -- Function to update highlights based on toggles
 function updateHighlights()
     for character, data in pairs(highlights) do
@@ -925,6 +1138,22 @@ function updateHeadshotBoxes()
     end
 end
 
+-- Function to update health display
+function updateHealthDisplay()
+    for character, data in pairs(healthGuis) do
+        if character.Parent then
+            data.billboard.Enabled = showHealth
+        else
+            if data.billboard then data.billboard:Destroy() end
+            healthGuis[character] = nil
+            if healthConnections[character] then
+                healthConnections[character]:Disconnect()
+                healthConnections[character] = nil
+            end
+        end
+    end
+end
+
 -- Function to remove highlight when character is removed
 local function removeHighlight(character)
     if highlights[character] then
@@ -1013,6 +1242,20 @@ local function removeHeadshotBox(character)
     end
 end
 
+-- Function to remove health display when character is removed
+local function removeHealthDisplay(character)
+    if healthGuis[character] then
+        if healthGuis[character].billboard then
+            healthGuis[character].billboard:Destroy()
+        end
+        healthGuis[character] = nil
+    end
+    if healthConnections[character] then
+        healthConnections[character]:Disconnect()
+        healthConnections[character] = nil
+    end
+end
+
 -- Function to toggle GUI visibility
 local function toggleGUI()
     guiVisible = not guiVisible
@@ -1026,10 +1269,41 @@ local function recreateGUI()
     end
 end
 
+-- Camera follow + death check
+RunService.RenderStepped:Connect(function()
+    if not targetLock or not lockedHead or not lockedHumanoid then
+        return
+    end
+
+    -- auto unlock if dead or basically dead
+    if lockedHumanoid.Health <= 1 or not lockedHead.Parent then
+        unlock()
+        return
+    end
+
+    camera.CFrame = CFrame.new(
+        camera.CFrame.Position,
+        lockedHead.Position + Vector3.new(0, 0.25, 0)
+    )
+end)
+
 -- Connect keybind for toggling GUI
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+UIS.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.Minus then
         toggleGUI()
+    end
+    
+    -- Y toggle for aim assist
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.Y and aimAssistEnabled then
+        if targetLock then
+            unlock()
+        else
+            lockedHead, lockedHumanoid = getClosestHeadToMouse()
+
+            if lockedHead then
+                targetLock = true
+            end
+        end
     end
 end)
 
@@ -1050,6 +1324,7 @@ workspace.DescendantAdded:Connect(function(descendant)
         applyAmmoHighlight(descendant)
         applyWeaponHighlight(descendant)
         applyHeadshotBox(descendant)
+        applyHealthDisplay(descendant)
     elseif descendant:IsA("Humanoid") then
         wait(0.1)
         local character = descendant.Parent
@@ -1057,6 +1332,7 @@ workspace.DescendantAdded:Connect(function(descendant)
             applyHighlight(character)
             applyPlayerHighlight(character)
             applyHeadshotBox(character)
+            applyHealthDisplay(character)
             
             -- Connect to humanoid died event
             descendant.Died:Connect(function()
@@ -1064,6 +1340,7 @@ workspace.DescendantAdded:Connect(function(descendant)
                 removeHighlight(character)
                 removePlayerHighlight(character)
                 removeHeadshotBox(character)
+                removeHealthDisplay(character)
             end)
         end
     end
@@ -1093,6 +1370,9 @@ workspace.DescendantRemoving:Connect(function(item)
         if headshotBoxes[item] then
             removeHeadshotBox(item)
         end
+        if healthGuis[item] then
+            removeHealthDisplay(item)
+        end
     end
 end)
 
@@ -1115,5 +1395,6 @@ for _, item in pairs(workspace:GetDescendants()) do
         applyAmmoHighlight(item)
         applyWeaponHighlight(item)
         applyHeadshotBox(item)
+        applyHealthDisplay(item)
     end
 end
