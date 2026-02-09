@@ -137,225 +137,10 @@ disableAllMasterButton.TextScaled = true
 disableAllMasterButton.Font = Enum.Font.SourceSansBold
 disableAllMasterButton.Parent = masterFrame
 
--- Create atmosphere control frame
-local atmosphereFrame = Instance.new("Frame")
-atmosphereFrame.Size = UDim2.new(1, 0, 0, 30)
-atmosphereFrame.Position = UDim2.new(0, 0, 0, 60)
-atmosphereFrame.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
-atmosphereFrame.BorderSizePixel = 0
-atmosphereFrame.Parent = mainFrame
-
-local atmosphereLabel = Instance.new("TextLabel")
-atmosphereLabel.Size = UDim2.new(0.3, 0, 1, 0)
-atmosphereLabel.Position = UDim2.new(0, 0, 0, 0)
-atmosphereLabel.BackgroundTransparency = 1
-atmosphereLabel.Text = "Lighting Override"
-atmosphereLabel.TextColor3 = Color3.new(1, 1, 1)
-atmosphereLabel.TextScaled = true
-atmosphereLabel.Font = Enum.Font.SourceSansBold
-atmosphereLabel.Parent = atmosphereFrame
-
-local atmosphereToggleButton = Instance.new("TextButton")
-atmosphereToggleButton.Size = UDim2.new(0.15, 0, 0.8, 0)
-atmosphereToggleButton.Position = UDim2.new(0.3, 0, 0.1, 0)
-atmosphereToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-atmosphereToggleButton.Text = "Toggle"
-atmosphereToggleButton.TextColor3 = Color3.new(1, 1, 1)
-atmosphereToggleButton.TextScaled = true
-atmosphereToggleButton.Font = Enum.Font.SourceSansBold
-atmosphereToggleButton.Parent = atmosphereFrame
-
-local atmosphereInput = Instance.new("TextBox")
-atmosphereInput.Size = UDim2.new(0.55, 0, 0.8, 0)
-atmosphereInput.Position = UDim2.new(0.45, 0, 0.1, 0)
-atmosphereInput.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
-atmosphereInput.Text = "0.4"
-atmosphereInput.TextColor3 = Color3.new(1, 1, 1)
-atmosphereInput.TextScaled = true
-atmosphereInput.Font = Enum.Font.SourceSans
-atmosphereInput.PlaceholderText = "Enter density value"
-atmosphereInput.Parent = atmosphereFrame
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "DecayingTraitorGUI"
-screenGui.ResetOnSpawn = false
-screenGui.IgnoreGuiInset = true
-screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-
--- GUI visibility state
-local guiVisible = true
-
--- Create main frame
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 350, 0, 500)
-mainFrame.Position = UDim2.new(0, 10, 0, 10)
-mainFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
-mainFrame.BorderSizePixel = 0
-mainFrame.Active = true
-mainFrame.Draggable = true
-mainFrame.Parent = screenGui
-
--- Create title
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 30)
-title.Position = UDim2.new(0, 0, 0, 0)
-title.BackgroundColor3 = Color3.new(0.05, 0.05, 0.05)
-title.Text = "Decaying Traitor"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.TextScaled = true
-title.Font = Enum.Font.SourceSansBold
-title.Parent = mainFrame
-
--- Create master control frame
-local masterFrame = Instance.new("Frame")
-masterFrame.Size = UDim2.new(1, 0, 0, 30)
-masterFrame.Position = UDim2.new(0, 0, 0, 30)
-masterFrame.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
-masterFrame.BorderSizePixel = 0
-masterFrame.Parent = mainFrame
-
-local masterLabel = Instance.new("TextLabel")
-masterLabel.Size = UDim2.new(0.15, 0, 1, 0)
-masterLabel.Position = UDim2.new(0, 0, 0, 0)
-masterLabel.BackgroundTransparency = 1
-masterLabel.Text = "Master Controls"
-masterLabel.TextColor3 = Color3.new(1, 1, 1)
-masterLabel.TextScaled = true
-masterLabel.Font = Enum.Font.SourceSansBold
-masterLabel.Parent = masterFrame
-
-local playerToggleButton = Instance.new("TextButton")
-playerToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-playerToggleButton.Position = UDim2.new(0.15, 0, 0.1, 0)
-playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-playerToggleButton.Text = "Players"
-playerToggleButton.TextColor3 = Color3.new(1, 1, 1)
-playerToggleButton.TextScaled = true
-playerToggleButton.Font = Enum.Font.SourceSansBold
-playerToggleButton.Parent = masterFrame
-
-local crateToggleButton = Instance.new("TextButton")
-crateToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-crateToggleButton.Position = UDim2.new(0.23, 0, 0.1, 0)
-crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-crateToggleButton.Text = "Crates"
-crateToggleButton.TextColor3 = Color3.new(1, 1, 1)
-crateToggleButton.TextScaled = true
-crateToggleButton.Font = Enum.Font.SourceSansBold
-crateToggleButton.Parent = masterFrame
-
-local workbenchToggleButton = Instance.new("TextButton")
-workbenchToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-workbenchToggleButton.Position = UDim2.new(0.31, 0, 0.1, 0)
-workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-workbenchToggleButton.Text = "Workbench"
-workbenchToggleButton.TextColor3 = Color3.new(1, 1, 1)
-workbenchToggleButton.TextScaled = true
-workbenchToggleButton.Font = Enum.Font.SourceSansBold
-workbenchToggleButton.Parent = masterFrame
-
-local headshotToggleButton = Instance.new("TextButton")
-headshotToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-headshotToggleButton.Position = UDim2.new(0.39, 0, 0.1, 0)
-headshotToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-headshotToggleButton.Text = "Headshot"
-headshotToggleButton.TextColor3 = Color3.new(1, 1, 1)
-headshotToggleButton.TextScaled = true
-headshotToggleButton.Font = Enum.Font.SourceSansBold
-headshotToggleButton.Parent = masterFrame
-
-local healthToggleButton = Instance.new("TextButton")
-healthToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-healthToggleButton.Position = UDim2.new(0.47, 0, 0.1, 0)
-healthToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-healthToggleButton.Text = "Health"
-healthToggleButton.TextColor3 = Color3.new(1, 1, 1)
-healthToggleButton.TextScaled = true
-healthToggleButton.Font = Enum.Font.SourceSansBold
-healthToggleButton.Parent = masterFrame
-
-local aimToggleButton = Instance.new("TextButton")
-aimToggleButton.Size = UDim2.new(0.06, 0, 0.8, 0)
-aimToggleButton.Position = UDim2.new(0.55, 0, 0.1, 0)
-aimToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-aimToggleButton.Text = "Aim"
-aimToggleButton.TextColor3 = Color3.new(1, 1, 1)
-aimToggleButton.TextScaled = true
-aimToggleButton.Font = Enum.Font.SourceSansBold
-aimToggleButton.Parent = masterFrame
-
-local autoLockToggleButton = Instance.new("TextButton")
-autoLockToggleButton.Size = UDim2.new(0.06, 0, 0.8, 0)
-autoLockToggleButton.Position = UDim2.new(0.61, 0, 0.1, 0)
-autoLockToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-autoLockToggleButton.Text = "Auto"
-autoLockToggleButton.TextColor3 = Color3.new(1, 1, 1)
-autoLockToggleButton.TextScaled = true
-autoLockToggleButton.Font = Enum.Font.SourceSansBold
-autoLockToggleButton.Parent = masterFrame
-
-local enableAllMasterButton = Instance.new("TextButton")
-enableAllMasterButton.Size = UDim2.new(0.12, 0, 0.8, 0)
-enableAllMasterButton.Position = UDim2.new(0.67, 0, 0.1, 0)
-enableAllMasterButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-enableAllMasterButton.Text = "All"
-enableAllMasterButton.TextColor3 = Color3.new(1, 1, 1)
-enableAllMasterButton.TextScaled = true
-enableAllMasterButton.Font = Enum.Font.SourceSansBold
-enableAllMasterButton.Parent = masterFrame
-
-local disableAllMasterButton = Instance.new("TextButton")
-disableAllMasterButton.Size = UDim2.new(0.12, 0, 0.8, 0)
-disableAllMasterButton.Position = UDim2.new(0.79, 0, 0.1, 0)
-disableAllMasterButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-disableAllMasterButton.Text = "None"
-disableAllMasterButton.TextColor3 = Color3.new(1, 1, 1)
-disableAllMasterButton.TextScaled = true
-disableAllMasterButton.Font = Enum.Font.SourceSansBold
-disableAllMasterButton.Parent = masterFrame
-
--- Create atmosphere control frame
-local atmosphereFrame = Instance.new("Frame")
-atmosphereFrame.Size = UDim2.new(1, 0, 0, 30)
-atmosphereFrame.Position = UDim2.new(0, 0, 0, 60)
-atmosphereFrame.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
-atmosphereFrame.BorderSizePixel = 0
-atmosphereFrame.Parent = mainFrame
-
-local atmosphereLabel = Instance.new("TextLabel")
-atmosphereLabel.Size = UDim2.new(0.3, 0, 1, 0)
-atmosphereLabel.Position = UDim2.new(0, 0, 0, 0)
-atmosphereLabel.BackgroundTransparency = 1
-atmosphereLabel.Text = "Atmosphere Density"
-atmosphereLabel.TextColor3 = Color3.new(1, 1, 1)
-atmosphereLabel.TextScaled = true
-atmosphereLabel.Font = Enum.Font.SourceSansBold
-atmosphereLabel.Parent = atmosphereFrame
-
-local atmosphereToggleButton = Instance.new("TextButton")
-atmosphereToggleButton.Size = UDim2.new(0.15, 0, 0.8, 0)
-atmosphereToggleButton.Position = UDim2.new(0.3, 0, 0.1, 0)
-atmosphereToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-atmosphereToggleButton.Text = "Toggle"
-atmosphereToggleButton.TextColor3 = Color3.new(1, 1, 1)
-atmosphereToggleButton.TextScaled = true
-atmosphereToggleButton.Font = Enum.Font.SourceSansBold
-atmosphereToggleButton.Parent = atmosphereFrame
-
-local atmosphereInput = Instance.new("TextBox")
-atmosphereInput.Size = UDim2.new(0.55, 0, 0.8, 0)
-atmosphereInput.Position = UDim2.new(0.45, 0, 0.1, 0)
-atmosphereInput.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
-atmosphereInput.Text = "0.4"
-atmosphereInput.TextColor3 = Color3.new(1, 1, 1)
-atmosphereInput.TextScaled = true
-atmosphereInput.Font = Enum.Font.SourceSans
-atmosphereInput.PlaceholderText = "Enter density value"
-atmosphereInput.Parent = atmosphereFrame
-
 -- Create scroll frame
 local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1, 0, 1, -90)
-scrollFrame.Position = UDim2.new(0, 0, 0, 90)
+scrollFrame.Size = UDim2.new(1, 0, 1, -60)
+scrollFrame.Position = UDim2.new(0, 0, 0, 60)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.ScrollBarThickness = 8
 scrollFrame.Parent = mainFrame
@@ -363,7 +148,7 @@ scrollFrame.Parent = mainFrame
 -- Ammo categories
 local ammoCategories = {
     ["Ammo"] = {
-        ["Shells"] = "Shells",
+        ["Shells Ammo"] = "Shells Ammo",
         ["Small Ammo"] = "Small Ammo",
         ["Long Ammo"] = "Long Ammo",
         ["Short Ammo"] = "Short Ammo",
@@ -433,7 +218,13 @@ local weaponCategories = {
         ["FAid"] = "IFAK Med",
         ["SUPMPistol"] = "Scrap",
         ["AdrStim"] = "Hemostatic",
-        ["BPRifle"] = "BlueprintR"
+        ["BPRifle"] = "BlueprintR",
+        ["AWMSniper"] = "Sniper",
+        ["IntSniper"] = "Sniper",
+        ["SUPSniper"] = "Sniper",
+        ["HuntingR"] = "Sniper",
+        ["Rifle"] = "Good Sniper",
+        ["AMR"] = "Chey Sniper"
     },
     ["Melee"] = {
         ["BBat"] = "Bat",
@@ -513,10 +304,6 @@ local showHealth = false
 local aimAssistEnabled = false
 local autoLockEnabled = false
 local autoSwitchEnabled = false
-local atmosphereEnabled = false
-local originalAtmosphereDensity = nil
-local constantAtmosphereDensity = 0.4
-
 -- Excluded models for highlighting and lock-on
 local excludedModels = {"Workshop", "Quarter", "SpawnDecor", "SpawnModel", "Masters"}
 
@@ -593,27 +380,6 @@ local function unlock()
             lockedHumanoid = nil
 end
 
--- Function to toggle atmosphere
-local function toggleAtmosphere()
-    atmosphereEnabled = not atmosphereEnabled
-    if atmosphereEnabled then
-        atmosphereToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        local atmosphere = Lighting:FindFirstChild("Atmosphere")
-        if atmosphere then
-            if originalAtmosphereDensity == nil then
-                originalAtmosphereDensity = atmosphere.Density
-                    end
-            atmosphere.Density = constantAtmosphereDensity
-                end
-        else
-        atmosphereToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        local atmosphere = Lighting:FindFirstChild("Atmosphere")
-        if atmosphere and originalAtmosphereDensity then
-            atmosphere.Density = originalAtmosphereDensity
-        end
-    end
-end
-
 -- Function to toggle all weapons in a category
 local function toggleCategory(categoryName, enabled)
     local categories = categoryName == "Ammo" and ammoCategories or weaponCategories
@@ -667,6 +433,7 @@ local function toggleCrateHighlights()
     end
     updateCrateHighlights()
     end
+
 -- Function to toggle workbench highlights
 local function toggleWorkbenchHighlights()
     showWorkbenches = not showWorkbenches
@@ -820,6 +587,7 @@ end
     end)
     return 35
 end
+
 -- Create toggles for ammo first, then weapons organized by categories
 local currentIndex = 1
 for categoryName, ammo in pairs(ammoCategories) do
@@ -884,23 +652,6 @@ end)
 -- Connect auto switch toggle button
 autoLockToggleButton.MouseButton1Click:Connect(function()
     toggleAutoSwitch()
-end)
-
--- Connect atmosphere toggle button
-atmosphereToggleButton.MouseButton1Click:Connect(function()
-    toggleAtmosphere()
-end)
-
--- Connect atmosphere input
-atmosphereInput.FocusLost:Connect(function(enterPressed)
-            local densityValue = tonumber(atmosphereInput.Text) or 0.4
-    constantAtmosphereDensity = densityValue
-    if atmosphereEnabled then
-        local atmosphere = Lighting:FindFirstChild("Atmosphere")
-        if atmosphere then
-            atmosphere.Density = constantAtmosphereDensity
-        end
-    end
 end)
 
 -- Function to create billboard gui
@@ -1688,6 +1439,7 @@ workspace.DescendantAdded:Connect(function(descendant)
         end
     end
 end)
+
 -- Monitor for model removal
 workspace.DescendantRemoving:Connect(function(descendant)
     if descendant:IsA("Model") then
@@ -1760,25 +1512,5 @@ screenGui.AncestryChanged:Connect(function()
         for character, _ in pairs(healthGuis) do
             removeHealthDisplay(character)
         end
-        
-        -- Reset atmosphere if enabled
-        if atmosphereEnabled then
-            local atmosphere = Lighting:FindFirstChild("Atmosphere")
-            if atmosphere and originalAtmosphereDensity then
-                atmosphere.Density = originalAtmosphereDensity
             end
-        end
-    end
-end)
--- Atmosphere monitoring loop
-spawn(function()
-    while true do
-        wait(0.1) -- Check every 0.1 seconds
-        if atmosphereEnabled then
-            local atmosphere = Lighting:FindFirstChild("Atmosphere")
-            if atmosphere and atmosphere.Density ~= constantAtmosphereDensity then
-                atmosphere.Density = constantAtmosphereDensity
-            end
-        end
-    end
 end)
