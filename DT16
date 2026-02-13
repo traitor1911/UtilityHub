@@ -38,7 +38,7 @@ masterFrame.BorderSizePixel = 0
 masterFrame.Parent = mainFrame
 
 local masterLabel = Instance.new("TextLabel")
-masterLabel.Size = UDim2.new(0.15, 0, 1, 0)
+masterLabel.Size = UDim2.new(0.12, 0, 1, 0)
 masterLabel.Position = UDim2.new(0, 0, 0, 0)
 masterLabel.BackgroundTransparency = 1
 masterLabel.Text = "Master Controls"
@@ -49,7 +49,7 @@ masterLabel.Parent = masterFrame
 
 local playerToggleButton = Instance.new("TextButton")
 playerToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-playerToggleButton.Position = UDim2.new(0.15, 0, 0.1, 0)
+playerToggleButton.Position = UDim2.new(0.12, 0, 0.1, 0)
 playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 playerToggleButton.Text = "Players"
 playerToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -59,7 +59,7 @@ playerToggleButton.Parent = masterFrame
 
 local crateToggleButton = Instance.new("TextButton")
 crateToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-crateToggleButton.Position = UDim2.new(0.23, 0, 0.1, 0)
+crateToggleButton.Position = UDim2.new(0.20, 0, 0.1, 0)
 crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 crateToggleButton.Text = "Crates"
 crateToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -69,7 +69,7 @@ crateToggleButton.Parent = masterFrame
 
 local workbenchToggleButton = Instance.new("TextButton")
 workbenchToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-workbenchToggleButton.Position = UDim2.new(0.31, 0, 0.1, 0)
+workbenchToggleButton.Position = UDim2.new(0.28, 0, 0.1, 0)
 workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 workbenchToggleButton.Text = "Workbench"
 workbenchToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -79,7 +79,7 @@ workbenchToggleButton.Parent = masterFrame
 
 local headshotToggleButton = Instance.new("TextButton")
 headshotToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-headshotToggleButton.Position = UDim2.new(0.39, 0, 0.1, 0)
+headshotToggleButton.Position = UDim2.new(0.36, 0, 0.1, 0)
 headshotToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 headshotToggleButton.Text = "Headshot"
 headshotToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -89,7 +89,7 @@ headshotToggleButton.Parent = masterFrame
 
 local healthToggleButton = Instance.new("TextButton")
 healthToggleButton.Size = UDim2.new(0.08, 0, 0.8, 0)
-healthToggleButton.Position = UDim2.new(0.47, 0, 0.1, 0)
+healthToggleButton.Position = UDim2.new(0.44, 0, 0.1, 0)
 healthToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 healthToggleButton.Text = "Health"
 healthToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -99,7 +99,7 @@ healthToggleButton.Parent = masterFrame
 
 local aimToggleButton = Instance.new("TextButton")
 aimToggleButton.Size = UDim2.new(0.06, 0, 0.8, 0)
-aimToggleButton.Position = UDim2.new(0.55, 0, 0.1, 0)
+aimToggleButton.Position = UDim2.new(0.52, 0, 0.1, 0)
 aimToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 aimToggleButton.Text = "Aim"
 aimToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -109,7 +109,7 @@ aimToggleButton.Parent = masterFrame
 
 local autoLockToggleButton = Instance.new("TextButton")
 autoLockToggleButton.Size = UDim2.new(0.06, 0, 0.8, 0)
-autoLockToggleButton.Position = UDim2.new(0.61, 0, 0.1, 0)
+autoLockToggleButton.Position = UDim2.new(0.58, 0, 0.1, 0)
 autoLockToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 autoLockToggleButton.Text = "Auto"
 autoLockToggleButton.TextColor3 = Color3.new(1, 1, 1)
@@ -117,9 +117,29 @@ autoLockToggleButton.TextScaled = true
 autoLockToggleButton.Font = Enum.Font.SourceSansBold
 autoLockToggleButton.Parent = masterFrame
 
+local wallToggleButton = Instance.new("TextButton")
+wallToggleButton.Size = UDim2.new(0.06, 0, 0.8, 0)
+wallToggleButton.Position = UDim2.new(0.64, 0, 0.1, 0)
+wallToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+wallToggleButton.Text = "Wall"
+wallToggleButton.TextColor3 = Color3.new(1, 1, 1)
+wallToggleButton.TextScaled = true
+wallToggleButton.Font = Enum.Font.SourceSansBold
+wallToggleButton.Parent = masterFrame
+
+local refreshButton = Instance.new("TextButton")
+refreshButton.Size = UDim2.new(0.08, 0, 0.8, 0)
+refreshButton.Position = UDim2.new(0.70, 0, 0.1, 0)
+refreshButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.8)
+refreshButton.Text = "Refresh"
+refreshButton.TextColor3 = Color3.new(1, 1, 1)
+refreshButton.TextScaled = true
+refreshButton.Font = Enum.Font.SourceSansBold
+refreshButton.Parent = masterFrame
+
 local enableAllMasterButton = Instance.new("TextButton")
-enableAllMasterButton.Size = UDim2.new(0.12, 0, 0.8, 0)
-enableAllMasterButton.Position = UDim2.new(0.67, 0, 0.1, 0)
+enableAllMasterButton.Size = UDim2.new(0.11, 0, 0.8, 0)
+enableAllMasterButton.Position = UDim2.new(0.78, 0, 0.1, 0)
 enableAllMasterButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
 enableAllMasterButton.Text = "All"
 enableAllMasterButton.TextColor3 = Color3.new(1, 1, 1)
@@ -128,8 +148,8 @@ enableAllMasterButton.Font = Enum.Font.SourceSansBold
 enableAllMasterButton.Parent = masterFrame
 
 local disableAllMasterButton = Instance.new("TextButton")
-disableAllMasterButton.Size = UDim2.new(0.12, 0, 0.8, 0)
-disableAllMasterButton.Position = UDim2.new(0.79, 0, 0.1, 0)
+disableAllMasterButton.Size = UDim2.new(0.11, 0, 0.8, 0)
+disableAllMasterButton.Position = UDim2.new(0.89, 0, 0.1, 0)
 disableAllMasterButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
 disableAllMasterButton.Text = "None"
 disableAllMasterButton.TextColor3 = Color3.new(1, 1, 1)
@@ -161,62 +181,62 @@ local ammoCategories = {
 -- Weapon mappings organized by categories
 local weaponCategories = {
     ["Weapons"] = {
-        ["URVolver"] = "Peacemaker",
+        ["URVolver"] = "Peacemaker Uppercut",
         ["MRVolver"] = "Redeemer",
         ["Avto"] = "Avtomat",
-        ["ScarL"] = "Scar",
-        ["SKSold"] = "Scrap",
-        ["SKS"] = "Scrap",
-        ["LeverShotgun"] = "Scrap",
-        ["Scorp"] = "Scrap",
-        ["MPTen"] = "Scrap",
-        ["SubPS"] = "Scrap",
-        ["SubMP"] = "Scrap",
-        ["AshR"] = "Heavy",
-        ["Benelli"] = "Shotgun",
-        ["GPan"] = "Scrap",
-        ["STIPistol"] = "Pistol",
+        ["ScarL"] = "ScarModded",
+        ["SKSold"] = "SKS",
+        ["SKS"] = "SKS",
+        ["LeverShotgun"] = "Lever shotgun",
+        ["Scorp"] = "Scorpion",
+        ["MPTen"] = "MP5",
+        ["SubPS"] = "P90",
+        ["SubMP"] = "MP55",
+        ["AshR"] = "ASH",
+        ["Benelli"] = "Benellio",
+        ["GPan"] = "Golden Dandelion",
+        ["STIPistol"] = "STI",
         ["HStim"] = "Cocktail",
-        ["Glock"] = "Scrap",
+        ["Glock"] = "Gock",
         ["AJM"] = "AJM",
         ["BPack"] = "Backpack",
-        ["DMusket"] = "Scrap",
+        ["DMusket"] = "deComMusket",
         ["UMP"] = "UMP",
         ["ASVal"] = "ASVAL",
         ["Mateba"] = "Worse AJM",
-        ["SubLMG"] = "M60M60M60",
-        ["DBarrel"] = "Scrap",
+        ["SubLMG"] = "HEAVYM60",
+        ["DBarrel"] = "Double Barrel Short",
         ["APack"] = "Armor",
         ["SPShotgun"] = "SPAS",
-        ["SubAK"] = "Scrap, AK",
+        ["SubAK"] = "AK74",
         ["AAShotgun"] = "AA12",
         ["TSMG"] = "Tommy Gun",
-        ["FNLMG"] = "M60M60M60",
+        ["FNLMG"] = "MEDM60",
         ["SubMPX"] = "Worse MCX",
         ["SubMCX"] = "MCX",
         ["SUPAK"] = "AKM",
-        ["SubPP"] = "Scrap",
-        ["KShotgun"] = "Pump Shotty",
-        ["Mac"] = "Scrap",
-        ["HRifle"] = "Gun",
-        ["Pistol"] = "Scrap",
+        ["SubPP"] = "PPSH",
+        ["KShotgun"] = "4Shotgun",
+        ["Mac"] = "MAC10",
+        ["HRifle"] = "Hunting Rifle",
+        ["Pistol"] = "M1911",
         ["DEFStim"] = "I4S",
-        ["SubScar"] = "Scar-",
+        ["SubScar"] = "ScarNonMod",
         ["SubVector"] = "Kriss",
-        ["DoubleShotgun"] = "Shit",
+        ["DoubleShotgun"] = "Double Barrel",
         ["Tourni"] = "Artery",
         ["HKMR"] = "Scrap",
         ["Deagle"] = "Scrap",
         ["FAMAS"] = "French Scrap",
-        ["CRVolver"] = "Scrap",
+        ["CRVolver"] = "PM Chain",
         ["EBR"] = "Scrap",
-        ["CPBow"] = "Mint",
-        ["SSnare"] = "Mega Scrap",
-        ["MPistol"] = "Scrap",
+        ["CPBow"] = "MilBow",
+        ["SSnare"] = "Snare Scrap",
+        ["MPistol"] = "Scrap1911",
         ["PMine"] = "Prox",
         ["ImpN"] = "ImpactG",
         ["FAid"] = "IFAK Med",
-        ["SUPMPistol"] = "Scrap",
+        ["SUPMPistol"] = "Modded M1911",
         ["AdrStim"] = "Hemostatic",
         ["BPRifle"] = "BlueprintR",
         ["AWMSniper"] = "Sniper",
@@ -224,7 +244,15 @@ local weaponCategories = {
         ["SUPSniper"] = "Sniper",
         ["HuntingR"] = "Sniper",
         ["Rifle"] = "Good Sniper",
-        ["AMR"] = "Chey Sniper"
+        ["AMR"] = "Chey Sniper",
+        ["SPDStim"] = "SpeedStim",
+        ["DStim"] = "MLStim",
+        ["BPNailed"] = "MariaBP",
+        ["BPSTI"] = "STD",
+        ["BPAKM"] = "akmBP",
+        ["BPKSG"] = "ksgBP",
+        ["KSG"] = "KSG",
+        ["PKillers"] = "VIRUS"
     },
     ["Melee"] = {
         ["BBat"] = "Bat",
@@ -233,12 +261,12 @@ local weaponCategories = {
         ["CHammer"] = "Hammer",
         ["NSword"] = "Sword",
         ["NKnuckles"] = "Fist",
-        ["MilAxe"] = "Axe",
+        ["MilAxe"] = "MMil",
         ["CCleaver"] = "Cleaver",
         ["THawk"] = "Tomahawk",
-        ["FAxe"] = "Axe + Riot",
+        ["FAxe"] = "MAxe",
         ["QHammer"] = "Decimator",
-        ["KaramB"] = "Karambit",
+        ["KaramB"] = "MKnife",
         ["IPick"] = "IcePick",
         ["Shovel"] = "Shovel",
         ["CKnife"] = "Knife",
@@ -246,10 +274,20 @@ local weaponCategories = {
         ["SCKnife"] = "Knife",
         ["PBaton"] = "Baton",
         ["Rake"] = "Rake",
-        ["SHammer"] = "Sledgehammer",
+        ["SHammer"] = "MSledge",
         ["GhostKnife"] = "Hidden",
         ["SClaw"] = "Sickler",
-        ["KitKnife"] = "Hanger"
+        ["KitKnife"] = "Hanger",
+        ["Yari"] = "MYari",
+        ["Hyperlame"] = "MLameo",
+        ["HKnife"] = "MHKnife",
+        ["SAxe"] = "MSplitting",
+        ["GSword"] = "MGreatS",
+        ["HBerd"] = "MHalberd",
+        ["PTrap"] = "Punji",
+        ["Dynamite"] = "Dynamite!!",
+        ["TSpear"] = "MTac",
+        ["IbuP"] = "VIRUS"
     },
     ["Pistols"] = {
         ["RVolver"] = "Magnum",
@@ -296,6 +334,7 @@ local weaponHighlights = {}
 local headshotBoxes = {}
 local healthGuis = {}
 local healthConnections = {}
+local wallBoxes = {}
 local showPlayers = false
 local showCrates = false
 local showWorkbenches = false
@@ -304,6 +343,14 @@ local showHealth = false
 local aimAssistEnabled = false
 local autoLockEnabled = false
 local autoSwitchEnabled = false
+local wallLockEnabled = false
+
+-- Cache for optimization
+local objectCache = {}
+local lastCacheUpdate = 0
+local cacheUpdateInterval = 2 -- Update cache every 2 seconds
+local maxCacheSize = 1000
+
 -- Excluded models for highlighting and lock-on
 local excludedModels = {"Workshop", "Quarter", "SpawnDecor", "SpawnModel", "Masters"}
 
@@ -319,6 +366,78 @@ local targetLock = false
 local lockedHead = nil
 local lockedHumanoid = nil
 
+-- Optimization: Batch operations
+local batchOperations = {}
+local batchSize = 50
+
+-- Function to clear cache and refresh
+local function clearCacheAndRefresh()
+    -- Clear object cache
+    objectCache = {}
+    lastCacheUpdate = 0
+    
+    -- Clear all highlights and GUI elements
+        for character, _ in pairs(highlights) do
+            removeHighlight(character)
+        end
+        for character, _ in pairs(playerHighlights) do
+            removePlayerHighlight(character)
+        end
+        for object, _ in pairs(crateHighlights) do
+            removeCrateHighlight(object)
+        end
+        for object, _ in pairs(workbenchHighlights) do
+            removeWorkbenchHighlight(object)
+        end
+        for object, _ in pairs(ammoHighlights) do
+            removeAmmoHighlight(object)
+        end
+        for object, _ in pairs(weaponHighlights) do
+            removeWeaponHighlight(object)
+        end
+        for character, _ in pairs(headshotBoxes) do
+            removeHeadshotBox(character)
+        end
+        for character, _ in pairs(healthGuis) do
+            removeHealthDisplay(character)
+        end
+    for character, _ in pairs(wallBoxes) do
+        removeWallBox(character)
+            end
+    
+    -- Clear tables
+    highlights = {}
+    playerHighlights = {}
+    crateHighlights = {}
+    workbenchHighlights = {}
+    ammoHighlights = {}
+    weaponHighlights = {}
+    headshotBoxes = {}
+    healthGuis = {}
+    healthConnections = {}
+    wallBoxes = {}
+    
+    -- Force garbage collection
+    wait(0.1)
+    
+    -- Rescan workspace
+    scanWorkspace()
+end
+-- Function to update object cache
+local function updateObjectCache()
+    local currentTime = tick()
+    if currentTime - lastCacheUpdate < cacheUpdateInterval then
+        return
+    end
+    
+    -- Clear cache if it gets too large
+    if #objectCache > maxCacheSize then
+        objectCache = {}
+    end
+    
+    lastCacheUpdate = currentTime
+end
+
 -- Function to check if character is in excluded model
 local function isInExcludedModel(character)
     local current = character.Parent
@@ -326,12 +445,27 @@ local function isInExcludedModel(character)
         for _, excludedName in pairs(excludedModels) do
             if current.Name == excludedName then
                 return true
-end
+            end
         end
         current = current.Parent
-        end
-    return false
     end
+    return false
+end
+
+-- Function to check if there's a wall between camera and target
+local function hasWallBetween(targetPosition)
+    local raycast = workspace:Raycast(camera.CFrame.Position, (targetPosition - camera.CFrame.Position).Unit * (targetPosition - camera.CFrame.Position).Magnitude)
+    if raycast then
+        local hit = raycast.Instance
+        -- Check if the hit part belongs to a character (NPC or player)
+        local character = hit.Parent
+        if character:FindFirstChild("Humanoid") then
+            return false -- Hit a character, not a wall
+        end
+        return true -- Hit something else (wall)
+    end
+    return false -- No obstruction
+end
 
 -- Find NPC head closest to mouse (with 150 stud distance limit)
 local function getClosestHeadToMouse()
@@ -348,36 +482,41 @@ local function getClosestHeadToMouse()
 
             if hum and head and hum.Health > 1 and not Players:GetPlayerFromCharacter(obj) and not isInExcludedModel(obj) then
                 -- Check distance limit of 150 studs
-            local distance = (camera.CFrame.Position - head.Position).Magnitude
+                local distance = (camera.CFrame.Position - head.Position).Magnitude
                 if distance <= 150 then
-                    local screenPos, onScreen = camera:WorldToScreenPoint(head.Position)
+                    -- Check wall if wall lock is disabled
+                    if not wallLockEnabled and hasWallBetween(head.Position) then
+                        -- Skip this target if there's a wall and wall lock is disabled
+                    else
+                        local screenPos, onScreen = camera:WorldToScreenPoint(head.Position)
 
-                    if onScreen then
-                        local dist = (mousePos - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                        if onScreen then
+                            local dist = (mousePos - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
 
-                        if dist < shortest then
-                            shortest = dist
-                            closestHead = head
-                            closestHum = hum
-        end
-        end
-        end
-end
-end
+                            if dist < shortest then
+                                shortest = dist
+                                closestHead = head
+                                closestHum = hum
+                            end
+                        end
+                    end
+                end
             end
+        end
+    end
 
     return closestHead, closestHum
-        end
+end
 
 -- Lock helper
 local function acquireTarget()
     lockedHead, lockedHumanoid = getClosestHeadToMouse()
-    end
+end
 
 local function unlock()
-            targetLock = false
-            lockedHead = nil
-            lockedHumanoid = nil
+    targetLock = false
+    lockedHead = nil
+    lockedHumanoid = nil
 end
 
 -- Function to toggle all weapons in a category
@@ -388,19 +527,19 @@ local function toggleCategory(categoryName, enabled)
             toggles[weaponName].enabled = enabled
             if enabled then
                 toggles[weaponName].button.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
+            else
                 toggles[weaponName].button.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
-    end
-end
-    if categoryName == "Ammo" then
-                    updateAmmoHighlights()
-    elseif categoryName == "Weapons" then
-                    updateWeaponHighlights()
-        else
-        updateHighlights()
             end
         end
+    end
+    if categoryName == "Ammo" then
+        updateAmmoHighlights()
+    elseif categoryName == "Weapons" then
+        updateWeaponHighlights()
+    else
+        updateHighlights()
+    end
+end
 
 -- Function to toggle all categories
 local function toggleAllCategories(enabled)
@@ -409,70 +548,70 @@ local function toggleAllCategories(enabled)
     end
     for categoryName, _ in pairs(weaponCategories) do
         toggleCategory(categoryName, enabled)
+    end
 end
-        end
 
 -- Function to toggle player highlights
 local function togglePlayerHighlights()
     showPlayers = not showPlayers
     if showPlayers then
         playerToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
+    else
         playerToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
     end
     updatePlayerHighlights()
-    end
-    
+end
+
 -- Function to toggle crate highlights
 local function toggleCrateHighlights()
     showCrates = not showCrates
     if showCrates then
         crateToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
+    else
         crateToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
     end
     updateCrateHighlights()
-    end
+end
 
 -- Function to toggle workbench highlights
 local function toggleWorkbenchHighlights()
     showWorkbenches = not showWorkbenches
     if showWorkbenches then
         workbenchToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
+    else
         workbenchToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
     end
     updateWorkbenchHighlights()
-        end
+end
 
 -- Function to toggle headshot boxes
 local function toggleHeadshotBoxes()
     showHeadshotBoxes = not showHeadshotBoxes
     if showHeadshotBoxes then
         headshotToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
+    else
         headshotToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
+    end
     updateHeadshotBoxes()
-        end
+end
 
 -- Function to toggle health display
 local function toggleHealthDisplay()
     showHealth = not showHealth
     if showHealth then
         healthToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
+    else
         healthToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
-    updateHealthDisplay()
     end
+    updateHealthDisplay()
+end
 
 -- Function to toggle aim assist
 local function toggleAimAssist()
     aimAssistEnabled = not aimAssistEnabled
     if aimAssistEnabled then
         aimToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-        else
+    else
         aimToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
         -- Unlock if currently locked
         if targetLock then
@@ -481,7 +620,7 @@ local function toggleAimAssist()
             lockedHumanoid = nil
         end
     end
-    end
+end
 
 -- Function to toggle auto switch
 local function toggleAutoSwitch()
@@ -490,8 +629,19 @@ local function toggleAutoSwitch()
         autoLockToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
     else
         autoLockToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-        end
     end
+end
+
+-- Function to toggle wall lock
+local function toggleWallLock()
+    wallLockEnabled = not wallLockEnabled
+    if wallLockEnabled then
+        wallToggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+    else
+        wallToggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    end
+    updateWallBoxes()
+end
 
 -- Function to create category header
 local function createCategoryHeader(categoryName, index)
@@ -534,14 +684,14 @@ local function createCategoryHeader(categoryName, index)
     
     enableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, true)
-end)
+    end)
 
     disableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, false)
-end)
+    end)
 
     return 35
-    end
+end
 
 -- Function to create toggle button
 local function createToggle(weaponName, displayName, index, isAmmo, isWeapon)
@@ -576,7 +726,7 @@ local function createToggle(weaponName, displayName, index, isAmmo, isWeapon)
             toggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
         else
             toggleButton.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-end
+        end
         if isAmmo then
             updateAmmoHighlights()
         elseif isWeapon then
@@ -619,6 +769,11 @@ disableAllMasterButton.MouseButton1Click:Connect(function()
     toggleAllCategories(false)
 end)
 
+-- Connect refresh button
+refreshButton.MouseButton1Click:Connect(function()
+    clearCacheAndRefresh()
+end)
+
 -- Connect player toggle button
 playerToggleButton.MouseButton1Click:Connect(function()
     togglePlayerHighlights()
@@ -654,21 +809,50 @@ autoLockToggleButton.MouseButton1Click:Connect(function()
     toggleAutoSwitch()
 end)
 
--- Function to create billboard gui
+-- Connect wall toggle button
+wallToggleButton.MouseButton1Click:Connect(function()
+    toggleWallLock()
+end)
+
+-- Optimized billboard creation with pooling
+local billboardPool = {}
+local function getBillboardFromPool()
+    if #billboardPool > 0 then
+        return table.remove(billboardPool)
+    else
+        return Instance.new("BillboardGui")
+    end
+end
+
+local function returnBillboardToPool(billboard)
+    billboard.Parent = nil
+    billboard.Enabled = true
+    table.insert(billboardPool, billboard)
+end
+
+-- Function to create billboard gui (optimized)
 local function createBillboard(character, weaponName)
     local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
     if not humanoidRootPart then return end
     
-    local billboard = Instance.new("BillboardGui")
+    local billboard = getBillboardFromPool()
     billboard.Size = UDim2.new(0, 100, 0, 50)
     billboard.StudsOffset = Vector3.new(0, 3, 0)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = math.huge
     billboard.Parent = humanoidRootPart
     
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, 0, 1, 0)
-    textLabel.BackgroundTransparency = 1
+    local textLabel = billboard:FindFirstChild("TextLabel")
+    if not textLabel then
+        textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextScaled = true
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.TextStrokeTransparency = 0
+        textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+        textLabel.Parent = billboard
+    end
     
     -- Find display name from categories
     local displayName = weaponName
@@ -681,11 +865,6 @@ local function createBillboard(character, weaponName)
     
     textLabel.Text = displayName
     textLabel.TextColor3 = Color3.new(1, 1, 1)
-    textLabel.TextScaled = true
-    textLabel.Font = Enum.Font.SourceSansBold
-    textLabel.TextStrokeTransparency = 0
-    textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-    textLabel.Parent = billboard
 
     -- Update billboard size and transparency based on distance
     local camera = workspace.CurrentCamera
@@ -703,34 +882,39 @@ local function createBillboard(character, weaponName)
             textLabel.TextStrokeTransparency = transparency
         else
             connection:Disconnect()
+            returnBillboardToPool(billboard)
         end
     end)
     
     return billboard
 end
 
--- Function to create player billboard gui
+-- Function to create player billboard gui (optimized)
 local function createPlayerBillboard(character, playerName)
     local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
     if not humanoidRootPart then return end
     
-    local billboard = Instance.new("BillboardGui")
+    local billboard = getBillboardFromPool()
     billboard.Size = UDim2.new(0, 80, 0, 30)
     billboard.StudsOffset = Vector3.new(0, 3, 0)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = math.huge
     billboard.Parent = humanoidRootPart
     
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, 0, 1, 0)
-    textLabel.BackgroundTransparency = 1
+    local textLabel = billboard:FindFirstChild("TextLabel")
+    if not textLabel then
+        textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextScaled = true
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.TextStrokeTransparency = 0
+        textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+        textLabel.Parent = billboard
+    end
+    
     textLabel.Text = playerName
     textLabel.TextColor3 = Color3.new(1, 1, 1)
-    textLabel.TextScaled = true
-    textLabel.Font = Enum.Font.SourceSansBold
-    textLabel.TextStrokeTransparency = 0
-    textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-    textLabel.Parent = billboard
 
     -- Update billboard size and transparency based on distance
     local camera = workspace.CurrentCamera
@@ -748,34 +932,39 @@ local function createPlayerBillboard(character, playerName)
             textLabel.TextStrokeTransparency = transparency
         else
             connection:Disconnect()
+            returnBillboardToPool(billboard)
         end
     end)
     
     return billboard
 end
 
--- Function to create object billboard gui
+-- Function to create object billboard gui (optimized)
 local function createObjectBillboard(object, text)
     local primaryPart = object.PrimaryPart or object:FindFirstChildOfClass("Part")
     if not primaryPart then return end
     
-    local billboard = Instance.new("BillboardGui")
+    local billboard = getBillboardFromPool()
     billboard.Size = UDim2.new(0, 80, 0, 30)
     billboard.StudsOffset = Vector3.new(0, 3, 0)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = math.huge
     billboard.Parent = primaryPart
     
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, 0, 1, 0)
-    textLabel.BackgroundTransparency = 1
+    local textLabel = billboard:FindFirstChild("TextLabel")
+    if not textLabel then
+        textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextScaled = true
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.TextStrokeTransparency = 0
+        textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+        textLabel.Parent = billboard
+    end
+    
     textLabel.Text = text
     textLabel.TextColor3 = Color3.new(1, 1, 1)
-    textLabel.TextScaled = true
-    textLabel.Font = Enum.Font.SourceSansBold
-    textLabel.TextStrokeTransparency = 0
-    textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-    textLabel.Parent = billboard
 
     -- Update billboard size and transparency based on distance
     local camera = workspace.CurrentCamera
@@ -793,36 +982,41 @@ local function createObjectBillboard(object, text)
             textLabel.TextStrokeTransparency = transparency
         else
             connection:Disconnect()
+            returnBillboardToPool(billboard)
         end
     end)
     
     return billboard
 end
 
--- Function to create health billboard gui
+-- Function to create health billboard gui (optimized)
 local function createHealthBillboard(character)
     local humanoid = character:FindFirstChild("Humanoid")
     local head = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
     if not humanoid or not head then return end
     
-    local billboard = Instance.new("BillboardGui")
+    local billboard = getBillboardFromPool()
     billboard.Size = UDim2.new(0, 100, 0, 50)
     billboard.StudsOffset = Vector3.new(0, 4, 0)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = math.huge
     billboard.Parent = head
     
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Size = UDim2.new(1, 0, 1, 0)
-    textLabel.BackgroundTransparency = 0.3
-    textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+    local textLabel = billboard:FindFirstChild("TextLabel")
+    if not textLabel then
+        textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 0.3
+        textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+        textLabel.TextScaled = true
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.TextStrokeTransparency = 0
+        textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+        textLabel.Parent = billboard
+    end
+    
     textLabel.Text = tostring(math.floor(humanoid.Health))
     textLabel.TextColor3 = Color3.new(1, 1, 1)
-    textLabel.TextScaled = true
-    textLabel.Font = Enum.Font.SourceSansBold
-    textLabel.TextStrokeTransparency = 0
-    textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-    textLabel.Parent = billboard
 
     -- Update billboard size and transparency based on distance
     local camera = workspace.CurrentCamera
@@ -841,6 +1035,7 @@ local function createHealthBillboard(character)
             textLabel.BackgroundTransparency = math.max(0.3, transparency)
         else
             connection:Disconnect()
+            returnBillboardToPool(billboard)
         end
     end)
     
@@ -876,6 +1071,29 @@ local function createHeadshotBox(character)
     return billboard
 end
 
+-- Function to create wall box
+local function createWallBox(character)
+    local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+    if not torso then return end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(3, 0, 4, 0)
+    billboard.StudsOffset = Vector3.new(0, 0, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = math.huge
+    billboard.Parent = torso
+    
+    local box = Instance.new("Frame")
+    box.Size = UDim2.new(1, 0, 1, 0)
+    box.BackgroundColor3 = Color3.new(1, 0, 0)
+    box.BackgroundTransparency = 0.7
+    box.BorderSizePixel = 2
+    box.BorderColor3 = Color3.new(1, 0, 0)
+    box.Parent = billboard
+    
+    return billboard
+end
+
 -- Function to check if character has weapon
 local function getCharacterWeapon(character)
     for _, weapons in pairs(weaponCategories) do
@@ -888,7 +1106,7 @@ local function getCharacterWeapon(character)
     return nil
 end
 
--- Function to apply highlight
+-- Function to apply highlight (optimized)
 local function applyHighlight(character)
     if character and character:IsA("Model") then
         local humanoid = character:FindFirstChild("Humanoid")
@@ -925,7 +1143,7 @@ local function applyHighlight(character)
     end
 end
 
--- Function to apply player highlight
+-- Function to apply player highlight (optimized)
 local function applyPlayerHighlight(character)
     if character and character:IsA("Model") then
         local humanoid = character:FindFirstChild("Humanoid")
@@ -946,13 +1164,13 @@ local function applyPlayerHighlight(character)
                     }
                     
                     updatePlayerHighlights()
-                    end
                 end
             end
         end
     end
+end
 
--- Function to apply crate highlight
+-- Function to apply crate highlight (optimized)
 local function applyCrateHighlight(object)
     if object and object:IsA("Model") and object.Name == "Crate" and not isInExcludedModel(object) then
         if not crateHighlights[object] then
@@ -965,15 +1183,15 @@ local function applyCrateHighlight(object)
             
             crateHighlights[object] = {
                 highlight = highlight,
-                            billboard = billboard
-                        }
+                billboard = billboard
+            }
             
             updateCrateHighlights()
-                        end
-                    end
-                end
+        end
+    end
+end
 
--- Function to apply workbench highlight
+-- Function to apply workbench highlight (optimized)
 local function applyWorkbenchHighlight(object)
     if object and object:IsA("Model") and object.Name == "Workbench" and not isInExcludedModel(object) then
         if not workbenchHighlights[object] then
@@ -990,11 +1208,11 @@ local function applyWorkbenchHighlight(object)
             }
             
             updateWorkbenchHighlights()
-            end
         end
     end
+end
 
--- Function to apply ammo highlight
+-- Function to apply ammo highlight (optimized)
 local function applyAmmoHighlight(object)
     if object and object:IsA("Model") and not isInExcludedModel(object) then
         for ammoName, displayName in pairs(ammoCategories["Ammo"]) do
@@ -1014,14 +1232,14 @@ local function applyAmmoHighlight(object)
                     }
                     
                     updateAmmoHighlights()
-end
+                end
                 break
             end
         end
-        end
     end
+end
 
--- Function to apply weapon highlight
+-- Function to apply weapon highlight (optimized)
 local function applyWeaponHighlight(object)
     if object and object:IsA("Model") and not isInExcludedModel(object) then
         for weaponName, displayName in pairs(weaponCategories["Weapons"]) do
@@ -1041,14 +1259,14 @@ local function applyWeaponHighlight(object)
                     }
                     
                     updateWeaponHighlights()
-            end
+                end
                 break
             end
         end
     end
 end
 
--- Function to apply headshot box
+-- Function to apply headshot box (optimized)
 local function applyHeadshotBox(character)
     if character and character:IsA("Model") then
         local humanoid = character:FindFirstChild("Humanoid")
@@ -1062,14 +1280,14 @@ local function applyHeadshotBox(character)
                             box = box
                         }
                         updateHeadshotBoxes()
+                    end
+                end
             end
         end
     end
 end
-            end
-        end
 
--- Function to apply health display
+-- Function to apply health display (optimized)
 local function applyHealthDisplay(character)
     if character and character:IsA("Model") then
         local humanoid = character:FindFirstChild("Humanoid")
@@ -1084,16 +1302,40 @@ local function applyHealthDisplay(character)
                         }
                         if connection then
                             healthConnections[character] = connection
-    end
+                        end
                         updateHealthDisplay()
-end
-            end
+                    end
+                end
             end
         end
     end
 end
 
--- Function to update highlights based on toggles
+-- Function to apply wall box (optimized)
+local function applyWallBox(character)
+    if character and character:IsA("Model") then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid and not isInExcludedModel(character) then
+            local plr = game.Players:GetPlayerFromCharacter(character)
+            if not plr then
+                local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+                if torso and hasWallBetween(torso.Position) then
+                    if not wallBoxes[character] then
+                        local box = createWallBox(character)
+                        if box then
+                            wallBoxes[character] = {
+                                box = box
+                            }
+                            updateWallBoxes()
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- Function to update highlights based on toggles (optimized)
 function updateHighlights()
     for character, data in pairs(highlights) do
         if character.Parent and toggles[data.weaponName] then
@@ -1103,13 +1345,15 @@ function updateHighlights()
             end
         else
             if data.highlight then data.highlight:Destroy() end
-            if data.billboard then data.billboard:Destroy() end
+            if data.billboard then 
+                returnBillboardToPool(data.billboard)
+            end
             highlights[character] = nil
         end
     end
 end
 
--- Function to update player highlights
+-- Function to update player highlights (optimized)
 function updatePlayerHighlights()
     for character, data in pairs(playerHighlights) do
         if character.Parent and data.player then
@@ -1119,77 +1363,87 @@ function updatePlayerHighlights()
             end
         else
             if data.highlight then data.highlight:Destroy() end
-            if data.billboard then data.billboard:Destroy() end
-            playerHighlights[character] = nil
+            if data.billboard then 
+                returnBillboardToPool(data.billboard)
             end
+            playerHighlights[character] = nil
         end
     end
+end
 
--- Function to update crate highlights
+-- Function to update crate highlights (optimized)
 function updateCrateHighlights()
     for object, data in pairs(crateHighlights) do
         if object.Parent then
             data.highlight.Enabled = showCrates
             if data.billboard then
                 data.billboard.Enabled = showCrates
-end
+            end
         else
             if data.highlight then data.highlight:Destroy() end
-            if data.billboard then data.billboard:Destroy() end
+            if data.billboard then 
+                returnBillboardToPool(data.billboard)
+            end
             crateHighlights[object] = nil
         end
     end
-    end
+end
     
--- Function to update workbench highlights
+-- Function to update workbench highlights (optimized)
 function updateWorkbenchHighlights()
     for object, data in pairs(workbenchHighlights) do
         if object.Parent then
             data.highlight.Enabled = showWorkbenches
             if data.billboard then
                 data.billboard.Enabled = showWorkbenches
-        end
+            end
         else
             if data.highlight then data.highlight:Destroy() end
-            if data.billboard then data.billboard:Destroy() end
+            if data.billboard then 
+                returnBillboardToPool(data.billboard)
+            end
             workbenchHighlights[object] = nil
-    end
+        end
     end
 end
 
--- Function to update ammo highlights
+-- Function to update ammo highlights (optimized)
 function updateAmmoHighlights()
     for object, data in pairs(ammoHighlights) do
         if object.Parent and toggles[data.ammoName] then
             data.highlight.Enabled = toggles[data.ammoName].enabled
             if data.billboard then
                 data.billboard.Enabled = toggles[data.ammoName].enabled
-        end
+            end
         else
             if data.highlight then data.highlight:Destroy() end
-            if data.billboard then data.billboard:Destroy() end
+            if data.billboard then 
+                returnBillboardToPool(data.billboard)
+            end
             ammoHighlights[object] = nil
+        end
     end
-        end
-        end
+end
 
--- Function to update weapon highlights
+-- Function to update weapon highlights (optimized)
 function updateWeaponHighlights()
     for object, data in pairs(weaponHighlights) do
         if object.Parent and toggles[data.weaponName] then
             data.highlight.Enabled = toggles[data.weaponName].enabled
             if data.billboard then
                 data.billboard.Enabled = toggles[data.weaponName].enabled
-        end
+            end
         else
             if data.highlight then data.highlight:Destroy() end
-            if data.billboard then data.billboard:Destroy() end
+            if data.billboard then 
+                returnBillboardToPool(data.billboard)
+            end
             weaponHighlights[object] = nil
         end
-        end
-        end
+    end
+end
 
--- Function to update headshot boxes
+-- Function to update headshot boxes (optimized)
 function updateHeadshotBoxes()
     for character, data in pairs(headshotBoxes) do
         if character.Parent then
@@ -1197,27 +1451,46 @@ function updateHeadshotBoxes()
         else
             if data.box then data.box:Destroy() end
             headshotBoxes[character] = nil
-    end
+        end
     end
 end
 
--- Function to update health display
+-- Function to update health display (optimized)
 function updateHealthDisplay()
     for character, data in pairs(healthGuis) do
         if character.Parent then
             data.billboard.Enabled = showHealth
         else
-            if data.billboard then data.billboard:Destroy() end
+            if data.billboard then 
+                returnBillboardToPool(data.billboard)
+            end
             healthGuis[character] = nil
             if healthConnections[character] then
                 healthConnections[character]:Disconnect()
                 healthConnections[character] = nil
+            end
         end
-    end
     end
 end
 
--- Function to remove highlight when character is removed
+-- Function to update wall boxes (optimized)
+function updateWallBoxes()
+    for character, data in pairs(wallBoxes) do
+        if character.Parent then
+            local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+            if torso and wallLockEnabled and hasWallBetween(torso.Position) then
+                data.box.Enabled = true
+            else
+                data.box.Enabled = false
+            end
+        else
+            if data.box then data.box:Destroy() end
+            wallBoxes[character] = nil
+        end
+    end
+end
+
+-- Function to remove highlight when character is removed (optimized)
 local function removeHighlight(character)
     if highlights[character] then
         if highlights[character].highlight then
