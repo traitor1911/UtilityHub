@@ -415,9 +415,6 @@ local autoLockEnabled = false
 local autoSwitchEnabled = false
 local wallLockEnabled = false
 
--- Category collapse states
-local categoryCollapsed = {}
-
 -- Cache for optimization
 local objectCache = {}
 local lastCacheUpdate = 0
@@ -603,12 +600,6 @@ local function unlock()
     lockedHumanoid = nil
         end
 
--- Function to toggle category collapse
-local function toggleCategoryCollapse(categoryName)
-    categoryCollapsed[categoryName] = not categoryCollapsed[categoryName]
-    refreshCategoryDisplay()
-        end
-
 -- Function to toggle all weapons in a category
 local function toggleCategory(categoryName, enabled)
     local categories = categoryName == "Ammo" and ammoCategories or weaponCategories
@@ -733,7 +724,7 @@ local function toggleWallLock()
     updateWallBoxes()
 end
 
--- Function to create category header with collapse functionality
+-- Function to create category header
 local function createCategoryHeader(categoryName, index)
     local headerFrame = Instance.new("Frame")
     headerFrame.Size = UDim2.new(1, -10, 0, 35)
@@ -746,23 +737,9 @@ local function createCategoryHeader(categoryName, index)
     headerCorner.CornerRadius = UDim.new(0, 8)
     headerCorner.Parent = headerFrame
     
-    local collapseButton = Instance.new("TextButton")
-    collapseButton.Size = UDim2.new(0, 25, 0, 25)
-    collapseButton.Position = UDim2.new(0, 5, 0, 5)
-    collapseButton.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
-    collapseButton.Text = categoryCollapsed[categoryName] and "+" or "-"
-    collapseButton.TextColor3 = Color3.new(1, 1, 1)
-    collapseButton.TextScaled = true
-    collapseButton.Font = Enum.Font.GothamBold
-    collapseButton.Parent = headerFrame
-    
-    local collapseCorner = Instance.new("UICorner")
-    collapseCorner.CornerRadius = UDim.new(0, 6)
-    collapseCorner.Parent = collapseButton
-    
     local headerLabel = Instance.new("TextLabel")
-    headerLabel.Size = UDim2.new(0.55, 0, 1, 0)
-    headerLabel.Position = UDim2.new(0, 35, 0, 0)
+    headerLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    headerLabel.Position = UDim2.new(0, 10, 0, 0)
     headerLabel.BackgroundTransparency = 1
     headerLabel.Text = categoryName
     headerLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -798,21 +775,16 @@ local function createCategoryHeader(categoryName, index)
     disableCorner.CornerRadius = UDim.new(0, 6)
     disableCorner.Parent = disableAllButton
     
-    collapseButton.MouseButton1Click:Connect(function()
-        toggleCategoryCollapse(categoryName)
-    end)
-    
     enableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, true)
     end)
-
+    
     disableAllButton.MouseButton1Click:Connect(function()
         toggleCategory(categoryName, false)
     end)
 
     categoryButtons[categoryName] = {
-        frame = headerFrame,
-        collapsed = categoryCollapsed[categoryName] or false
+        frame = headerFrame
     }
 
     return 40
@@ -825,8 +797,6 @@ local function createToggle(weaponName, displayName, index, isAmmo, isWeapon, ca
     toggleFrame.Position = UDim2.new(0, 15, 0, (index - 1) * 40)
     toggleFrame.BackgroundTransparency = 1
     toggleFrame.Parent = scrollFrame
-    toggleFrame.Visible = not categoryCollapsed[categoryName]
-    
     local toggleButton = Instance.new("TextButton")
     toggleButton.Size = UDim2.new(0, 25, 0, 25)
     toggleButton.Position = UDim2.new(0, 0, 0, 2.5)
@@ -876,7 +846,7 @@ local function createToggle(weaponName, displayName, index, isAmmo, isWeapon, ca
     return 40
 end
 
--- Function to refresh category display based on collapse states
+-- Function to refresh category display
 function refreshCategoryDisplay()
     for _, child in pairs(scrollFrame:GetChildren()) do
         if child:IsA("Frame") then
@@ -888,22 +858,18 @@ function refreshCategoryDisplay()
     local currentIndex = 1
     for categoryName, ammo in pairs(ammoCategories) do
         currentIndex = currentIndex + createCategoryHeader(categoryName, currentIndex) / 40
-        if not categoryCollapsed[categoryName] then
             for ammoName, displayName in pairs(ammo) do
                 currentIndex = currentIndex + createToggle(ammoName, displayName, currentIndex, true, false, categoryName) / 40
             end
-        end
         currentIndex = currentIndex + 0.5
     end
 
     for categoryName, weapons in pairs(weaponCategories) do
         currentIndex = currentIndex + createCategoryHeader(categoryName, currentIndex) / 40
-        if not categoryCollapsed[categoryName] then
             for weaponName, displayName in pairs(weapons) do
                 local isWeapon = categoryName == "Weapons"
                 currentIndex = currentIndex + createToggle(weaponName, displayName, currentIndex, false, isWeapon, categoryName) / 40
             end
-        end
         currentIndex = currentIndex + 0.5
     end
     
