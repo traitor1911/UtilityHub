@@ -968,13 +968,13 @@ local function returnBillboardToPool(billboard)
     table.insert(billboardPool, billboard)
 end
 
--- Function to create billboard gui (optimized)
+-- Function to create billboard gui (optimized and smaller for NPCs)
 local function createBillboard(character, weaponName)
     local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
     if not humanoidRootPart then return end
     
     local billboard = getBillboardFromPool()
-    billboard.Size = UDim2.new(0, 100, 0, 50)
+    billboard.Size = UDim2.new(0, 100, 0, 40)
     billboard.StudsOffset = Vector3.new(0, 3, 0)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = math.huge
@@ -984,12 +984,19 @@ local function createBillboard(character, weaponName)
     if not textLabel then
         textLabel = Instance.new("TextLabel")
         textLabel.Size = UDim2.new(1, 0, 1, 0)
-        textLabel.BackgroundTransparency = 1
+        textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+        textLabel.BackgroundTransparency = 0.3
+        textLabel.BorderSizePixel = 2
+        textLabel.BorderColor3 = Color3.new(1, 1, 1)
         textLabel.TextScaled = true
-        textLabel.Font = Enum.Font.GothamBold
+        textLabel.Font = Enum.Font.Gotham
         textLabel.TextStrokeTransparency = 0
         textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
         textLabel.Parent = billboard
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = textLabel
     end
     
     -- Find display name from categories
@@ -997,9 +1004,9 @@ local function createBillboard(character, weaponName)
     for catName, weapons in pairs(weaponCategories) do
         if weapons[weaponName] then
             displayName = weapons[weaponName]
-            break
+                break
+            end
         end
-    end
     
     textLabel.Text = displayName
     textLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -1012,22 +1019,26 @@ local function createBillboard(character, weaponName)
     connection = runService.Heartbeat:Connect(function()
         if humanoidRootPart.Parent and camera then
             local distance = (camera.CFrame.Position - humanoidRootPart.Position).Magnitude
-            local scale = math.max(0.3, math.min(1.5, 50 / distance))
-            local transparency = math.max(0.1, math.min(0.8, distance / 150))
+            local scale = math.max(0.4, math.min(1.5, 50 / distance))
+            local transparency = math.max(0, math.min(0.6, distance / 200))
             
-            billboard.Size = UDim2.new(0, 100 * scale, 0, 50 * scale)
+            billboard.Size = UDim2.new(0, 100 * scale, 0, 40 * scale)
             textLabel.TextTransparency = transparency
             textLabel.TextStrokeTransparency = transparency
+            textLabel.BackgroundTransparency = math.max(0.3, transparency + 0.3)
+            textLabel.BorderColor3 = Color3.new(1 - transparency, 1 - transparency, 1 - transparency)
         else
             connection:Disconnect()
+            if billboard.Parent then
             returnBillboardToPool(billboard)
-        end
+            end
+end
     end)
     
     return billboard
 end
 
--- Function to create player billboard gui (optimized)
+-- Function to create player billboard gui (optimized and smaller)
 local function createPlayerBillboard(character, playerName)
     local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
     if not humanoidRootPart then return end
@@ -1043,13 +1054,20 @@ local function createPlayerBillboard(character, playerName)
     if not textLabel then
         textLabel = Instance.new("TextLabel")
         textLabel.Size = UDim2.new(1, 0, 1, 0)
-        textLabel.BackgroundTransparency = 1
+        textLabel.BackgroundColor3 = Color3.new(0, 0.4, 0.4)
+        textLabel.BackgroundTransparency = 0.3
+        textLabel.BorderSizePixel = 2
+        textLabel.BorderColor3 = Color3.new(0, 1, 1)
         textLabel.TextScaled = true
-        textLabel.Font = Enum.Font.GothamBold
+        textLabel.Font = Enum.Font.Gotham
         textLabel.TextStrokeTransparency = 0
         textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
         textLabel.Parent = billboard
-    end
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = textLabel
+            end
     
     textLabel.Text = playerName
     textLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -1062,29 +1080,33 @@ local function createPlayerBillboard(character, playerName)
     connection = runService.Heartbeat:Connect(function()
         if humanoidRootPart.Parent and camera then
             local distance = (camera.CFrame.Position - humanoidRootPart.Position).Magnitude
-            local scale = math.max(0.3, math.min(1.2, 40 / distance))
-            local transparency = math.max(0.1, math.min(0.8, distance / 150))
+            local scale = math.max(0.4, math.min(1.5, 40 / distance))
+            local transparency = math.max(0, math.min(0.6, distance / 200))
             
             billboard.Size = UDim2.new(0, 80 * scale, 0, 30 * scale)
             textLabel.TextTransparency = transparency
             textLabel.TextStrokeTransparency = transparency
+            textLabel.BackgroundTransparency = math.max(0.3, transparency + 0.3)
+            textLabel.BorderColor3 = Color3.new(0, 1 - transparency, 1 - transparency)
         else
             connection:Disconnect()
+            if billboard.Parent then
             returnBillboardToPool(billboard)
-        end
-    end)
-    
-    return billboard
+            end
 end
+end)
 
--- Function to create object billboard gui (optimized)
+    return billboard
+    end
+
+-- Function to create object billboard gui (optimized and more visible)
 local function createObjectBillboard(object, text)
     local primaryPart = object.PrimaryPart or object:FindFirstChildOfClass("Part")
     if not primaryPart then return end
     
     local billboard = getBillboardFromPool()
-    billboard.Size = UDim2.new(0, 80, 0, 30)
-    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.Size = UDim2.new(0, 100, 0, 35)
+    billboard.StudsOffset = Vector3.new(0, 4, 0)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = math.huge
     billboard.Parent = primaryPart
@@ -1093,14 +1115,21 @@ local function createObjectBillboard(object, text)
     if not textLabel then
         textLabel = Instance.new("TextLabel")
         textLabel.Size = UDim2.new(1, 0, 1, 0)
-        textLabel.BackgroundTransparency = 1
+        textLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+        textLabel.BackgroundTransparency = 0.3
+        textLabel.BorderSizePixel = 2
+        textLabel.BorderColor3 = Color3.new(1, 1, 1)
         textLabel.TextScaled = true
         textLabel.Font = Enum.Font.GothamBold
         textLabel.TextStrokeTransparency = 0
         textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
         textLabel.Parent = billboard
-    end
     
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = textLabel
+end
+
     textLabel.Text = text
     textLabel.TextColor3 = Color3.new(1, 1, 1)
 
@@ -1112,29 +1141,33 @@ local function createObjectBillboard(object, text)
     connection = runService.Heartbeat:Connect(function()
         if primaryPart.Parent and camera then
             local distance = (camera.CFrame.Position - primaryPart.Position).Magnitude
-            local scale = math.max(0.3, math.min(1.2, 40 / distance))
-            local transparency = math.max(0.1, math.min(0.8, distance / 150))
+            local scale = math.max(0.5, math.min(1.8, 50 / distance))
+            local transparency = math.max(0, math.min(0.6, distance / 200))
             
-            billboard.Size = UDim2.new(0, 80 * scale, 0, 30 * scale)
+            billboard.Size = UDim2.new(0, 100 * scale, 0, 35 * scale)
             textLabel.TextTransparency = transparency
             textLabel.TextStrokeTransparency = transparency
-        else
+            textLabel.BackgroundTransparency = math.max(0.3, transparency + 0.3)
+            textLabel.BorderColor3 = Color3.new(1 - transparency, 1 - transparency, 1 - transparency)
+                    else
             connection:Disconnect()
-            returnBillboardToPool(billboard)
+            if billboard.Parent then
+                returnBillboardToPool(billboard)
+        end
         end
     end)
     
     return billboard
-end
-
--- Function to create health billboard gui (optimized)
+        end
+    
+-- Function to create health billboard gui (optimized and smaller)
 local function createHealthBillboard(character)
-    local humanoid = character:FindFirstChild("Humanoid")
+        local humanoid = character:FindFirstChild("Humanoid")
     local head = character:FindFirstChild("Head") or character:FindFirstChild("HumanoidRootPart")
     if not humanoid or not head then return end
     
     local billboard = getBillboardFromPool()
-    billboard.Size = UDim2.new(0, 100, 0, 50)
+    billboard.Size = UDim2.new(0, 80, 0, 35)
     billboard.StudsOffset = Vector3.new(0, 4, 0)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = math.huge
@@ -1144,17 +1177,23 @@ local function createHealthBillboard(character)
     if not textLabel then
         textLabel = Instance.new("TextLabel")
         textLabel.Size = UDim2.new(1, 0, 1, 0)
-        textLabel.BackgroundTransparency = 0.3
-        textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+        textLabel.BackgroundTransparency = 0.2
+        textLabel.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+        textLabel.BorderSizePixel = 2
+        textLabel.BorderColor3 = Color3.new(0, 1, 0)
         textLabel.TextScaled = true
-        textLabel.Font = Enum.Font.GothamBold
+        textLabel.Font = Enum.Font.Gotham
         textLabel.TextStrokeTransparency = 0
         textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
         textLabel.Parent = billboard
-    end
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = textLabel
+        end
     
     textLabel.Text = tostring(math.floor(humanoid.Health))
-    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextColor3 = Color3.new(0, 1, 0)
 
     -- Update billboard size and transparency based on distance
     local camera = workspace.CurrentCamera
@@ -1164,29 +1203,44 @@ local function createHealthBillboard(character)
     connection = runService.Heartbeat:Connect(function()
         if head.Parent and camera then
             local distance = (camera.CFrame.Position - head.Position).Magnitude
-            local scale = math.max(0.3, math.min(1.2, 40 / distance))
-            local transparency = math.max(0.1, math.min(0.8, distance / 150))
+            local scale = math.max(0.4, math.min(1.5, 40 / distance))
+            local transparency = math.max(0, math.min(0.6, distance / 200))
             
-            billboard.Size = UDim2.new(0, 100 * scale, 0, 50 * scale)
+            billboard.Size = UDim2.new(0, 80 * scale, 0, 35 * scale)
             textLabel.TextTransparency = transparency
             textLabel.TextStrokeTransparency = transparency
-            textLabel.BackgroundTransparency = math.max(0.3, transparency)
+            textLabel.BackgroundTransparency = math.max(0.2, transparency + 0.2)
+            
+            -- Color based on health
+            local healthPercent = humanoid.Health / humanoid.MaxHealth
+            if healthPercent > 0.6 then
+                textLabel.TextColor3 = Color3.new(0, 1, 0)
+                textLabel.BorderColor3 = Color3.new(0, 1 - transparency, 0)
+            elseif healthPercent > 0.3 then
+                textLabel.TextColor3 = Color3.new(1, 1, 0)
+                textLabel.BorderColor3 = Color3.new(1 - transparency, 1 - transparency, 0)
+        else
+                textLabel.TextColor3 = Color3.new(1, 0, 0)
+                textLabel.BorderColor3 = Color3.new(1 - transparency, 0, 0)
+            end
         else
             connection:Disconnect()
-            returnBillboardToPool(billboard)
+            if billboard.Parent then
+                returnBillboardToPool(billboard)
+            end
         end
-    end)
-    
+end)
+
     -- Update health display
     local healthConnection = humanoid.HealthChanged:Connect(function()
         if textLabel.Parent then
             textLabel.Text = tostring(math.floor(humanoid.Health))
-        end
-    end)
-    
-    return billboard, healthConnection
-end
+            end
+end)
 
+    return billboard, healthConnection
+    end
+    
 -- Function to create headshot box
 local function createHeadshotBox(character)
     local head = character:FindFirstChild("Head")
@@ -1207,7 +1261,7 @@ local function createHeadshotBox(character)
     box.Parent = billboard
     
     return billboard
-end
+        end
 
 -- Function to create wall box
 local function createWallBox(character)
@@ -1230,15 +1284,15 @@ local function createWallBox(character)
     box.Parent = billboard
     
     return billboard
-end
-
+    end
+    
 -- Function to check if character has weapon
 local function getCharacterWeapon(character)
     for _, weapons in pairs(weaponCategories) do
         for weaponName, _ in pairs(weapons) do
             if weaponName ~= "NoWeapon" and character:FindFirstChild(weaponName) then
                 return weaponName
-            end
+    end
         end
     end
     return nil
@@ -1264,7 +1318,7 @@ local function applyHighlight(character)
                     else
                         highlight.FillColor = Color3.new(1, 0, 0) -- Red for no weapon
                         highlight.OutlineColor = Color3.new(1, 0, 0) -- Red outline for no weapon
-                    end
+    end
 
                     local billboard = createBillboard(character, actualWeaponName)
                     
@@ -1275,11 +1329,11 @@ local function applyHighlight(character)
                     }
                     
                     updateHighlights()
-                end
-            end
         end
     end
 end
+        end
+        end
 
 -- Function to apply player highlight (optimized)
 local function applyPlayerHighlight(character)
@@ -1302,11 +1356,11 @@ local function applyPlayerHighlight(character)
                     }
                     
                     updatePlayerHighlights()
-                end
-            end
         end
-    end
-end
+        end
+        end
+        end
+        end
 
 -- Function to apply crate highlight (optimized)
 local function applyCrateHighlight(object)
@@ -1326,9 +1380,8 @@ local function applyCrateHighlight(object)
             
             updateCrateHighlights()
         end
-    end
+            end
 end
-
 -- Function to apply workbench highlight (optimized)
 local function applyWorkbenchHighlight(object)
     if object and object:IsA("Model") and object.Name == "Workbench" and not isInExcludedModel(object) then
