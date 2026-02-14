@@ -19,6 +19,8 @@ local GUIVisible = true
 local CFrameWalkSpeed = 1.5
 local MadeOfSteelEnabled = false
 local MadeOfSteelSound = nil
+local FloatEnabled = false
+local FloatHeight = 0
 ------------------------------------------------
 -- // GUI
 ------------------------------------------------
@@ -27,8 +29,8 @@ ScreenGui.Name = "MaliciousWinterHub"
 ScreenGui.ResetOnSpawn = false
 
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0,300,0,180)
-Main.Position = UDim2.new(0.5,-150,0.5,-90)
+Main.Size = UDim2.new(0,300,0,220)
+Main.Position = UDim2.new(0.5,-150,0.5,-110)
 Main.BackgroundColor3 = Color3.fromRGB(45,30,30)
 Main.Active = true
 Main.Draggable = true
@@ -84,6 +86,8 @@ CFrameWalkSpeedBox.TextColor3 = Color3.new(1,1,1)
 CFrameWalkSpeedBox.ClearTextOnFocus = false
 
 local MadeOfSteelBtn = button("Made of Steel ([): OFF",75)
+
+local FloatBtn = button("Float (N): OFF",115)
 
 -- Close button
 local CloseBtn = Instance.new("TextButton", Main)
@@ -148,12 +152,59 @@ local function toggleMadeOfSteel()
 		end
 	end
 end
+
+------------------------------------------------
+-- // FLOAT LOGIC
+------------------------------------------------
+local FloatBodyVelocity = nil
+
+local function cleanupFloat()
+		if FloatBodyVelocity then
+			FloatBodyVelocity:Destroy()
+			FloatBodyVelocity = nil
+	end
+	end
+
+local function FloatControl()
+	while FloatEnabled do
+		RunService.RenderStepped:Wait()
+		local character = lp.Character
+		if character and character:FindFirstChild("HumanoidRootPart") then
+			local rootPart = character.HumanoidRootPart
+			local camera = workspace.CurrentCamera
+			if not FloatBodyVelocity or FloatBodyVelocity.Parent ~= rootPart then
+				cleanupFloat()
+				FloatBodyVelocity = Instance.new("BodyVelocity")
+				FloatBodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)
+				FloatBodyVelocity.Velocity = Vector3.new(0, 0, 0)
+				FloatBodyVelocity.Parent = rootPart
+end
+			-- Calculate vertical velocity based on camera look direction
+			local cameraLookVector = camera.CFrame.LookVector
+			local verticalVelocity = cameraLookVector.Y * 16
+			FloatBodyVelocity.Velocity = Vector3.new(0, verticalVelocity, 0)
+	else
+			cleanupFloat()
+	end
+	end
+		cleanupFloat()
+		end
+
+local function toggleFloat()
+	FloatEnabled = not FloatEnabled
+	FloatBtn.Text = "Float (N): "..(FloatEnabled and "ON" or "OFF")
+		if FloatEnabled then
+		FloatControl()
+	else
+		cleanupFloat()
+		end
+	end
+
 ------------------------------------------------
 -- // BUTTON CONNECTIONS
 ------------------------------------------------
 local conn1 = CFrameWalkBtn.MouseButton1Click:Connect(toggleCFrameWalk)
 table.insert(Connections, conn1)
-
 local conn2 = CFrameWalkSpeedBox.FocusLost:Connect(function()
 	local n = tonumber(CFrameWalkSpeedBox.Text)
 	if n and n > 0 and n <= 500 then
@@ -161,20 +212,23 @@ local conn2 = CFrameWalkSpeedBox.FocusLost:Connect(function()
 		CFrameWalkSpeedBox.Text = tostring(n)
 	else
 		CFrameWalkSpeedBox.Text = tostring(CFrameWalkSpeed)
-	end
+		end
 end)
 table.insert(Connections, conn2)
 local conn3 = MadeOfSteelBtn.MouseButton1Click:Connect(toggleMadeOfSteel)
 table.insert(Connections, conn3)
-
-local conn4 = CloseBtn.MouseButton1Click:Connect(function()
+local conn4 = FloatBtn.MouseButton1Click:Connect(toggleFloat)
+table.insert(Connections, conn4)
+local conn5 = CloseBtn.MouseButton1Click:Connect(function()
 	-- Reset state
 	CFrameWalkEnabled = false
 	MadeOfSteelEnabled = false
+	FloatEnabled = false
 	if MadeOfSteelSound then
 		MadeOfSteelSound:Stop()
 		MadeOfSteelSound:Destroy()
 	end
+	cleanupFloat()
 	-- Disconnect all connections
 	for _, connection in ipairs(Connections) do
 		if connection then
@@ -185,12 +239,12 @@ local conn4 = CloseBtn.MouseButton1Click:Connect(function()
 	-- Destroy GUI
 	ScreenGui:Destroy()
 end)
-table.insert(Connections, conn4)
+table.insert(Connections, conn5)
 
 ------------------------------------------------
 -- // KEYBINDS
 ------------------------------------------------
-local conn5 = UserInputService.InputBegan:Connect(function(input,gp)
+local conn6 = UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
 	if input.KeyCode == Enum.KeyCode.B then
 		toggleCFrameWalk()
@@ -199,6 +253,8 @@ local conn5 = UserInputService.InputBegan:Connect(function(input,gp)
 		Main.Visible = GUIVisible
 	elseif input.KeyCode == Enum.KeyCode.LeftBracket then
 		toggleMadeOfSteel()
-	end
+	elseif input.KeyCode == Enum.KeyCode.N then
+		toggleFloat()
+		end
 end)
-table.insert(Connections, conn5)
+table.insert(Connections, conn6)
