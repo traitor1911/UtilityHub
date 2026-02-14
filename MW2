@@ -169,8 +169,9 @@ local function FloatControl()
 	while FloatEnabled do
 		RunService.RenderStepped:Wait()
 		local character = lp.Character
-		if character and character:FindFirstChild("HumanoidRootPart") then
+		if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid") then
 			local rootPart = character.HumanoidRootPart
+			local humanoid = character.Humanoid
 			local camera = workspace.CurrentCamera
 			if not FloatBodyVelocity or FloatBodyVelocity.Parent ~= rootPart then
 				cleanupFloat()
@@ -179,15 +180,28 @@ local function FloatControl()
 				FloatBodyVelocity.Velocity = Vector3.new(0, 0, 0)
 				FloatBodyVelocity.Parent = rootPart
 end
-			-- Calculate vertical velocity based on camera look direction
+			-- Get movement input and camera look direction
+			local moveDirection = humanoid.MoveDirection
 			local cameraLookVector = camera.CFrame.LookVector
-			local verticalVelocity = cameraLookVector.Y * 16
+			local verticalVelocity = 0
+			
+			-- Check if W or S is being pressed and apply vertical movement based on camera angle
+			if moveDirection.Magnitude > 0 then
+				-- W key (forward movement) - follow camera direction
+				if moveDirection:Dot(camera.CFrame.LookVector) > 0 then
+					verticalVelocity = cameraLookVector.Y * 16
+				-- S key (backward movement) - opposite of camera direction
+				elseif moveDirection:Dot(camera.CFrame.LookVector) < 0 then
+					verticalVelocity = cameraLookVector.Y * -16
+	end
+	end
+			
 			FloatBodyVelocity.Velocity = Vector3.new(0, verticalVelocity, 0)
 	else
-			cleanupFloat()
-	end
-	end
 		cleanupFloat()
+		end
+	end
+	cleanupFloat()
 		end
 
 local function toggleFloat()
@@ -197,8 +211,8 @@ local function toggleFloat()
 		FloatControl()
 	else
 		cleanupFloat()
-		end
 	end
+		end
 
 ------------------------------------------------
 -- // BUTTON CONNECTIONS
@@ -235,7 +249,6 @@ local conn5 = CloseBtn.MouseButton1Click:Connect(function()
 			connection:Disconnect()
 		end
 	end
-
 	-- Destroy GUI
 	ScreenGui:Destroy()
 end)
