@@ -1,0 +1,204 @@
+-- Check if script is already running
+if game:GetService("CoreGui"):FindFirstChild("MaliciousWinterHub") then
+	game:GetService("CoreGui").MaliciousWinterHub:Destroy()
+end
+
+--// Services
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local SoundService = game:GetService("SoundService")
+--// Player
+local lp = Players.LocalPlayer
+------------------------------------------------
+-- // STATE
+------------------------------------------------
+local CFrameWalkEnabled = false
+local GUIVisible = true
+local CFrameWalkSpeed = 1.5
+local MadeOfSteelEnabled = false
+local MadeOfSteelSound = nil
+------------------------------------------------
+-- // GUI
+------------------------------------------------
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "MaliciousWinterHub"
+ScreenGui.ResetOnSpawn = false
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0,300,0,180)
+Main.Position = UDim2.new(0.5,-150,0.5,-90)
+Main.BackgroundColor3 = Color3.fromRGB(45,30,30)
+Main.Active = true
+Main.Draggable = true
+Main.BorderSizePixel = 0
+
+local function label(text,y,size,parent)
+	parent = parent or Main
+	local l = Instance.new("TextLabel", parent)
+	l.Position = UDim2.new(0,10,0,y)
+	l.Size = UDim2.new(1,-20,0,20)
+	l.BackgroundTransparency = 1
+	l.Text = text
+	l.TextColor3 = Color3.new(1,1,1)
+	l.Font = Enum.Font.GothamBold
+	l.TextSize = size
+	return l
+end
+
+local function button(text,y,parent)
+	parent = parent or Main
+	local b = Instance.new("TextButton", parent)
+	b.Position = UDim2.new(0,10,0,y)
+	b.Size = UDim2.new(0,200,0,32)
+	b.Text = text
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 16
+	b.TextColor3 = Color3.new(1,1,1)
+	b.BackgroundColor3 = Color3.fromRGB(55,40,40)
+	return b
+end
+
+label("Malicious Winter",5,18)
+
+local VersionLabel = Instance.new("TextLabel", Main)
+VersionLabel.Position = UDim2.new(0,200,0,5)
+VersionLabel.Size = UDim2.new(0,90,0,20)
+VersionLabel.BackgroundTransparency = 1
+VersionLabel.Text = "V1.0.0"
+VersionLabel.TextColor3 = Color3.fromRGB(150,150,150)
+VersionLabel.Font = Enum.Font.Gotham
+VersionLabel.TextSize = 12
+local CFrameWalkBtn = button("CFrame Walk (B): OFF",35)
+
+local CFrameWalkSpeedBox = Instance.new("TextBox", Main)
+CFrameWalkSpeedBox.Position = UDim2.new(0,220,0,35)
+CFrameWalkSpeedBox.Size = UDim2.new(0,70,0,32)
+CFrameWalkSpeedBox.PlaceholderText = "1.5"
+CFrameWalkSpeedBox.Text = "1.5"
+CFrameWalkSpeedBox.Font = Enum.Font.Gotham
+CFrameWalkSpeedBox.TextSize = 14
+CFrameWalkSpeedBox.BackgroundColor3 = Color3.fromRGB(60,45,45)
+CFrameWalkSpeedBox.TextColor3 = Color3.new(1,1,1)
+CFrameWalkSpeedBox.ClearTextOnFocus = false
+
+local MadeOfSteelBtn = button("Made of Steel ([): OFF",75)
+
+-- Close button
+local CloseBtn = Instance.new("TextButton", Main)
+CloseBtn.Position = UDim2.new(0,5,1,-37)
+CloseBtn.Size = UDim2.new(0,32,0,32)
+CloseBtn.Text = "X"
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 18
+CloseBtn.TextColor3 = Color3.new(1,1,1)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180,50,50)
+
+------------------------------------------------
+-- // CONNECTION STORAGE
+------------------------------------------------
+local Connections = {}
+
+------------------------------------------------
+-- // CFRAME WALK LOGIC
+------------------------------------------------
+local function CFrameWalkControl()
+	while CFrameWalkEnabled do
+		RunService.RenderStepped:Wait()
+		local character = lp.Character
+		if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid") then
+			local humanoid = character.Humanoid
+			local rootPart = character.HumanoidRootPart
+			local moveDirection = humanoid.MoveDirection
+			if moveDirection.Magnitude > 0 then
+				rootPart.CFrame = rootPart.CFrame + moveDirection * CFrameWalkSpeed / 10
+			end
+		end
+	end
+end
+
+local function toggleCFrameWalk()
+	CFrameWalkEnabled = not CFrameWalkEnabled
+	CFrameWalkBtn.Text = "CFrame Walk (B): "..(CFrameWalkEnabled and "ON" or "OFF")
+	if CFrameWalkEnabled then
+		CFrameWalkControl()
+	end
+end
+
+------------------------------------------------
+-- // MADE OF STEEL LOGIC
+------------------------------------------------
+local function toggleMadeOfSteel()
+	MadeOfSteelEnabled = not MadeOfSteelEnabled
+	MadeOfSteelBtn.Text = "Made of Steel ([): "..(MadeOfSteelEnabled and "ON" or "OFF")
+	
+	if MadeOfSteelEnabled then
+		if not MadeOfSteelSound then
+			MadeOfSteelSound = Instance.new("Sound")
+			MadeOfSteelSound.SoundId = "rbxassetid://13484994113"
+			MadeOfSteelSound.Volume = 0.5
+			MadeOfSteelSound.Looped = true
+			MadeOfSteelSound.Parent = SoundService
+		end
+		MadeOfSteelSound:Play()
+	else
+		if MadeOfSteelSound then
+			MadeOfSteelSound:Stop()
+		end
+	end
+end
+------------------------------------------------
+-- // BUTTON CONNECTIONS
+------------------------------------------------
+local conn1 = CFrameWalkBtn.MouseButton1Click:Connect(toggleCFrameWalk)
+table.insert(Connections, conn1)
+
+local conn2 = CFrameWalkSpeedBox.FocusLost:Connect(function()
+	local n = tonumber(CFrameWalkSpeedBox.Text)
+	if n and n > 0 and n <= 500 then
+		CFrameWalkSpeed = n
+		CFrameWalkSpeedBox.Text = tostring(n)
+	else
+		CFrameWalkSpeedBox.Text = tostring(CFrameWalkSpeed)
+	end
+end)
+table.insert(Connections, conn2)
+local conn3 = MadeOfSteelBtn.MouseButton1Click:Connect(toggleMadeOfSteel)
+table.insert(Connections, conn3)
+
+local conn4 = CloseBtn.MouseButton1Click:Connect(function()
+	-- Reset state
+	CFrameWalkEnabled = false
+	MadeOfSteelEnabled = false
+	if MadeOfSteelSound then
+		MadeOfSteelSound:Stop()
+		MadeOfSteelSound:Destroy()
+	end
+	-- Disconnect all connections
+	for _, connection in ipairs(Connections) do
+		if connection then
+			connection:Disconnect()
+		end
+	end
+
+	-- Destroy GUI
+	ScreenGui:Destroy()
+end)
+table.insert(Connections, conn4)
+
+------------------------------------------------
+-- // KEYBINDS
+------------------------------------------------
+local conn5 = UserInputService.InputBegan:Connect(function(input,gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.B then
+		toggleCFrameWalk()
+	elseif input.KeyCode == Enum.KeyCode.RightBracket then
+		GUIVisible = not GUIVisible
+		Main.Visible = GUIVisible
+	elseif input.KeyCode == Enum.KeyCode.LeftBracket then
+		toggleMadeOfSteel()
+	end
+end)
+table.insert(Connections, conn5)
