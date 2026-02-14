@@ -357,7 +357,7 @@ local weaponCategories = {
         ["PTrap"] = "Punji",
         ["Dynamite"] = "Dynamite!!",
         ["TSpear"] = "MTac",
-        ["IbuP"] = "VIRUS"
+        ["IbuP"] = "VIRUS22"
     },
     ["Pistols"] = {
         ["RVolver"] = "Magnum",
