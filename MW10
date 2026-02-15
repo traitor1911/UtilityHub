@@ -27,7 +27,18 @@ local deleting = false
 local history = {}
 local NoClipEnabled = false
 local AutoWalkEnabled = false
-local AutoWalkTarget = nil
+
+-- Excluded models for lock-on
+local excludedModels = {"Workshop", "Quarter", "SpawnDecor", "SpawnModel", "Masters"}
+
+-- Aim assist variables
+			local camera = workspace.CurrentCamera
+local targetLock = false
+local lockedHead = nil
+local lockedHumanoid = nil
+local aimAssistEnabled = false
+local autoSwitchEnabled = false
+local wallLockEnabled = false
 ------------------------------------------------
 -- // GUI
 ------------------------------------------------
@@ -54,7 +65,7 @@ local function label(text,y,size,parent)
 	l.Font = Enum.Font.GothamBold
 	l.TextSize = size
 	return l
-end
+		end
 
 local function button(text,y,parent)
 	parent = parent or Main
@@ -67,7 +78,20 @@ local function button(text,y,parent)
 	b.TextColor3 = Color3.new(1,1,1)
 	b.BackgroundColor3 = Color3.fromRGB(55,40,40)
 	return b
-end
+	end
+
+local function leftButton(text,y,parent)
+	parent = parent or Main
+	local b = Instance.new("TextButton", parent)
+	b.Position = UDim2.new(0,10,0,y)
+	b.Size = UDim2.new(0,90,0,32)
+	b.Text = text
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 14
+	b.TextColor3 = Color3.new(1,1,1)
+	b.BackgroundColor3 = Color3.fromRGB(55,40,40)
+	return b
+		end
 
 label("Malicious Winter",5,18)
 
@@ -79,7 +103,15 @@ VersionLabel.Text = "V1.0.0"
 VersionLabel.TextColor3 = Color3.fromRGB(150,150,150)
 VersionLabel.Font = Enum.Font.Gotham
 VersionLabel.TextSize = 12
+
+-- Left side buttons
+local AimBtn = leftButton("Aim: OFF",35)
+local AutoBtn = leftButton("Auto: OFF",75)
+local WallBtn = leftButton("Wall: OFF",115)
+
 local CFrameWalkBtn = button("CFrame Walk (B): OFF",35)
+CFrameWalkBtn.Position = UDim2.new(0,110,0,35)
+CFrameWalkBtn.Size = UDim2.new(0,100,0,32)
 
 local CFrameWalkSpeedBox = Instance.new("TextBox", Main)
 CFrameWalkSpeedBox.Position = UDim2.new(0,220,0,35)
@@ -92,19 +124,20 @@ CFrameWalkSpeedBox.BackgroundColor3 = Color3.fromRGB(60,45,45)
 CFrameWalkSpeedBox.TextColor3 = Color3.new(1,1,1)
 CFrameWalkSpeedBox.ClearTextOnFocus = false
 
-local MadeOfSteelBtn = button("Made of Steel ([): OFF",75)
+local MadeOfSteelBtn = button("Made of Steel ([): OFF",155)
 
-local FloatBtn = button("Float (N): OFF",115)
+local FloatBtn = button("Float (N): OFF",195)
 
-local DeleteBtn = button("Delete: OFF",155)
+local DeleteBtn = button("Delete: OFF",235)
 
-local UndoBtn = button("Undo: Click",195)
+local UndoBtn = button("Undo: Click",275)
 
-local HomeBtn = button("Home (K)",235)
+local HomeBtn = button("Home (K)",315)
 
-local CastleBtn = button("Castle (L)",275)
+local CastleBtn = button("Castle (L)",355)
 
-local AgentCDBtn = button("TP AgentCD",315)
+-- Adjust main frame height to accommodate new buttons
+Main.Size = UDim2.new(0,300,0,420)
 
 -- Close button
 local CloseBtn = Instance.new("TextButton", Main)
@@ -120,6 +153,115 @@ CloseBtn.BackgroundColor3 = Color3.fromRGB(180,50,50)
 -- // CONNECTION STORAGE
 ------------------------------------------------
 local Connections = {}
+------------------------------------------------
+-- // AIM ASSIST LOGIC
+------------------------------------------------
+-- Function to check if character is in excluded model
+local function isInExcludedModel(character)
+    local current = character.Parent
+    while current and current ~= workspace do
+        for _, excludedName in pairs(excludedModels) do
+            if current.Name == excludedName then
+                return true
+	end
+	end
+        current = current.Parent
+    end
+    return false
+end
+
+-- Function to check if there's a wall between camera and target
+local function hasWallBetween(targetPosition)
+    local raycast = workspace:Raycast(camera.CFrame.Position, (targetPosition - camera.CFrame.Position).Unit * (targetPosition - camera.CFrame.Position).Magnitude)
+    if raycast then
+        local hit = raycast.Instance
+        -- Check if the hit part belongs to a character (NPC or player)
+        local character = hit.Parent
+        if character:FindFirstChild("Humanoid") then
+            return false -- Hit a character, not a wall
+        end
+        return true -- Hit something else (wall)
+    end
+    return false -- No obstruction
+end
+
+-- Find NPC head closest to mouse (with 150 stud distance limit)
+local function getClosestHeadToMouse()
+    local closestHead = nil
+    local closestHum = nil
+    local shortest = math.huge
+
+    local mousePos = Vector2.new(Mouse.X, Mouse.Y)
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj ~= lp.Character then
+            local hum = obj:FindFirstChildWhichIsA("Humanoid")
+            local head = obj:FindFirstChild("Head")
+
+            if hum and head and hum.Health > 1 and not Players:GetPlayerFromCharacter(obj) and not isInExcludedModel(obj) then
+                -- Check distance limit of 150 studs
+                local distance = (camera.CFrame.Position - head.Position).Magnitude
+                if distance <= 150 then
+                    -- Check wall if wall lock is disabled
+                    if not wallLockEnabled and hasWallBetween(head.Position) then
+                        -- Skip this target if there's a wall and wall lock is disabled
+                    else
+                        local screenPos, onScreen = camera:WorldToScreenPoint(head.Position)
+
+                        if onScreen then
+                            local dist = (mousePos - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+
+                            if dist < shortest then
+                                shortest = dist
+                                closestHead = head
+                                closestHum = hum
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return closestHead, closestHum
+end
+
+-- Lock helper
+local function acquireTarget()
+    lockedHead, lockedHumanoid = getClosestHeadToMouse()
+end
+
+local function unlock()
+    targetLock = false
+    lockedHead = nil
+    lockedHumanoid = nil
+end
+
+-- Function to toggle aim assist
+local function toggleAimAssist()
+    aimAssistEnabled = not aimAssistEnabled
+    AimBtn.Text = "Aim: "..(aimAssistEnabled and "ON" or "OFF")
+    if not aimAssistEnabled then
+        -- Unlock if currently locked
+        if targetLock then
+            targetLock = false
+            lockedHead = nil
+            lockedHumanoid = nil
+        end
+    end
+end
+
+-- Function to toggle auto switch
+local function toggleAutoSwitch()
+    autoSwitchEnabled = not autoSwitchEnabled
+    AutoBtn.Text = "Auto: "..(autoSwitchEnabled and "ON" or "OFF")
+end
+
+-- Function to toggle wall lock
+local function toggleWallLock()
+    wallLockEnabled = not wallLockEnabled
+    WallBtn.Text = "Wall: "..(wallLockEnabled and "ON" or "OFF")
+end
 
 ------------------------------------------------
 -- // NOCLIP LOGIC
@@ -188,42 +330,84 @@ end
 end
 
 ------------------------------------------------
--- // WEAPON TELEPORT LOGIC
+-- // WEAPON PILE LOGIC
 ------------------------------------------------
-local function TeleportWeapons()
+local function TeleportWeaponsToPile()
 	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
 		return
 		end
-
+	
 	local playerPosition = lp.Character.HumanoidRootPart.Position
 	local weaponNames = {
-		"URVolver", "MRVolver", "Avto", "ScarL", "SKS", "LeverShotgun", "Scorp", "MPTen", "SubPS", "SubMP",
-		"AshR", "Benelli", "GPan", "STIPistol", "HStim", "Glock", "AJM", "BPack", "DMusket", "UMP",
-		"ASVal", "Mateba", "SubLMG", "DBarrel", "APack", "SPShotgun", "SubAK", "AAShotgun", "TSMG", "FNLMG",
-		"SubMPX", "SubMCX", "SUPAK", "SubPP", "KShotgun", "Mac", "HRifle", "Pistol", "DEFStim", "SubScar",
-		"SubVector", "DoubleShotgun", "Tourni", "HKMR", "Deagle", "FAMAS", "CRVolver", "EBR", "CPBow", "SSnare",
-		"MPistol", "PMine", "ImpN", "FAid", "SUPMPistol", "AdrStim", "BPRifle", "AWMSniper", "IntSniper", "SUPSniper",
-		"HuntingR", "Rifle", "AMR", "SPDStim", "DStim", "BPNailed", "BPSTI", "BPAKM", "BPKSG", "KSG", "PKillers"
+		"AgentCD", "URVolver", "MRVolver", "Avto", "ScarL", "SKSold", "SKS", "LeverShotgun", 
+		"Scorp", "MPTen", "SubPS", "SubMP", "AshR", "Benelli", "GPan", "STIPistol", "HStim", 
+		"Glock", "AJM", "BPack", "DMusket", "UMP", "ASVal", "Mateba", "SubLMG", "DBarrel", 
+		"APack", "SPShotgun", "SubAK", "AAShotgun", "TSMG", "FNLMG", "SubMPX", "SubMCX", 
+		"SUPAK", "SubPP", "KShotgun", "Mac", "HRifle", "Pistol", "DEFStim", "SubScar", 
+		"SubVector", "DoubleShotgun", "Tourni", "HKMR", "Deagle", "FAMAS", "CRVolver", "EBR", 
+		"CPBow", "SSnare", "MPistol", "PMine", "ImpN", "FAid", "SUPMPistol", "AdrStim", 
+		"BPRifle", "AWMSniper", "IntSniper", "SUPSniper", "HuntingR", "Rifle", "AMR", 
+		"SPDStim", "DStim", "BPNailed", "BPSTI", "BPAKM", "BPKSG", "KSG", "PKillers"
 	}
-	
 	local weaponCount = 0
-	local pileRadius = 5
-	for _, obj in pairs(Workspace:GetDescendants()) do
+	local gridSize = 5 -- 5x5 grid
+	
+	-- Check WeaponDrops first
+	local weaponDrops = Workspace:FindFirstChild("WeaponDrops")
+	if weaponDrops then
+		for _, obj in pairs(weaponDrops:GetChildren()) do
 		if obj:IsA("Model") then
-			for _, weaponName in pairs(weaponNames) do
-				if obj.Name == weaponName then
+				for _, weaponName in pairs(weaponNames) do
+					if obj.Name == weaponName then
+						local row = math.floor(weaponCount / gridSize)
+						local col = weaponCount % gridSize
+						local offsetX = (col - 2) * 2 -- Center around player (-4, -2, 0, 2, 4)
+						local offsetZ = (row - 2) * 2 + 3 -- Start 3 studs in front, then spread
+						local targetPosition = playerPosition + Vector3.new(offsetX, 0, offsetZ)
 					weaponCount = weaponCount + 1
-					
-					-- Calculate position in a circular pile
-					local angle = (weaponCount - 1) * (math.pi * 2 / math.max(weaponCount, 8))
-					local offsetX = math.cos(angle) * pileRadius
-					local offsetZ = math.sin(angle) * pileRadius
-					local targetPosition = playerPosition + Vector3.new(offsetX, 2, offsetZ)
-					
-					if obj.PrimaryPart then
+					if obj:FindFirstChild("Handle") then
+						obj.Handle.CFrame = CFrame.new(targetPosition)
+					elseif obj.PrimaryPart then
 						obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
 	else
-						-- If no PrimaryPart, try to move the first BasePart found
+						-- If no Handle or PrimaryPart, try to move the first BasePart found
+						for _, part in pairs(obj:GetChildren()) do
+							if part:IsA("BasePart") then
+								part.CFrame = CFrame.new(targetPosition)
+								break
+	end
+	end
+end
+					break
+	end
+	end
+end
+	end
+	end
+			
+	-- Check all workspace descendants for any missed weapons
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		if obj:IsA("Model") and obj.Parent ~= lp.Character then
+			for _, weaponName in pairs(weaponNames) do
+				if obj.Name == weaponName then
+					-- Skip if already processed in WeaponDrops
+					if weaponDrops and obj:IsDescendantOf(weaponDrops) then
+								break
+		end
+					
+					local row = math.floor(weaponCount / gridSize)
+					local col = weaponCount % gridSize
+					local offsetX = (col - 2) * 2 -- Center around player (-4, -2, 0, 2, 4)
+					local offsetZ = (row - 2) * 2 + 3 -- Start 3 studs in front, then spread
+					local targetPosition = playerPosition + Vector3.new(offsetX, 0, offsetZ)
+					weaponCount = weaponCount + 1
+					
+					if obj:FindFirstChild("Handle") then
+						obj.Handle.CFrame = CFrame.new(targetPosition)
+					elseif obj.PrimaryPart then
+						obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+	else
+						-- If no Handle or PrimaryPart, try to move the first BasePart found
 						for _, part in pairs(obj:GetChildren()) do
 							if part:IsA("BasePart") then
 								part.CFrame = CFrame.new(targetPosition)
@@ -241,61 +425,44 @@ end
 ------------------------------------------------
 -- // CRATES LOGIC
 ------------------------------------------------
-local INTERACTABLES = workspace:WaitForChild("Interactables")
-
--- Check if crate has "Interact"
-local function crateHasInteract(crate)
-	return crate:FindFirstChild("Interact", true) ~= nil
+local function getCharacter()
+	return lp.Character or lp.CharacterAdded:Wait()
 		end
+
+local function getNearestValidCrate()
+	local interactables = Workspace:FindFirstChild("Interactables")
+	if not interactables then return nil end
 	
--- Get all valid crates
-local function getValidCrates()
-	local valid = {}
-	for _, obj in ipairs(INTERACTABLES:GetChildren()) do
+	local character = getCharacter()
+	local hrp = character:WaitForChild("HumanoidRootPart")
+	
+	local nearestCrate = nil
+	local shortestDistance = math.huge
+	for _, obj in ipairs(interactables:GetChildren()) do
 		if obj:IsA("Model") and obj.Name == "Crate" then
-			if crateHasInteract(obj) then
-				table.insert(valid, obj)
+			-- Must contain "Interact"
+			if obj:FindFirstChild("Interact", true) then
+				local distance = (obj:GetPivot().Position - hrp.Position).Magnitude
+				
+				if distance < shortestDistance then
+					shortestDistance = distance
+					nearestCrate = obj
 	end
 		end
 		end
-
-	return valid
-	end
-
--- Get a random valid crate
-local function getRandomCrate()
-	local crates = getValidCrates()
-	if #crates == 0 then
-		return nil
 	end
 	
-	return crates[math.random(1, #crates)]
-	end
+	return nearestCrate
+		end
 
--- Teleport directly to the TOP CENTER of the crate model
 local function TeleportToCrate()
-	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
-		return
-	end
-
-	local crate = getRandomCrate()
+	local crate = getNearestValidCrate()
 	if not crate then return end
-	local root = lp.Character.HumanoidRootPart
-	local humanoid = lp.Character.Humanoid
-
-	-- Use model bounding box for accurate center + size
-	local cf, size = crate:GetBoundingBox()
-
-	local crateTopY = cf.Position.Y + (size.Y / 2)
-	local characterHeight = humanoid.HipHeight + (root.Size.Y / 2)
-
-	local targetPosition = Vector3.new(
-		cf.Position.X,
-		crateTopY + characterHeight,
-		cf.Position.Z
-	)
-
-	root.CFrame = CFrame.new(targetPosition)
+	
+	local character = getCharacter()
+	local hrp = character:WaitForChild("HumanoidRootPart")
+	
+	hrp.CFrame = crate:GetPivot() * CFrame.new(0, 3, 0)
 	end
 ------------------------------------------------
 -- // AMMO TELEPORT LOGIC
@@ -303,19 +470,23 @@ local function TeleportToCrate()
 local function TeleportAmmo()
 	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
 		return
-	end
+		end
 
 	local playerPosition = lp.Character.HumanoidRootPart.Position
 	local ammoTypes = {"Shell Ammo", "Light Ammo", "Short Ammo", "Long Ammo", "Heavy Ammo", "Medium Ammo"}
 	local ammoCount = 0
+	local gridSize = 3 -- 3x3 grid for ammo
 	
 	for _, obj in pairs(Workspace:GetDescendants()) do
 		if obj:IsA("Model") then
 			for _, ammoType in pairs(ammoTypes) do
 				if obj.Name == ammoType then
+					local row = math.floor(ammoCount / gridSize)
+					local col = ammoCount % gridSize
+					local offsetX = (col - 1) * 2 -- Center around player (-2, 0, 2)
+					local offsetZ = (row - 1) * 2 + 3 -- Start 3 studs in front, then spread
+					local targetPosition = playerPosition + Vector3.new(offsetX, 0, offsetZ)
 					ammoCount = ammoCount + 1
-					local offsetX = (ammoCount - 1) * 3
-					local targetPosition = playerPosition + Vector3.new(offsetX, 0, 3)
 					
 					if obj.PrimaryPart then
 						obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
@@ -330,15 +501,11 @@ local function TeleportAmmo()
 		end
 					break
 	end
-		end
-		end
 	end
-		end
+	end
+	end
+end
 
-local function TeleportAmmoAndAgentCD()
-		TeleportAmmo()
-	TeleportAgentCD()
-	end
 ------------------------------------------------
 -- // CFRAME WALK LOGIC
 ------------------------------------------------
@@ -354,7 +521,7 @@ local function CFrameWalkControl()
 			local moveDirection = humanoid.MoveDirection
 			if moveDirection.Magnitude > 0 then
 				rootPart.CFrame = rootPart.CFrame + moveDirection * CFrameWalkSpeed / 10
-	end
+		end
 	end
 		end
 
@@ -475,9 +642,15 @@ local function undoLastDelete()
 ------------------------------------------------
 -- // BUTTON CONNECTIONS
 ------------------------------------------------
-local conn1 = CFrameWalkBtn.MouseButton1Click:Connect(toggleCFrameWalk)
+local conn1 = AimBtn.MouseButton1Click:Connect(toggleAimAssist)
 table.insert(Connections, conn1)
-local conn2 = CFrameWalkSpeedBox.FocusLost:Connect(function()
+local conn2 = AutoBtn.MouseButton1Click:Connect(toggleAutoSwitch)
+table.insert(Connections, conn2)
+local conn3 = WallBtn.MouseButton1Click:Connect(toggleWallLock)
+table.insert(Connections, conn3)
+local conn4 = CFrameWalkBtn.MouseButton1Click:Connect(toggleCFrameWalk)
+table.insert(Connections, conn4)
+local conn5 = CFrameWalkSpeedBox.FocusLost:Connect(function()
 	local n = tonumber(CFrameWalkSpeedBox.Text)
 	if n and n > 0 and n <= 500 then
 		CFrameWalkSpeed = n
@@ -486,21 +659,27 @@ local conn2 = CFrameWalkSpeedBox.FocusLost:Connect(function()
 		CFrameWalkSpeedBox.Text = tostring(CFrameWalkSpeed)
 		end
 end)
-table.insert(Connections, conn2)
-local conn3 = MadeOfSteelBtn.MouseButton1Click:Connect(toggleMadeOfSteel)
-table.insert(Connections, conn3)
-local conn4 = FloatBtn.MouseButton1Click:Connect(toggleFloat)
-table.insert(Connections, conn4)
-local conn5 = DeleteBtn.MouseButton1Click:Connect(toggleDelete)
 table.insert(Connections, conn5)
-local conn6 = UndoBtn.MouseButton1Click:Connect(undoLastDelete)
+local conn6 = MadeOfSteelBtn.MouseButton1Click:Connect(toggleMadeOfSteel)
 table.insert(Connections, conn6)
-local conn7 = CloseBtn.MouseButton1Click:Connect(function()
+local conn7 = FloatBtn.MouseButton1Click:Connect(toggleFloat)
+table.insert(Connections, conn7)
+local conn8 = DeleteBtn.MouseButton1Click:Connect(toggleDelete)
+table.insert(Connections, conn8)
+local conn9 = UndoBtn.MouseButton1Click:Connect(undoLastDelete)
+table.insert(Connections, conn9)
+local conn10 = CloseBtn.MouseButton1Click:Connect(function()
 	-- Reset state
 	CFrameWalkEnabled = false
 	MadeOfSteelEnabled = false
 	FloatEnabled = false
 	AutoWalkEnabled = false
+	aimAssistEnabled = false
+	autoSwitchEnabled = false
+	wallLockEnabled = false
+	targetLock = false
+	lockedHead = nil
+	lockedHumanoid = nil
 	if MadeOfSteelSound then
 		MadeOfSteelSound:Stop()
 		MadeOfSteelSound:Destroy()
@@ -516,23 +695,19 @@ local conn7 = CloseBtn.MouseButton1Click:Connect(function()
 	-- Destroy GUI
 	ScreenGui:Destroy()
 end)
-table.insert(Connections, conn7)
-local conn8 = HomeBtn.MouseButton1Click:Connect(function()
+table.insert(Connections, conn10)
+local conn11 = HomeBtn.MouseButton1Click:Connect(function()
 	AutoWalkToTarget(Vector3.new(346.68, -0.04, -9.71))
 end)
-table.insert(Connections, conn8)
-local conn9 = CastleBtn.MouseButton1Click:Connect(function()
+table.insert(Connections, conn11)
+local conn12 = CastleBtn.MouseButton1Click:Connect(function()
 	AutoWalkToTarget(Vector3.new(-49.27, 47.25, 151.14))
 end)
-table.insert(Connections, conn9)
-local conn10 = AgentCDBtn.MouseButton1Click:Connect(function()
-	TeleportAgentCD()
-end)
-table.insert(Connections, conn10)
+table.insert(Connections, conn12)
 ------------------------------------------------
 -- // MOUSE CLICK FOR DELETE
 ------------------------------------------------
-local conn11 = Mouse.Button1Down:Connect(function()
+local conn13 = Mouse.Button1Down:Connect(function()
 	if not deleting then return end
 	local target = Mouse.Target
 	if target and target:IsA("BasePart") and not target:IsDescendantOf(lp.Character) then
@@ -552,11 +727,62 @@ local conn11 = Mouse.Button1Down:Connect(function()
 		target:Destroy()
 	end
 end)
-table.insert(Connections, conn11)
+table.insert(Connections, conn13)
+------------------------------------------------
+-- // AIM ASSIST RENDER STEPPED
+------------------------------------------------
+local conn14 = RunService.RenderStepped:Connect(function()
+    if not targetLock then return end
+
+    -- if no target or dead → grab next automatically (only if auto switch is enabled)
+    if not lockedHead
+        or not lockedHumanoid
+        or lockedHumanoid.Health <= 1
+        or not lockedHead.Parent then
+
+        if autoSwitchEnabled then
+            acquireTarget()
+
+            if not lockedHead then
+                -- nobody left alive
+                unlock()
+                return
+            end
+        else
+            -- auto switch disabled, just unlock
+            unlock()
+            return
+        end
+    end
+
+    -- Check if locked target is still within 150 studs
+    if lockedHead then
+        local distance = (camera.CFrame.Position - lockedHead.Position).Magnitude
+        if distance > 150 then
+            if autoSwitchEnabled then
+                acquireTarget()
+                if not lockedHead then
+                    unlock()
+                    return
+                end
+            else
+                unlock()
+                return
+            end
+        end
+    end
+
+    camera.CFrame = CFrame.new(
+        camera.CFrame.Position,
+        lockedHead.Position + Vector3.new(0, 0.25, 0)
+    )
+end)
+table.insert(Connections, conn14)
+
 ------------------------------------------------
 -- // KEYBINDS
 ------------------------------------------------
-local conn12 = UserInputService.InputBegan:Connect(function(input,gp)
+local conn15 = UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
 	if input.KeyCode == Enum.KeyCode.B then
 		toggleCFrameWalk()
@@ -572,11 +798,20 @@ local conn12 = UserInputService.InputBegan:Connect(function(input,gp)
 	elseif input.KeyCode == Enum.KeyCode.L then
 		AutoWalkToTarget(Vector3.new(-49.27, 47.25, 151.14))
 	elseif input.KeyCode == Enum.KeyCode.Comma then
-		TeleportToCrate()
+		TeleportWeaponsToPile()
 	elseif input.KeyCode == Enum.KeyCode.Period then
-		TeleportAmmoAndAgentCD()
+		TeleportAmmo()
 	elseif input.KeyCode == Enum.KeyCode.P then
-		TeleportWeapons()
+		TeleportToCrate()
+	elseif input.KeyCode == Enum.KeyCode.Y and aimAssistEnabled then
+		if targetLock then
+			unlock()
+		else
+			targetLock = true
+			acquireTarget()
+		end
+	elseif input.KeyCode == Enum.KeyCode.Minus then
+		toggleAutoSwitch()
 	end
 end)
-table.insert(Connections, conn12)
+table.insert(Connections, conn15)
