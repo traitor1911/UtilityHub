@@ -27,6 +27,7 @@ local deleting = false
 local history = {}
 local NoClipEnabled = false
 local AutoWalkEnabled = false
+local HighlightEnabled = false
 
 -- Excluded models for lock-on
 local excludedModels = {"Workshop", "Quarter", "SpawnDecor", "SpawnModel", "Masters"}
@@ -39,6 +40,21 @@ local lockedHumanoid = nil
 local aimAssistEnabled = false
 local autoSwitchEnabled = false
 local wallLockEnabled = false
+
+-- Highlight storage
+local highlightConnections = {}
+local healthGuis = {}
+local highlightedModels = {}
+local activeHostilesConnection = nil
+
+-- AI_QUEEN teleport variables
+local aiQueenFrozen = false
+local aiQueenFrozenCFrame = nil
+local aiQueenHighlight = nil
+local distanceInFront = 5
+
+-- Bridge variables
+local bridgePart = nil
 ------------------------------------------------
 -- // GUI
 ------------------------------------------------
@@ -47,8 +63,8 @@ ScreenGui.Name = "MaliciousWinterHub"
 ScreenGui.ResetOnSpawn = false
 
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0,300,0,380)
-Main.Position = UDim2.new(0.5,-150,0.5,-190)
+Main.Size = UDim2.new(0,300,0,420)
+Main.Position = UDim2.new(0.5,-150,0.5,-210)
 Main.BackgroundColor3 = Color3.fromRGB(45,30,30)
 Main.Active = true
 Main.Draggable = true
@@ -128,16 +144,50 @@ local MadeOfSteelBtn = button("Made of Steel ([): OFF",155)
 
 local FloatBtn = button("Float (N): OFF",195)
 
-local DeleteBtn = button("Delete: OFF",235)
+local DeleteBtn = button("Delete (H): OFF",235)
 
-local UndoBtn = button("Undo: Click",275)
+local UndoBtn = button("Undo (Del): Click",275)
 
-local HomeBtn = button("Home (K)",315)
+local NoClipBtn = button("NoClip (M): OFF",315)
 
-local CastleBtn = button("Castle (L)",355)
+local HighlightBtn = button("Highlight: OFF",355)
+
+local HomeBtn = button("Home (K)",395)
+
+local CastleBtn = button("Castle (L)",435)
+
+-- AI_QUEEN teleport button (bottom right corner)
+local AIQueenBtn = Instance.new("TextButton", Main)
+AIQueenBtn.Position = UDim2.new(1,-80,1,-37)
+AIQueenBtn.Size = UDim2.new(0,75,0,32)
+AIQueenBtn.Text = "TP Queen"
+AIQueenBtn.Font = Enum.Font.Gotham
+AIQueenBtn.TextSize = 12
+AIQueenBtn.TextColor3 = Color3.new(1,1,1)
+AIQueenBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
+
+-- Bridge teleport button (above AI Queen button)
+local BridgeTeleportBtn = Instance.new("TextButton", Main)
+BridgeTeleportBtn.Position = UDim2.new(1,-80,1,-74)
+BridgeTeleportBtn.Size = UDim2.new(0,75,0,32)
+BridgeTeleportBtn.Text = "TP Bridge"
+BridgeTeleportBtn.Font = Enum.Font.Gotham
+BridgeTeleportBtn.TextSize = 12
+BridgeTeleportBtn.TextColor3 = Color3.new(1,1,1)
+BridgeTeleportBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
+
+-- Bridge create button (above bridge teleport button)
+local BridgeCreateBtn = Instance.new("TextButton", Main)
+BridgeCreateBtn.Position = UDim2.new(1,-80,1,-111)
+BridgeCreateBtn.Size = UDim2.new(0,75,0,32)
+BridgeCreateBtn.Text = "Bridge"
+BridgeCreateBtn.Font = Enum.Font.Gotham
+BridgeCreateBtn.TextSize = 12
+BridgeCreateBtn.TextColor3 = Color3.new(1,1,1)
+BridgeCreateBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
 
 -- Adjust main frame height to accommodate new buttons
-Main.Size = UDim2.new(0,300,0,420)
+Main.Size = UDim2.new(0,300,0,480)
 
 -- Close button
 local CloseBtn = Instance.new("TextButton", Main)
@@ -264,43 +314,335 @@ local function toggleWallLock()
 end
 
 ------------------------------------------------
+-- // BRIDGE LOGIC
+------------------------------------------------
+local function createBridge()
+    -- Remove existing bridge if it exists
+    if bridgePart then
+        bridgePart:Destroy()
+        bridgePart = nil
+    end
+    
+    -- Create new bridge part
+    bridgePart = Instance.new("Part")
+    bridgePart.Name = "CustomBridge"
+    bridgePart.Material = Enum.Material.Concrete
+    bridgePart.Color = Color3.fromRGB(100, 100, 100)
+    bridgePart.Anchored = true
+    bridgePart.CanCollide = true
+    
+    -- Calculate size and position
+    local x1, z1 = -18.35, -91.90
+    local x2, z2 = -99.83, -62.18
+    local y = -134.68
+    
+    local centerX = (x1 + x2) / 2
+    local centerZ = (z1 + z2) / 2
+    local sizeX = math.abs(x2 - x1)
+    local sizeZ = math.abs(z2 - z1)
+    
+    bridgePart.Size = Vector3.new(sizeX, 2, sizeZ)
+    bridgePart.Position = Vector3.new(centerX, y, centerZ)
+    bridgePart.Parent = workspace
+end
+
+local function teleportToBridge()
+	if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+        lp.Character.HumanoidRootPart.CFrame = CFrame.new(-59.09, -134.68, -77.04)
+		end
+	end
+------------------------------------------------
+-- // AI_QUEEN TELEPORT LOGIC
+------------------------------------------------
+local function teleportAIQueen()
+        local targetFolder = workspace:FindFirstChild("activeHostiles")
+    if not targetFolder then return end
+    
+            local target = targetFolder:FindFirstChild("AI_QUEEN")
+    if not target then return end
+                local npcHRP = target:FindFirstChild("HumanoidRootPart")
+    if not npcHRP then return end
+		local character = lp.Character
+    if not character then return end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    -- Calculate position in front
+    local forward = hrp.CFrame.LookVector
+    aiQueenFrozenCFrame = CFrame.new(hrp.Position + forward * distanceInFront, hrp.Position + forward * (distanceInFront + 1))
+
+    -- Teleport NPC
+    target:SetPrimaryPartCFrame(aiQueenFrozenCFrame)
+
+    -- Create highlight if it doesn't exist
+    if not aiQueenHighlight then
+        aiQueenHighlight = Instance.new("Highlight")
+        aiQueenHighlight.FillColor = Color3.fromRGB(255, 0, 0)
+        aiQueenHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        aiQueenHighlight.Adornee = npcHRP
+        aiQueenHighlight.Parent = target
+                    end
+    aiQueenHighlight.Enabled = true
+
+    -- Freeze NPC
+    aiQueenFrozen = true
+                end
+------------------------------------------------
 -- // NOCLIP LOGIC
 ------------------------------------------------
+local noClipConnection = nil
 local function enableNoClip()
 	NoClipEnabled = true
-		local character = lp.Character
+			local character = lp.Character
 	if character then
 		for _, part in pairs(character:GetDescendants()) do
-			if part:IsA("BasePart") then
+					if part:IsA("BasePart") then
 				part.CanCollide = false
-			end
 		end
 	end
 end
-
+	
+	-- Create connection to maintain noclip
+	if noClipConnection then
+		noClipConnection:Disconnect()
+	end
+	noClipConnection = RunService.Stepped:Connect(function()
+	if NoClipEnabled then
+		local character = lp.Character
+			if character then
+				for _, part in pairs(character:GetDescendants()) do
+					if part:IsA("BasePart") then
+						part.CanCollide = false
+		end
+	end
+		end
+		end
+end)
+	end
+	
 local function disableNoClip()
 	NoClipEnabled = false
+	if noClipConnection then
+		noClipConnection:Disconnect()
+		noClipConnection = nil
+		end
 		local character = lp.Character
 	if character then
 		for _, part in pairs(character:GetDescendants()) do
 			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
 				part.CanCollide = true
+	end
+	end
+            end
+        end
+
+local function toggleNoClip()
+	if NoClipEnabled then
+	disableNoClip()
+            else
+		enableNoClip()
+            end
+	NoClipBtn.Text = "NoClip (M): "..(NoClipEnabled and "ON" or "OFF")
+        end
+------------------------------------------------
+-- // HIGHLIGHT LOGIC
+------------------------------------------------
+local function cleanupHighlights()
+	for _, connection in pairs(highlightConnections) do
+		if connection then
+			connection:Disconnect()
+		end
+	end
+	highlightConnections = {}
+	
+	for _, gui in pairs(healthGuis) do
+		if gui then
+			gui:Destroy()
+	end
+            end
+	healthGuis = {}
+	
+	-- Clear highlighted models tracking
+	for model, _ in pairs(highlightedModels) do
+				local highlight = model:FindFirstChild("Highlight")
+				if highlight then
+					highlight:Destroy()
+				end
+			end
+	highlightedModels = {}
+	
+	-- Disconnect activeHostiles connection
+	if activeHostilesConnection then
+		activeHostilesConnection:Disconnect()
+		activeHostilesConnection = nil
+		end
+	end
+
+local function createHealthGui(character)
+	local head = character:FindFirstChild("Head")
+	local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+	if not head or not humanoid then return end
+	
+	local billboardGui = Instance.new("BillboardGui")
+	billboardGui.Size = UDim2.new(0, 120, 0, 60)
+	billboardGui.StudsOffset = Vector3.new(0, 2, 0)
+	billboardGui.Parent = head
+	
+	local backgroundFrame = Instance.new("Frame")
+	backgroundFrame.Size = UDim2.new(1, 0, 1, 0)
+	backgroundFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+	backgroundFrame.BackgroundTransparency = 0.3
+	backgroundFrame.BorderSizePixel = 0
+	backgroundFrame.Parent = billboardGui
+	
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Size = UDim2.new(1, 0, 1, 0)
+	textLabel.BackgroundTransparency = 1
+	textLabel.TextColor3 = Color3.new(1, 1, 1)
+	textLabel.TextStrokeTransparency = 0.5
+	textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+	textLabel.Font = Enum.Font.GothamBold
+	textLabel.TextSize = 24
+	textLabel.Parent = backgroundFrame
+	
+	local function updateHealth()
+		if humanoid and humanoid.Parent then
+			textLabel.Text = math.floor(humanoid.Health)
+			-- Scale with distance
+			local distance = (camera.CFrame.Position - head.Position).Magnitude
+			local scale = math.max(0.5, math.min(2, 50 / distance))
+			billboardGui.Size = UDim2.new(0, 120 * scale, 0, 60 * scale)
 end
 	end
-	end
+
+	updateHealth()
+	local connection = humanoid.HealthChanged:Connect(updateHealth)
+	table.insert(highlightConnections, connection)
+	table.insert(healthGuis, billboardGui)
+end
+local function addHighlightToModel(model)
+	if highlightedModels[model] then return end -- Already highlighted
+	local humanoid = model:FindFirstChildWhichIsA("Humanoid")
+	if not humanoid then return end
+	
+	-- Add highlight
+	local highlight = Instance.new("Highlight")
+	highlight.FillColor = Color3.new(1, 0, 0)
+	highlight.OutlineColor = Color3.new(1, 1, 1)
+	highlight.FillTransparency = 0.5
+	highlight.OutlineTransparency = 0
+	highlight.Parent = model
+	-- Create health GUI
+	createHealthGui(model)
+	
+	-- Track this model and monitor its health
+	highlightedModels[model] = true
+	
+	-- Monitor health to remove highlight when dead
+	local healthConnection = humanoid.HealthChanged:Connect(function(health)
+		if health <= 0 then
+			-- Remove highlight
+			local existingHighlight = model:FindFirstChild("Highlight")
+			if existingHighlight then
+				existingHighlight:Destroy()
 		end
+
+			-- Remove from tracking
+			highlightedModels[model] = nil
+			
+			-- Clean up health GUI
+			local head = model:FindFirstChild("Head")
+			if head then
+				local billboardGui = head:FindFirstChild("BillboardGui")
+				if billboardGui then
+					billboardGui:Destroy()
+end
+	end
+end
+	end)
+	table.insert(highlightConnections, healthConnection)
+	
+	-- Monitor if model gets removed
+	local ancestryConnection = model.AncestryChanged:Connect(function()
+		if not model.Parent then
+			highlightedModels[model] = nil
+						end
+	end)
+	table.insert(highlightConnections, ancestryConnection)
+	end
+
+local function enableHighlights()
+	local activeHostiles = workspace:FindFirstChild("activeHostiles")
+	if not activeHostiles then 
+		-- Wait for activeHostiles to be created
+		local connection
+		connection = workspace.ChildAdded:Connect(function(child)
+			if child.Name == "activeHostiles" and HighlightEnabled then
+			connection:Disconnect()
+				enableHighlights()
+		end
+		end)
+		table.insert(highlightConnections, connection)
+		return 
+            end
+	
+	-- Add highlights to existing models
+	for _, model in pairs(activeHostiles:GetChildren()) do
+		if model:IsA("Model") and model:FindFirstChildWhichIsA("Humanoid") then
+			addHighlightToModel(model)
+        end
+    end
+
+	-- Monitor for new models added to activeHostiles
+	local childAddedConnection = activeHostiles.ChildAdded:Connect(function(child)
+		if child:IsA("Model") and HighlightEnabled then
+			-- Wait a moment for the humanoid to be added
+			wait(0.1)
+			if child:FindFirstChildWhichIsA("Humanoid") then
+				addHighlightToModel(child)
+                end
+            end
+end)
+	table.insert(highlightConnections, childAddedConnection)
+	activeHostilesConnection = childAddedConnection
+
+	-- Monitor for models removed from activeHostiles
+	local childRemovedConnection = activeHostiles.ChildRemoved:Connect(function(child)
+		if highlightedModels[child] then
+			highlightedModels[child] = nil
+			local highlight = child:FindFirstChild("Highlight")
+			if highlight then
+				highlight:Destroy()
+		end
+	end
+end)
+	table.insert(highlightConnections, childRemovedConnection)
+	end
+local function disableHighlights()
+	cleanupHighlights()
+end
+
+local function toggleHighlight()
+	HighlightEnabled = not HighlightEnabled
+	HighlightBtn.Text = "Highlight: "..(HighlightEnabled and "ON" or "OFF")
+	
+	if HighlightEnabled then
+		enableHighlights()
+	else
+	disableHighlights()
+		end
+	end
 ------------------------------------------------
 -- // AUTO WALK LOGIC
 ------------------------------------------------
 local function AutoWalkToTarget(targetPosition)
 			local character = lp.Character
 	if not character or not character:FindFirstChild("HumanoidRootPart") then
-		return
-		end
+                return
+            end
 			local rootPart = character.HumanoidRootPart
 	rootPart.CFrame = CFrame.new(targetPosition)
-	end
-
+        end
 ------------------------------------------------
 -- // AGENTCD LOGIC
 ------------------------------------------------
@@ -311,21 +653,29 @@ local function TeleportAgentCD()
 		local agentCD = weaponDrops:FindFirstChild("AgentCD")
 	if not agentCD then return end
 	
+	-- Check if already marked as teleported
+	if agentCD:FindFirstChild("TeleportedMarker") then return end
+	
 	if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
 			local playerPosition = lp.Character.HumanoidRootPart.Position
 			if agentCD:FindFirstChild("Handle") then
 				agentCD.Handle.CFrame = CFrame.new(playerPosition + Vector3.new(0, 10, 0))
 			elseif agentCD.PrimaryPart then
 				agentCD:SetPrimaryPartCFrame(CFrame.new(playerPosition + Vector3.new(0, 10, 0)))
-	else
+		else
 				-- If no Handle or PrimaryPart, try to move the first BasePart found
 				for _, part in pairs(agentCD:GetChildren()) do
 					if part:IsA("BasePart") then
 						part.CFrame = CFrame.new(playerPosition + Vector3.new(0, 10, 0))
 						break
-	end
+		end
 	end
 end
+		
+		-- Mark as teleported
+		local marker = Instance.new("BoolValue")
+		marker.Name = "TeleportedMarker"
+		marker.Parent = agentCD
 	end
 end
 
@@ -341,87 +691,113 @@ local function TeleportWeaponsToPile()
 	local weaponNames = {
 		"AgentCD", "URVolver", "MRVolver", "Avto", "ScarL", "SKSold", "SKS", "LeverShotgun", 
 		"Scorp", "MPTen", "SubPS", "SubMP", "AshR", "Benelli", "GPan", "STIPistol", "HStim", 
-		"Glock", "AJM", "BPack", "DMusket", "UMP", "ASVal", "Mateba", "SubLMG", "DBarrel", 
+		"Glock", "AJM", "DMusket", "UMP", "ASVal", "Mateba", "SubLMG", "DBarrel", 
 		"APack", "SPShotgun", "SubAK", "AAShotgun", "TSMG", "FNLMG", "SubMPX", "SubMCX", 
 		"SUPAK", "SubPP", "KShotgun", "Mac", "HRifle", "Pistol", "DEFStim", "SubScar", 
 		"SubVector", "DoubleShotgun", "Tourni", "HKMR", "Deagle", "FAMAS", "CRVolver", "EBR", 
 		"CPBow", "SSnare", "MPistol", "PMine", "ImpN", "FAid", "SUPMPistol", "AdrStim", 
-		"BPRifle", "AWMSniper", "IntSniper", "SUPSniper", "HuntingR", "Rifle", "AMR", 
-		"SPDStim", "DStim", "BPNailed", "BPSTI", "BPAKM", "BPKSG", "KSG", "PKillers"
+		"HuntingR", "AWMSniper", "IntSniper", "SUPSniper", "HuntingR", "Rifle", "AMR", 
+		"SPDStim", "DStim", "KSG", "PKillers", "IbuP", "BPack"
 	}
 	local weaponCount = 0
-	local gridSize = 5 -- 5x5 grid
-	
+	local itemsPerRow = 4
 	-- Check WeaponDrops first
 	local weaponDrops = Workspace:FindFirstChild("WeaponDrops")
 	if weaponDrops then
 		for _, obj in pairs(weaponDrops:GetChildren()) do
 		if obj:IsA("Model") then
-				for _, weaponName in pairs(weaponNames) do
-					if obj.Name == weaponName then
-						local row = math.floor(weaponCount / gridSize)
-						local col = weaponCount % gridSize
-						local offsetX = (col - 2) * 2 -- Center around player (-4, -2, 0, 2, 4)
-						local offsetZ = (row - 2) * 2 + 3 -- Start 3 studs in front, then spread
-						local targetPosition = playerPosition + Vector3.new(offsetX, 0, offsetZ)
-					weaponCount = weaponCount + 1
-					if obj:FindFirstChild("Handle") then
-						obj.Handle.CFrame = CFrame.new(targetPosition)
-					elseif obj.PrimaryPart then
-						obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+				-- Check if already marked as teleported
+				if obj:FindFirstChild("TeleportedMarker") then
+					-- Skip this item
 	else
-						-- If no Handle or PrimaryPart, try to move the first BasePart found
-						for _, part in pairs(obj:GetChildren()) do
-							if part:IsA("BasePart") then
-								part.CFrame = CFrame.new(targetPosition)
-								break
+			for _, weaponName in pairs(weaponNames) do
+				if obj.Name == weaponName then
+					-- Skip items with "BP" in the name
+					if not string.find(obj.Name, "BP") then
+						local row = math.floor(weaponCount / itemsPerRow)
+						local col = weaponCount % itemsPerRow
+						local offsetX = (col - (itemsPerRow - 1) / 2) * 3 -- 3 stud spacing
+						local offsetZ = (row % 4) * 3 + 3 -- 3 stud spacing between rows, start 3 studs in front
+						local offsetY = math.floor(row / 4) * 3 -- Stack upwards every 4 rows
+						local targetPosition = playerPosition + Vector3.new(offsetX, offsetY, offsetZ)
+						weaponCount = weaponCount + 1
+						if obj:FindFirstChild("Handle") then
+							obj.Handle.CFrame = CFrame.new(targetPosition)
+						elseif obj.PrimaryPart then
+							obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+	else
+							-- If no Handle or PrimaryPart, try to move the first BasePart found
+							for _, part in pairs(obj:GetChildren()) do
+								if part:IsA("BasePart") then
+									part.CFrame = CFrame.new(targetPosition)
+									break
 	end
 	end
 end
+							
+							-- Mark as teleported
+							local marker = Instance.new("BoolValue")
+							marker.Name = "TeleportedMarker"
+							marker.Parent = obj
+	end
 					break
 	end
-	end
 end
 	end
 	end
-			
+		end
+		end
+
 	-- Check all workspace descendants for any missed weapons
 	for _, obj in pairs(Workspace:GetDescendants()) do
 		if obj:IsA("Model") and obj.Parent ~= lp.Character then
-			for _, weaponName in pairs(weaponNames) do
-				if obj.Name == weaponName then
-					-- Skip if already processed in WeaponDrops
-					if weaponDrops and obj:IsDescendantOf(weaponDrops) then
+			-- Check if already marked as teleported
+			if obj:FindFirstChild("TeleportedMarker") then
+				-- Skip this item
+        else
+				for _, weaponName in pairs(weaponNames) do
+					if obj.Name == weaponName then
+						-- Skip if already processed in WeaponDrops
+						if weaponDrops and obj:IsDescendantOf(weaponDrops) then
 								break
-		end
-					
-					local row = math.floor(weaponCount / gridSize)
-					local col = weaponCount % gridSize
-					local offsetX = (col - 2) * 2 -- Center around player (-4, -2, 0, 2, 4)
-					local offsetZ = (row - 2) * 2 + 3 -- Start 3 studs in front, then spread
-					local targetPosition = playerPosition + Vector3.new(offsetX, 0, offsetZ)
-					weaponCount = weaponCount + 1
-					
-					if obj:FindFirstChild("Handle") then
-						obj.Handle.CFrame = CFrame.new(targetPosition)
-					elseif obj.PrimaryPart then
-						obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+        end
+						
+						-- Skip items with "BP" in the name
+						if not string.find(obj.Name, "BP") then
+							local row = math.floor(weaponCount / itemsPerRow)
+							local col = weaponCount % itemsPerRow
+							local offsetX = (col - (itemsPerRow - 1) / 2) * 3 -- 3 stud spacing
+							local offsetZ = (row % 4) * 3 + 3 -- 3 stud spacing between rows, start 3 studs in front
+							local offsetY = math.floor(row / 4) * 3 -- Stack upwards every 4 rows
+							local targetPosition = playerPosition + Vector3.new(offsetX, offsetY, offsetZ)
+							weaponCount = weaponCount + 1
+							
+							if obj:FindFirstChild("Handle") then
+								obj.Handle.CFrame = CFrame.new(targetPosition)
+							elseif obj.PrimaryPart then
+								obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
 	else
-						-- If no Handle or PrimaryPart, try to move the first BasePart found
-						for _, part in pairs(obj:GetChildren()) do
-							if part:IsA("BasePart") then
-								part.CFrame = CFrame.new(targetPosition)
-								break
+								-- If no Handle or PrimaryPart, try to move the first BasePart found
+								for _, part in pairs(obj:GetChildren()) do
+									if part:IsA("BasePart") then
+										part.CFrame = CFrame.new(targetPosition)
+										break
 	end
 	end
 end
-					break
+
+							-- Mark as teleported
+							local marker = Instance.new("BoolValue")
+							marker.Name = "TeleportedMarker"
+							marker.Parent = obj
 	end
+						break
 	end
 end
 	end
 	end
-			
+		end
+	end
 ------------------------------------------------
 -- // CRATES LOGIC
 ------------------------------------------------
@@ -453,7 +829,7 @@ local function getNearestValidCrate()
 	end
 	
 	return nearestCrate
-		end
+	end
 
 local function TeleportToCrate()
 	local crate = getNearestValidCrate()
@@ -462,49 +838,44 @@ local function TeleportToCrate()
 	local character = getCharacter()
 	local hrp = character:WaitForChild("HumanoidRootPart")
 	
-	hrp.CFrame = crate:GetPivot() * CFrame.new(0, 3, 0)
+	hrp.CFrame = crate:GetPivot() * CFrame.new(0, -3, 0)
 	end
 ------------------------------------------------
 -- // AMMO TELEPORT LOGIC
 ------------------------------------------------
 local function TeleportAmmo()
 	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
-		return
-		end
+                return
+            end
 
 	local playerPosition = lp.Character.HumanoidRootPart.Position
-	local ammoTypes = {"Shell Ammo", "Light Ammo", "Short Ammo", "Long Ammo", "Heavy Ammo", "Medium Ammo"}
-	local ammoCount = 0
-	local gridSize = 3 -- 3x3 grid for ammo
+	local ammoTypes = {"Shells Ammo", "Light Ammo", "Short Ammo", "Long Ammo", "Heavy Ammo", "Medium Ammo", "Small Ammo"}
+	
+	-- Create a single position 2 studs in front of player
+	local forward = lp.Character.HumanoidRootPart.CFrame.LookVector
+	local targetPosition = playerPosition + forward * 2
 	
 	for _, obj in pairs(Workspace:GetDescendants()) do
 		if obj:IsA("Model") then
 			for _, ammoType in pairs(ammoTypes) do
 				if obj.Name == ammoType then
-					local row = math.floor(ammoCount / gridSize)
-					local col = ammoCount % gridSize
-					local offsetX = (col - 1) * 2 -- Center around player (-2, 0, 2)
-					local offsetZ = (row - 1) * 2 + 3 -- Start 3 studs in front, then spread
-					local targetPosition = playerPosition + Vector3.new(offsetX, 0, offsetZ)
-					ammoCount = ammoCount + 1
-					
 					if obj.PrimaryPart then
 						obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
-	else
+        else
 						-- If no PrimaryPart, try to move the first BasePart found
 						for _, part in pairs(obj:GetChildren()) do
 							if part:IsA("BasePart") then
 								part.CFrame = CFrame.new(targetPosition)
 								break
-		end
-	end
-		end
+        end
+    end
+                end
 					break
-	end
-	end
-	end
-	end
-end
+            end
+            end
+        end
+    end
+		end
 
 ------------------------------------------------
 -- // CFRAME WALK LOGIC
@@ -521,7 +892,7 @@ local function CFrameWalkControl()
 			local moveDirection = humanoid.MoveDirection
 			if moveDirection.Magnitude > 0 then
 				rootPart.CFrame = rootPart.CFrame + moveDirection * CFrameWalkSpeed / 10
-		end
+	end
 	end
 		end
 
@@ -625,7 +996,7 @@ local function toggleFloat()
 ------------------------------------------------
 local function toggleDelete()
 	deleting = not deleting
-	DeleteBtn.Text = "Delete: "..(deleting and "ON" or "OFF")
+	DeleteBtn.Text = "Delete (H): "..(deleting and "ON" or "OFF")
 	DeleteBtn.BackgroundColor3 = deleting and Color3.fromRGB(55,40,40) or Color3.fromRGB(80,20,20)
 		end
 
@@ -668,7 +1039,11 @@ local conn8 = DeleteBtn.MouseButton1Click:Connect(toggleDelete)
 table.insert(Connections, conn8)
 local conn9 = UndoBtn.MouseButton1Click:Connect(undoLastDelete)
 table.insert(Connections, conn9)
-local conn10 = CloseBtn.MouseButton1Click:Connect(function()
+local conn10 = NoClipBtn.MouseButton1Click:Connect(toggleNoClip)
+table.insert(Connections, conn10)
+local conn11 = HighlightBtn.MouseButton1Click:Connect(toggleHighlight)
+table.insert(Connections, conn11)
+local conn12 = CloseBtn.MouseButton1Click:Connect(function()
 	-- Reset state
 	CFrameWalkEnabled = false
 	MadeOfSteelEnabled = false
@@ -680,12 +1055,23 @@ local conn10 = CloseBtn.MouseButton1Click:Connect(function()
 	targetLock = false
 	lockedHead = nil
 	lockedHumanoid = nil
+	aiQueenFrozen = false
+	aiQueenFrozenCFrame = nil
+	if aiQueenHighlight then
+		aiQueenHighlight:Destroy()
+		aiQueenHighlight = nil
+	end
 	if MadeOfSteelSound then
 		MadeOfSteelSound:Stop()
 		MadeOfSteelSound:Destroy()
 	end
+	if bridgePart then
+		bridgePart:Destroy()
+		bridgePart = nil
+	end
 	cleanupFloat()
 	disableNoClip()
+	disableHighlights()
 	-- Disconnect all connections
 	for _, connection in ipairs(Connections) do
 		if connection then
@@ -695,19 +1081,25 @@ local conn10 = CloseBtn.MouseButton1Click:Connect(function()
 	-- Destroy GUI
 	ScreenGui:Destroy()
 end)
-table.insert(Connections, conn10)
-local conn11 = HomeBtn.MouseButton1Click:Connect(function()
+table.insert(Connections, conn12)
+local conn13 = HomeBtn.MouseButton1Click:Connect(function()
 	AutoWalkToTarget(Vector3.new(346.68, -0.04, -9.71))
 end)
-table.insert(Connections, conn11)
-local conn12 = CastleBtn.MouseButton1Click:Connect(function()
+table.insert(Connections, conn13)
+local conn14 = CastleBtn.MouseButton1Click:Connect(function()
 	AutoWalkToTarget(Vector3.new(-49.27, 47.25, 151.14))
 end)
-table.insert(Connections, conn12)
+table.insert(Connections, conn14)
+local conn15 = AIQueenBtn.MouseButton1Click:Connect(teleportAIQueen)
+table.insert(Connections, conn15)
+local conn16 = BridgeCreateBtn.MouseButton1Click:Connect(createBridge)
+table.insert(Connections, conn16)
+local conn17 = BridgeTeleportBtn.MouseButton1Click:Connect(teleportToBridge)
+table.insert(Connections, conn17)
 ------------------------------------------------
 -- // MOUSE CLICK FOR DELETE
 ------------------------------------------------
-local conn13 = Mouse.Button1Down:Connect(function()
+local conn18 = Mouse.Button1Down:Connect(function()
 	if not deleting then return end
 	local target = Mouse.Target
 	if target and target:IsA("BasePart") and not target:IsDescendantOf(lp.Character) then
@@ -727,19 +1119,35 @@ local conn13 = Mouse.Button1Down:Connect(function()
 		target:Destroy()
 	end
 end)
-table.insert(Connections, conn13)
+table.insert(Connections, conn18)
 ------------------------------------------------
 -- // AIM ASSIST RENDER STEPPED
 ------------------------------------------------
-local conn14 = RunService.RenderStepped:Connect(function()
+local conn19 = RunService.RenderStepped:Connect(function()
+    -- AI_QUEEN freeze logic
+    if aiQueenFrozen and aiQueenFrozenCFrame then
+        local targetFolder = workspace:FindFirstChild("activeHostiles")
+        if targetFolder then
+            local target = targetFolder:FindFirstChild("AI_QUEEN")
+            if target then
+                local npcHRP = target:FindFirstChild("HumanoidRootPart")
+                if npcHRP then
+                    npcHRP.CFrame = aiQueenFrozenCFrame
+                    -- Optional: set velocity to zero to counter physics
+                    if npcHRP:IsA("BasePart") then
+                        npcHRP.Velocity = Vector3.new(0,0,0)
+                        npcHRP.RotVelocity = Vector3.new(0,0,0)
+                    end
+                end
+            end
+        end
+    end
     if not targetLock then return end
-
     -- if no target or dead → grab next automatically (only if auto switch is enabled)
     if not lockedHead
         or not lockedHumanoid
         or lockedHumanoid.Health <= 1
         or not lockedHead.Parent then
-
         if autoSwitchEnabled then
             acquireTarget()
 
@@ -777,12 +1185,12 @@ local conn14 = RunService.RenderStepped:Connect(function()
         lockedHead.Position + Vector3.new(0, 0.25, 0)
     )
 end)
-table.insert(Connections, conn14)
+table.insert(Connections, conn19)
 
 ------------------------------------------------
 -- // KEYBINDS
 ------------------------------------------------
-local conn15 = UserInputService.InputBegan:Connect(function(input,gp)
+local conn20 = UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
 	if input.KeyCode == Enum.KeyCode.B then
 		toggleCFrameWalk()
@@ -793,6 +1201,10 @@ local conn15 = UserInputService.InputBegan:Connect(function(input,gp)
 		toggleMadeOfSteel()
 	elseif input.KeyCode == Enum.KeyCode.N then
 		toggleFloat()
+	elseif input.KeyCode == Enum.KeyCode.H then
+		toggleDelete()
+	elseif input.KeyCode == Enum.KeyCode.M then
+		toggleNoClip()
 	elseif input.KeyCode == Enum.KeyCode.K then
 		AutoWalkToTarget(Vector3.new(346.68, -0.04, -9.71))
 	elseif input.KeyCode == Enum.KeyCode.L then
@@ -812,6 +1224,8 @@ local conn15 = UserInputService.InputBegan:Connect(function(input,gp)
 		end
 	elseif input.KeyCode == Enum.KeyCode.Minus then
 		toggleAutoSwitch()
+	elseif input.KeyCode == Enum.KeyCode.Delete then
+		undoLastDelete()
 	end
 end)
-table.insert(Connections, conn15)
+table.insert(Connections, conn20)
