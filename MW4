@@ -27,6 +27,8 @@ local history = {}
 local NoClipEnabled = false
 local AutoWalkEnabled = false
 local AutoWalkTarget = nil
+local SledgeBoxTeleporting = false
+local SledgeBoxConnection = nil
 ------------------------------------------------
 -- // GUI
 ------------------------------------------------
@@ -35,8 +37,8 @@ ScreenGui.Name = "MaliciousWinterHub"
 ScreenGui.ResetOnSpawn = false
 
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0,300,0,340)
-Main.Position = UDim2.new(0.5,-150,0.5,-170)
+Main.Size = UDim2.new(0,300,0,380)
+Main.Position = UDim2.new(0.5,-150,0.5,-190)
 Main.BackgroundColor3 = Color3.fromRGB(45,30,30)
 Main.Active = true
 Main.Draggable = true
@@ -103,6 +105,8 @@ local HomeBtn = button("Home",235)
 
 local CastleBtn = button("Castle",275)
 
+local SledgeBoxBtn = button("SledgeBox",315)
+
 -- Close button
 local CloseBtn = Instance.new("TextButton", Main)
 CloseBtn.Position = UDim2.new(0,5,1,-37)
@@ -155,6 +159,48 @@ local function AutoWalkToTarget(targetPosition)
 			local rootPart = character.HumanoidRootPart
 	rootPart.CFrame = CFrame.new(targetPosition)
 	end
+
+------------------------------------------------
+-- // SLEDGEBOX TELEPORT LOGIC
+------------------------------------------------
+local function SledgeBoxTeleport()
+	if SledgeBoxTeleporting then return end
+	SledgeBoxTeleporting = true
+		local character = lp.Character
+	if not character or not character:FindFirstChild("HumanoidRootPart") then
+		SledgeBoxTeleporting = false
+		return
+	end
+			local rootPart = character.HumanoidRootPart
+	local previousPosition = rootPart.CFrame
+	
+	-- Teleport to SledgeBox location
+	rootPart.CFrame = CFrame.new(Vector3.new(-91.86, 10.60, 104.13))
+	
+	-- Set up Q key listener for early return
+	local earlyReturn = false
+	SledgeBoxConnection = UserInputService.InputBegan:Connect(function(input, gp)
+	if gp then return end
+		if input.KeyCode == Enum.KeyCode.Q and SledgeBoxTeleporting then
+			earlyReturn = true
+	end
+end)
+	
+	-- Wait 1.5 seconds or until Q is pressed
+	local startTime = tick()
+	while tick() - startTime < 1.5 and not earlyReturn do
+		wait(0.1)
+	end
+	
+	-- Clean up connection and teleport back
+	if SledgeBoxConnection then
+		SledgeBoxConnection:Disconnect()
+		SledgeBoxConnection = nil
+	end
+	rootPart.CFrame = previousPosition
+	
+	SledgeBoxTeleporting = false
+end
 ------------------------------------------------
 -- // CFRAME WALK LOGIC
 ------------------------------------------------
@@ -324,6 +370,11 @@ local conn7 = CloseBtn.MouseButton1Click:Connect(function()
 	end
 	cleanupFloat()
 	disableNoClip()
+	-- Clean up SledgeBox connection if active
+	if SledgeBoxConnection then
+		SledgeBoxConnection:Disconnect()
+		SledgeBoxConnection = nil
+	end
 	-- Disconnect all connections
 	for _, connection in ipairs(Connections) do
 		if connection then
@@ -342,10 +393,14 @@ local conn9 = CastleBtn.MouseButton1Click:Connect(function()
 	AutoWalkToTarget(Vector3.new(-49.27, 47.25, 151.14))
 end)
 table.insert(Connections, conn9)
+local conn10 = SledgeBoxBtn.MouseButton1Click:Connect(function()
+	spawn(SledgeBoxTeleport)
+end)
+table.insert(Connections, conn10)
 ------------------------------------------------
 -- // MOUSE CLICK FOR DELETE
 ------------------------------------------------
-local conn10 = Mouse.Button1Down:Connect(function()
+local conn11 = Mouse.Button1Down:Connect(function()
 	if not deleting then return end
 	local target = Mouse.Target
 	if target and target:IsA("BasePart") and not target:IsDescendantOf(lp.Character) then
@@ -365,11 +420,11 @@ local conn10 = Mouse.Button1Down:Connect(function()
 		target:Destroy()
 	end
 end)
-table.insert(Connections, conn10)
+table.insert(Connections, conn11)
 ------------------------------------------------
 -- // KEYBINDS
 ------------------------------------------------
-local conn11 = UserInputService.InputBegan:Connect(function(input,gp)
+local conn12 = UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
 	if input.KeyCode == Enum.KeyCode.B then
 		toggleCFrameWalk()
@@ -382,4 +437,4 @@ local conn11 = UserInputService.InputBegan:Connect(function(input,gp)
 		toggleFloat()
 	end
 end)
-table.insert(Connections, conn11)
+table.insert(Connections, conn12)
