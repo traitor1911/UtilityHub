@@ -284,6 +284,11 @@ end
 	end
 	end
 			
+local function TeleportAmmoAndAgentCD()
+		TeleportAmmo()
+	TeleportAgentCD()
+	end
+			
 ------------------------------------------------
 -- // CFRAME WALK LOGIC
 ------------------------------------------------
@@ -519,7 +524,7 @@ local conn12 = UserInputService.InputBegan:Connect(function(input,gp)
 	elseif input.KeyCode == Enum.KeyCode.Comma then
 		TeleportToCrate()
 	elseif input.KeyCode == Enum.KeyCode.Period then
-		TeleportAmmo()
+		TeleportAmmoAndAgentCD()
 	end
 end)
 table.insert(Connections, conn12)
