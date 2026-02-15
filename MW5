@@ -172,8 +172,6 @@ local function SledgeBoxTeleport()
 		return
 	end
 			local rootPart = character.HumanoidRootPart
-	local previousPosition = rootPart.CFrame
-	
 	-- Teleport to SledgeBox location
 	rootPart.CFrame = CFrame.new(Vector3.new(-91.86, 10.60, 104.13))
 	
@@ -192,13 +190,12 @@ end)
 		wait(0.1)
 	end
 	
-	-- Clean up connection and teleport back
+	-- Clean up connection and teleport to home
 	if SledgeBoxConnection then
 		SledgeBoxConnection:Disconnect()
 		SledgeBoxConnection = nil
 	end
-	rootPart.CFrame = previousPosition
-	
+	rootPart.CFrame = CFrame.new(Vector3.new(346.68, -0.04, -9.71))
 	SledgeBoxTeleporting = false
 end
 ------------------------------------------------
