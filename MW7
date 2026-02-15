@@ -100,9 +100,9 @@ local DeleteBtn = button("Delete: OFF",155)
 
 local UndoBtn = button("Undo: Click",195)
 
-local HomeBtn = button("Home",235)
+local HomeBtn = button("Home (K)",235)
 
-local CastleBtn = button("Castle",275)
+local CastleBtn = button("Castle (L)",275)
 
 local AgentCDBtn = button("TP AgentCD",315)
 
@@ -186,6 +186,104 @@ local function TeleportAgentCD()
 end
 	end
 end
+
+------------------------------------------------
+-- // CRATES LOGIC
+------------------------------------------------
+local INTERACTABLES = workspace:WaitForChild("Interactables")
+
+-- Check if crate has "Interact"
+local function crateHasInteract(crate)
+	return crate:FindFirstChild("Interact", true) ~= nil
+		end
+	
+-- Get all valid crates
+local function getValidCrates()
+	local valid = {}
+	for _, obj in ipairs(INTERACTABLES:GetChildren()) do
+		if obj:IsA("Model") and obj.Name == "Crate" then
+			if crateHasInteract(obj) then
+				table.insert(valid, obj)
+	end
+	end
+	end
+
+	return valid
+	end
+
+-- Get a random valid crate
+local function getRandomCrate()
+	local crates = getValidCrates()
+	if #crates == 0 then
+		return nil
+end
+	
+	return crates[math.random(1, #crates)]
+	end
+
+-- Teleport directly to the TOP CENTER of the crate model
+local function TeleportToCrate()
+	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
+		return
+		end
+
+	local crate = getRandomCrate()
+	if not crate then return end
+	local root = lp.Character.HumanoidRootPart
+	local humanoid = lp.Character.Humanoid
+
+	-- Use model bounding box for accurate center + size
+	local cf, size = crate:GetBoundingBox()
+
+	local crateTopY = cf.Position.Y + (size.Y / 2)
+	local characterHeight = humanoid.HipHeight + (root.Size.Y / 2)
+
+	local targetPosition = Vector3.new(
+		cf.Position.X,
+		crateTopY + characterHeight,
+		cf.Position.Z
+	)
+
+	root.CFrame = CFrame.new(targetPosition)
+		end
+------------------------------------------------
+-- // AMMO TELEPORT LOGIC
+------------------------------------------------
+local function TeleportAmmo()
+	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
+		return
+		end
+
+	local playerPosition = lp.Character.HumanoidRootPart.Position
+	local ammoTypes = {"Shell Ammo", "Light Ammo", "Short Ammo", "Long Ammo", "Heavy Ammo", "Medium Ammo"}
+	local ammoCount = 0
+	
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		if obj:IsA("Model") then
+			for _, ammoType in pairs(ammoTypes) do
+				if obj.Name == ammoType then
+					ammoCount = ammoCount + 1
+					local offsetX = (ammoCount - 1) * 3
+					local targetPosition = playerPosition + Vector3.new(offsetX, 0, 3)
+					
+					if obj.PrimaryPart then
+						obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+	else
+						-- If no PrimaryPart, try to move the first BasePart found
+						for _, part in pairs(obj:GetChildren()) do
+							if part:IsA("BasePart") then
+								part.CFrame = CFrame.new(targetPosition)
+								break
+	end
+	end
+end
+					break
+	end
+	end
+end
+	end
+	end
+			
 ------------------------------------------------
 -- // CFRAME WALK LOGIC
 ------------------------------------------------
@@ -414,6 +512,14 @@ local conn12 = UserInputService.InputBegan:Connect(function(input,gp)
 		toggleMadeOfSteel()
 	elseif input.KeyCode == Enum.KeyCode.N then
 		toggleFloat()
+	elseif input.KeyCode == Enum.KeyCode.K then
+		AutoWalkToTarget(Vector3.new(346.68, -0.04, -9.71))
+	elseif input.KeyCode == Enum.KeyCode.L then
+		AutoWalkToTarget(Vector3.new(-49.27, 47.25, 151.14))
+	elseif input.KeyCode == Enum.KeyCode.Comma then
+		TeleportToCrate()
+	elseif input.KeyCode == Enum.KeyCode.Period then
+		TeleportAmmo()
 	end
 end)
 table.insert(Connections, conn12)
