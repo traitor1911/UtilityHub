@@ -202,11 +202,8 @@ end
 -- // CFRAME WALK LOGIC
 ------------------------------------------------
 local function CFrameWalkControl()
-	-- Enable float when CFrame walking starts
-	if not FloatEnabled then
-		toggleFloat()
-	end
-	
+	-- Enable noclip when CFrame walking starts
+	enableNoClip()
 	while CFrameWalkEnabled do
 		RunService.RenderStepped:Wait()
 		local character = lp.Character
@@ -219,16 +216,18 @@ local function CFrameWalkControl()
 	end
 		end
 	end
-end
+	
+	-- Disable noclip when CFrame walking stops
+	disableNoClip()
+	end
 
 local function toggleCFrameWalk()
 	CFrameWalkEnabled = not CFrameWalkEnabled
 	CFrameWalkBtn.Text = "CFrame Walk (B): "..(CFrameWalkEnabled and "ON" or "OFF")
 	if CFrameWalkEnabled then
 		CFrameWalkControl()
+		end
 	end
-end
-
 ------------------------------------------------
 -- // MADE OF STEEL LOGIC
 ------------------------------------------------
@@ -243,12 +242,12 @@ local function toggleMadeOfSteel()
 			MadeOfSteelSound.Volume = 0.5
 			MadeOfSteelSound.Looped = true
 			MadeOfSteelSound.Parent = SoundService
-		end
+	end
 		MadeOfSteelSound:Play()
 	else
 		if MadeOfSteelSound then
 			MadeOfSteelSound:Stop()
-		end
+	end
 	end
 end
 
