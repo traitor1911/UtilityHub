@@ -9,6 +9,7 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:GetService("SoundService")
+local Workspace = game:GetService("Workspace")
 --// Player
 local lp = Players.LocalPlayer
 local Mouse = lp:GetMouse()
@@ -27,8 +28,6 @@ local history = {}
 local NoClipEnabled = false
 local AutoWalkEnabled = false
 local AutoWalkTarget = nil
-local SledgeBoxTeleporting = false
-local SledgeBoxConnection = nil
 ------------------------------------------------
 -- // GUI
 ------------------------------------------------
@@ -105,7 +104,7 @@ local HomeBtn = button("Home",235)
 
 local CastleBtn = button("Castle",275)
 
-local SledgeBoxBtn = button("SledgeBox",315)
+local AgentCDBtn = button("TP AgentCD",315)
 
 -- Close button
 local CloseBtn = Instance.new("TextButton", Main)
@@ -161,42 +160,31 @@ local function AutoWalkToTarget(targetPosition)
 	end
 
 ------------------------------------------------
--- // SLEDGEBOX TELEPORT LOGIC
+-- // AGENTCD LOGIC
 ------------------------------------------------
-local function SledgeBoxTeleport()
-	if SledgeBoxTeleporting then return end
-	SledgeBoxTeleporting = true
-		local character = lp.Character
-	if not character or not character:FindFirstChild("HumanoidRootPart") then
-		SledgeBoxTeleporting = false
-		return
-	end
-			local rootPart = character.HumanoidRootPart
-	-- Teleport to SledgeBox location
-	rootPart.CFrame = CFrame.new(Vector3.new(-91.86, 10.60, 104.13))
+local function TeleportAgentCD()
+	local weaponDrops = Workspace:FindFirstChild("WeaponDrops")
+		if not weaponDrops then return end
+		
+		local agentCD = weaponDrops:FindFirstChild("AgentCD")
+	if not agentCD then return end
 	
-	-- Set up Q key listener for early return
-	local earlyReturn = false
-	SledgeBoxConnection = UserInputService.InputBegan:Connect(function(input, gp)
-	if gp then return end
-		if input.KeyCode == Enum.KeyCode.Q and SledgeBoxTeleporting then
-			earlyReturn = true
+	if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+			local playerPosition = lp.Character.HumanoidRootPart.Position
+			if agentCD:FindFirstChild("Handle") then
+				agentCD.Handle.CFrame = CFrame.new(playerPosition + Vector3.new(0, 10, 0))
+			elseif agentCD.PrimaryPart then
+				agentCD:SetPrimaryPartCFrame(CFrame.new(playerPosition + Vector3.new(0, 10, 0)))
+	else
+				-- If no Handle or PrimaryPart, try to move the first BasePart found
+				for _, part in pairs(agentCD:GetChildren()) do
+					if part:IsA("BasePart") then
+						part.CFrame = CFrame.new(playerPosition + Vector3.new(0, 10, 0))
+						break
 	end
-end)
-	
-	-- Wait 1.5 seconds or until Q is pressed
-	local startTime = tick()
-	while tick() - startTime < 1.5 and not earlyReturn do
-		wait(0.1)
 	end
-	
-	-- Clean up connection and teleport to home
-	if SledgeBoxConnection then
-		SledgeBoxConnection:Disconnect()
-		SledgeBoxConnection = nil
+end
 	end
-	rootPart.CFrame = CFrame.new(Vector3.new(346.68, -0.04, -9.71))
-	SledgeBoxTeleporting = false
 end
 ------------------------------------------------
 -- // CFRAME WALK LOGIC
@@ -213,20 +201,20 @@ local function CFrameWalkControl()
 			local moveDirection = humanoid.MoveDirection
 			if moveDirection.Magnitude > 0 then
 				rootPart.CFrame = rootPart.CFrame + moveDirection * CFrameWalkSpeed / 10
-	end
 		end
 	end
-	
+		end
+
 	-- Disable noclip when CFrame walking stops
 	disableNoClip()
-	end
+		end
 
 local function toggleCFrameWalk()
 	CFrameWalkEnabled = not CFrameWalkEnabled
 	CFrameWalkBtn.Text = "CFrame Walk (B): "..(CFrameWalkEnabled and "ON" or "OFF")
 	if CFrameWalkEnabled then
 		CFrameWalkControl()
-		end
+	end
 	end
 ------------------------------------------------
 -- // MADE OF STEEL LOGIC
@@ -366,11 +354,6 @@ local conn7 = CloseBtn.MouseButton1Click:Connect(function()
 	end
 	cleanupFloat()
 	disableNoClip()
-	-- Clean up SledgeBox connection if active
-	if SledgeBoxConnection then
-		SledgeBoxConnection:Disconnect()
-		SledgeBoxConnection = nil
-	end
 	-- Disconnect all connections
 	for _, connection in ipairs(Connections) do
 		if connection then
@@ -389,8 +372,8 @@ local conn9 = CastleBtn.MouseButton1Click:Connect(function()
 	AutoWalkToTarget(Vector3.new(-49.27, 47.25, 151.14))
 end)
 table.insert(Connections, conn9)
-local conn10 = SledgeBoxBtn.MouseButton1Click:Connect(function()
-	spawn(SledgeBoxTeleport)
+local conn10 = AgentCDBtn.MouseButton1Click:Connect(function()
+	TeleportAgentCD()
 end)
 table.insert(Connections, conn10)
 ------------------------------------------------
