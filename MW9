@@ -188,6 +188,57 @@ end
 end
 
 ------------------------------------------------
+-- // WEAPON TELEPORT LOGIC
+------------------------------------------------
+local function TeleportWeapons()
+	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
+		return
+		end
+
+	local playerPosition = lp.Character.HumanoidRootPart.Position
+	local weaponNames = {
+		"URVolver", "MRVolver", "Avto", "ScarL", "SKS", "LeverShotgun", "Scorp", "MPTen", "SubPS", "SubMP",
+		"AshR", "Benelli", "GPan", "STIPistol", "HStim", "Glock", "AJM", "BPack", "DMusket", "UMP",
+		"ASVal", "Mateba", "SubLMG", "DBarrel", "APack", "SPShotgun", "SubAK", "AAShotgun", "TSMG", "FNLMG",
+		"SubMPX", "SubMCX", "SUPAK", "SubPP", "KShotgun", "Mac", "HRifle", "Pistol", "DEFStim", "SubScar",
+		"SubVector", "DoubleShotgun", "Tourni", "HKMR", "Deagle", "FAMAS", "CRVolver", "EBR", "CPBow", "SSnare",
+		"MPistol", "PMine", "ImpN", "FAid", "SUPMPistol", "AdrStim", "BPRifle", "AWMSniper", "IntSniper", "SUPSniper",
+		"HuntingR", "Rifle", "AMR", "SPDStim", "DStim", "BPNailed", "BPSTI", "BPAKM", "BPKSG", "KSG", "PKillers"
+	}
+	
+	local weaponCount = 0
+	local pileRadius = 5
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		if obj:IsA("Model") then
+			for _, weaponName in pairs(weaponNames) do
+				if obj.Name == weaponName then
+					weaponCount = weaponCount + 1
+					
+					-- Calculate position in a circular pile
+					local angle = (weaponCount - 1) * (math.pi * 2 / math.max(weaponCount, 8))
+					local offsetX = math.cos(angle) * pileRadius
+					local offsetZ = math.sin(angle) * pileRadius
+					local targetPosition = playerPosition + Vector3.new(offsetX, 2, offsetZ)
+					
+					if obj.PrimaryPart then
+						obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+	else
+						-- If no PrimaryPart, try to move the first BasePart found
+						for _, part in pairs(obj:GetChildren()) do
+							if part:IsA("BasePart") then
+								part.CFrame = CFrame.new(targetPosition)
+								break
+	end
+	end
+end
+					break
+	end
+	end
+end
+	end
+	end
+			
+------------------------------------------------
 -- // CRATES LOGIC
 ------------------------------------------------
 local INTERACTABLES = workspace:WaitForChild("Interactables")
@@ -205,8 +256,8 @@ local function getValidCrates()
 			if crateHasInteract(obj) then
 				table.insert(valid, obj)
 	end
-	end
-	end
+		end
+		end
 
 	return valid
 	end
@@ -216,7 +267,7 @@ local function getRandomCrate()
 	local crates = getValidCrates()
 	if #crates == 0 then
 		return nil
-end
+	end
 	
 	return crates[math.random(1, #crates)]
 	end
@@ -225,7 +276,7 @@ end
 local function TeleportToCrate()
 	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
 		return
-		end
+	end
 
 	local crate = getRandomCrate()
 	if not crate then return end
@@ -245,14 +296,14 @@ local function TeleportToCrate()
 	)
 
 	root.CFrame = CFrame.new(targetPosition)
-		end
+	end
 ------------------------------------------------
 -- // AMMO TELEPORT LOGIC
 ------------------------------------------------
 local function TeleportAmmo()
 	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
 		return
-		end
+	end
 
 	local playerPosition = lp.Character.HumanoidRootPart.Position
 	local ammoTypes = {"Shell Ammo", "Light Ammo", "Short Ammo", "Long Ammo", "Heavy Ammo", "Medium Ammo"}
@@ -274,21 +325,20 @@ local function TeleportAmmo()
 							if part:IsA("BasePart") then
 								part.CFrame = CFrame.new(targetPosition)
 								break
+		end
 	end
-	end
-end
+		end
 					break
 	end
+		end
+		end
 	end
-end
-	end
-	end
-			
+		end
+
 local function TeleportAmmoAndAgentCD()
 		TeleportAmmo()
 	TeleportAgentCD()
 	end
-			
 ------------------------------------------------
 -- // CFRAME WALK LOGIC
 ------------------------------------------------
@@ -304,7 +354,7 @@ local function CFrameWalkControl()
 			local moveDirection = humanoid.MoveDirection
 			if moveDirection.Magnitude > 0 then
 				rootPart.CFrame = rootPart.CFrame + moveDirection * CFrameWalkSpeed / 10
-		end
+	end
 	end
 		end
 
@@ -525,6 +575,8 @@ local conn12 = UserInputService.InputBegan:Connect(function(input,gp)
 		TeleportToCrate()
 	elseif input.KeyCode == Enum.KeyCode.Period then
 		TeleportAmmoAndAgentCD()
+	elseif input.KeyCode == Enum.KeyCode.P then
+		TeleportWeapons()
 	end
 end)
 table.insert(Connections, conn12)
