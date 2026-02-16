@@ -19,8 +19,16 @@ local Mouse = lp:GetMouse()
 local CFrameWalkEnabled = false
 local GUIVisible = true
 local CFrameWalkSpeed = 1.5
-local MadeOfSteelEnabled = false
-local MadeOfSteelSound = nil
+local MusicEnabled = false
+local MusicSound = nil
+local MusicIndex = 0
+local MusicTracks = {
+	{name = "Made of Steel", id = "13484994113"},
+	{name = "Scav War", id = "13484867507"},
+	{name = "Calm Night", id = "13490050860"},
+	{name = "Shattered", id = "13484689025"},
+	{name = "Legacy", id = "13484692437"}
+}
 local FloatEnabled = false
 local FloatHeight = 0
 local deleting = false
@@ -140,7 +148,7 @@ CFrameWalkSpeedBox.BackgroundColor3 = Color3.fromRGB(60,45,45)
 CFrameWalkSpeedBox.TextColor3 = Color3.new(1,1,1)
 CFrameWalkSpeedBox.ClearTextOnFocus = false
 
-local MadeOfSteelBtn = button("Made of Steel ([): OFF",155)
+local MusicBtn = button("Music ([): OFF",155)
 
 local FloatBtn = button("Float (N): OFF",195)
 
@@ -156,7 +164,7 @@ local HomeBtn = button("Home (K)",395)
 
 local CastleBtn = button("Castle (L)",435)
 
-local CustomBtn = button("Custom (P)",475)
+local CustomBtn = button("Lab (P)",475)
 
 -- AI_QUEEN teleport button (bottom right corner)
 local AIQueenBtn = Instance.new("TextButton", Main)
@@ -910,39 +918,77 @@ local function toggleCFrameWalk()
 	end
 	end
 ------------------------------------------------
--- // MADE OF STEEL LOGIC
+-- // MUSIC LOGIC
 ------------------------------------------------
-local function toggleMadeOfSteel()
-	MadeOfSteelEnabled = not MadeOfSteelEnabled
-	MadeOfSteelBtn.Text = "Made of Steel ([): "..(MadeOfSteelEnabled and "ON" or "OFF")
+local function cycleMusic()
+	MusicIndex = MusicIndex + 1
 	
-	if MadeOfSteelEnabled then
-		if not MadeOfSteelSound then
-			MadeOfSteelSound = Instance.new("Sound")
-			MadeOfSteelSound.SoundId = "rbxassetid://13484994113"
-			MadeOfSteelSound.Volume = 0.5
-			MadeOfSteelSound.Looped = true
-			MadeOfSteelSound.Parent = SoundService
+	-- If we've gone past all tracks, turn music off
+	if MusicIndex > #MusicTracks then
+		MusicIndex = 0
+	MusicEnabled = false
+	if MusicSound then
+		MusicSound:Stop()
+		MusicSound:Destroy()
+			MusicSound = nil
 	end
-		MadeOfSteelSound:Play()
-	else
-		if MadeOfSteelSound then
-			MadeOfSteelSound:Stop()
-	end
-	end
-end
+		MusicBtn.Text = "Music ([): OFF"
+                return
+            end
+	
+	local currentTrack = MusicTracks[MusicIndex]
+	
+	if MusicSound then
+		MusicSound:Stop()
+		MusicSound:Destroy()
+        end
+		
+	MusicSound = Instance.new("Sound")
+	MusicSound.SoundId = "rbxassetid://"..currentTrack.id
+	MusicSound.Volume = 0.5
+	MusicSound.Looped = true
+	MusicSound.Parent = SoundService
+	MusicSound:Play()
+	
+	MusicEnabled = true
+	MusicBtn.Text = "Music ([): "..currentTrack.name
+    end
 
+local function toggleMusic()
+	MusicEnabled = not MusicEnabled
+	
+	if MusicEnabled then
+		-- If music index is 0 (off state), start from first track
+		if MusicIndex == 0 then
+			MusicIndex = 1
+                end
+		local currentTrack = MusicTracks[MusicIndex]
+		if not MusicSound then
+			MusicSound = Instance.new("Sound")
+			MusicSound.SoundId = "rbxassetid://"..currentTrack.id
+			MusicSound.Volume = 0.5
+			MusicSound.Looped = true
+			MusicSound.Parent = SoundService
+            end
+		MusicSound:Play()
+		MusicBtn.Text = "Music ([): "..currentTrack.name
+        else
+	if MusicSound then
+		MusicSound:Stop()
+    end
+		MusicBtn.Text = "Music ([): OFF"
+		end
+	end
 ------------------------------------------------
 -- // FLOAT LOGIC
 ------------------------------------------------
 local FloatBodyVelocity = nil
-
 local function cleanupFloat()
 		if FloatBodyVelocity then
 			FloatBodyVelocity:Destroy()
 			FloatBodyVelocity = nil
-	end
-	end
+                    end
+		end
 
 local function FloatControl()
 	while FloatEnabled do
@@ -953,12 +999,12 @@ local function FloatControl()
 			local humanoid = character.Humanoid
 			local camera = workspace.CurrentCamera
 			if not FloatBodyVelocity or FloatBodyVelocity.Parent ~= rootPart then
-				cleanupFloat()
+	cleanupFloat()
 				FloatBodyVelocity = Instance.new("BodyVelocity")
 				FloatBodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)
 				FloatBodyVelocity.Velocity = Vector3.new(0, 0, 0)
 				FloatBodyVelocity.Parent = rootPart
-end
+	end
 			-- Get movement input and camera look direction
 			local moveDirection = humanoid.MoveDirection
 			local cameraLookVector = camera.CFrame.LookVector
@@ -972,27 +1018,26 @@ end
 				-- S key (backward movement) - opposite of camera direction
 				elseif moveDirection:Dot(camera.CFrame.LookVector) < 0 then
 					verticalVelocity = cameraLookVector.Y * -16
-	end
-	end
+            end
+        end
 			
 			FloatBodyVelocity.Velocity = Vector3.new(0, verticalVelocity, 0)
-	else
+        else
 		cleanupFloat()
-		end
-	end
+        end
+    end
 	cleanupFloat()
-		end
+                end
 
 local function toggleFloat()
 	FloatEnabled = not FloatEnabled
 	FloatBtn.Text = "Float (N): "..(FloatEnabled and "ON" or "OFF")
 		if FloatEnabled then
 		FloatControl()
-	else
+            else
 		cleanupFloat()
-	end
-		end
-
+            end
+            end
 ------------------------------------------------
 -- // DELETE/UNDO LOGIC
 ------------------------------------------------
@@ -1008,9 +1053,9 @@ local function undoLastDelete()
 	local newPart = data.clone:Clone()
 	for prop, val in pairs(data.props) do
 		newPart[prop] = val
-	end
-	newPart.Parent = data.props.Parent
 		end
+	newPart.Parent = data.props.Parent
+	end
 
 ------------------------------------------------
 -- // BUTTON CONNECTIONS
@@ -1033,7 +1078,7 @@ local conn5 = CFrameWalkSpeedBox.FocusLost:Connect(function()
 		end
 end)
 table.insert(Connections, conn5)
-local conn6 = MadeOfSteelBtn.MouseButton1Click:Connect(toggleMadeOfSteel)
+local conn6 = MusicBtn.MouseButton1Click:Connect(cycleMusic)
 table.insert(Connections, conn6)
 local conn7 = FloatBtn.MouseButton1Click:Connect(toggleFloat)
 table.insert(Connections, conn7)
@@ -1048,7 +1093,7 @@ table.insert(Connections, conn11)
 local conn12 = CloseBtn.MouseButton1Click:Connect(function()
 	-- Reset state
 	CFrameWalkEnabled = false
-	MadeOfSteelEnabled = false
+	MusicEnabled = false
 	FloatEnabled = false
 	AutoWalkEnabled = false
 	aimAssistEnabled = false
@@ -1063,9 +1108,9 @@ local conn12 = CloseBtn.MouseButton1Click:Connect(function()
 		aiQueenHighlight:Destroy()
 		aiQueenHighlight = nil
 	end
-	if MadeOfSteelSound then
-		MadeOfSteelSound:Stop()
-		MadeOfSteelSound:Destroy()
+	if MusicSound then
+		MusicSound:Stop()
+		MusicSound:Destroy()
 	end
 	if bridgePart then
 		bridgePart:Destroy()
@@ -1156,7 +1201,6 @@ local conn20 = RunService.RenderStepped:Connect(function()
         or not lockedHead.Parent then
         if autoSwitchEnabled then
             acquireTarget()
-
             if not lockedHead then
                 -- nobody left alive
                 unlock()
@@ -1168,7 +1212,6 @@ local conn20 = RunService.RenderStepped:Connect(function()
             return
         end
     end
-
     -- Check if locked target is still within 150 studs
     if lockedHead then
         local distance = (camera.CFrame.Position - lockedHead.Position).Magnitude
@@ -1185,7 +1228,6 @@ local conn20 = RunService.RenderStepped:Connect(function()
             end
         end
     end
-
     camera.CFrame = CFrame.new(
         camera.CFrame.Position,
         lockedHead.Position + Vector3.new(0, 0.25, 0)
@@ -1203,7 +1245,7 @@ local conn21 = UserInputService.InputBegan:Connect(function(input,gp)
 		GUIVisible = not GUIVisible
 		Main.Visible = GUIVisible
 	elseif input.KeyCode == Enum.KeyCode.LeftBracket then
-		toggleMadeOfSteel()
+		cycleMusic()
 	elseif input.KeyCode == Enum.KeyCode.N then
 		toggleFloat()
 	elseif input.KeyCode == Enum.KeyCode.H then
