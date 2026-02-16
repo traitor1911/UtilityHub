@@ -156,6 +156,8 @@ local HomeBtn = button("Home (K)",395)
 
 local CastleBtn = button("Castle (L)",435)
 
+local CustomBtn = button("Custom (P)",475)
+
 -- AI_QUEEN teleport button (bottom right corner)
 local AIQueenBtn = Instance.new("TextButton", Main)
 AIQueenBtn.Position = UDim2.new(1,-80,1,-37)
@@ -187,7 +189,7 @@ BridgeCreateBtn.TextColor3 = Color3.new(1,1,1)
 BridgeCreateBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
 
 -- Adjust main frame height to accommodate new buttons
-Main.Size = UDim2.new(0,300,0,480)
+Main.Size = UDim2.new(0,300,0,520)
 
 -- Close button
 local CloseBtn = Instance.new("TextButton", Main)
@@ -1090,16 +1092,20 @@ local conn14 = CastleBtn.MouseButton1Click:Connect(function()
 	AutoWalkToTarget(Vector3.new(-49.27, 47.25, 151.14))
 end)
 table.insert(Connections, conn14)
-local conn15 = AIQueenBtn.MouseButton1Click:Connect(teleportAIQueen)
+local conn15 = CustomBtn.MouseButton1Click:Connect(function()
+	AutoWalkToTarget(Vector3.new(96.90, -63.42, -221.82))
+end)
 table.insert(Connections, conn15)
-local conn16 = BridgeCreateBtn.MouseButton1Click:Connect(createBridge)
+local conn16 = AIQueenBtn.MouseButton1Click:Connect(teleportAIQueen)
 table.insert(Connections, conn16)
-local conn17 = BridgeTeleportBtn.MouseButton1Click:Connect(teleportToBridge)
+local conn17 = BridgeCreateBtn.MouseButton1Click:Connect(createBridge)
 table.insert(Connections, conn17)
+local conn18 = BridgeTeleportBtn.MouseButton1Click:Connect(teleportToBridge)
+table.insert(Connections, conn18)
 ------------------------------------------------
 -- // MOUSE CLICK FOR DELETE
 ------------------------------------------------
-local conn18 = Mouse.Button1Down:Connect(function()
+local conn19 = Mouse.Button1Down:Connect(function()
 	if not deleting then return end
 	local target = Mouse.Target
 	if target and target:IsA("BasePart") and not target:IsDescendantOf(lp.Character) then
@@ -1117,13 +1123,13 @@ local conn18 = Mouse.Button1Down:Connect(function()
 		}
 		table.insert(history, {props = props, clone = clone})
 		target:Destroy()
-	end
+                    end
 end)
-table.insert(Connections, conn18)
+table.insert(Connections, conn19)
 ------------------------------------------------
 -- // AIM ASSIST RENDER STEPPED
 ------------------------------------------------
-local conn19 = RunService.RenderStepped:Connect(function()
+local conn20 = RunService.RenderStepped:Connect(function()
     -- AI_QUEEN freeze logic
     if aiQueenFrozen and aiQueenFrozenCFrame then
         local targetFolder = workspace:FindFirstChild("activeHostiles")
@@ -1137,8 +1143,8 @@ local conn19 = RunService.RenderStepped:Connect(function()
                     if npcHRP:IsA("BasePart") then
                         npcHRP.Velocity = Vector3.new(0,0,0)
                         npcHRP.RotVelocity = Vector3.new(0,0,0)
-                    end
-                end
+		end
+	end
             end
         end
     end
@@ -1185,12 +1191,11 @@ local conn19 = RunService.RenderStepped:Connect(function()
         lockedHead.Position + Vector3.new(0, 0.25, 0)
     )
 end)
-table.insert(Connections, conn19)
-
+table.insert(Connections, conn20)
 ------------------------------------------------
 -- // KEYBINDS
 ------------------------------------------------
-local conn20 = UserInputService.InputBegan:Connect(function(input,gp)
+local conn21 = UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
 	if input.KeyCode == Enum.KeyCode.B then
 		toggleCFrameWalk()
@@ -1209,12 +1214,12 @@ local conn20 = UserInputService.InputBegan:Connect(function(input,gp)
 		AutoWalkToTarget(Vector3.new(346.68, -0.04, -9.71))
 	elseif input.KeyCode == Enum.KeyCode.L then
 		AutoWalkToTarget(Vector3.new(-49.27, 47.25, 151.14))
+	elseif input.KeyCode == Enum.KeyCode.P then
+		AutoWalkToTarget(Vector3.new(96.90, -63.42, -221.82))
 	elseif input.KeyCode == Enum.KeyCode.Comma then
 		TeleportWeaponsToPile()
 	elseif input.KeyCode == Enum.KeyCode.Period then
 		TeleportAmmo()
-	elseif input.KeyCode == Enum.KeyCode.P then
-		TeleportToCrate()
 	elseif input.KeyCode == Enum.KeyCode.Y and aimAssistEnabled then
 		if targetLock then
 			unlock()
@@ -1228,4 +1233,4 @@ local conn20 = UserInputService.InputBegan:Connect(function(input,gp)
 		undoLastDelete()
 	end
 end)
-table.insert(Connections, conn20)
+table.insert(Connections, conn21)
