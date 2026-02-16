@@ -27,7 +27,8 @@ local MusicTracks = {
 	{name = "Scav War", id = "13484867507"},
 	{name = "Calm Night", id = "13490050860"},
 	{name = "Shattered", id = "13484689025"},
-	{name = "Legacy", id = "13484692437"}
+	{name = "Legacy", id = "13484692437"},
+	{name = "Tame the Beast", id = "117967615144125"}
 }
 local FloatEnabled = false
 local FloatHeight = 0
@@ -166,15 +167,25 @@ local CastleBtn = button("Castle (L)",435)
 
 local CustomBtn = button("Lab (P)",475)
 
--- AI_QUEEN teleport button (bottom right corner)
-local AIQueenBtn = Instance.new("TextButton", Main)
-AIQueenBtn.Position = UDim2.new(1,-80,1,-37)
-AIQueenBtn.Size = UDim2.new(0,75,0,32)
-AIQueenBtn.Text = "TP Queen"
-AIQueenBtn.Font = Enum.Font.Gotham
-AIQueenBtn.TextSize = 12
-AIQueenBtn.TextColor3 = Color3.new(1,1,1)
-AIQueenBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
+-- Blueprint teleport button (above bridge create button)
+local BlueprintBtn = Instance.new("TextButton", Main)
+BlueprintBtn.Position = UDim2.new(1,-80,1,-148)
+BlueprintBtn.Size = UDim2.new(0,75,0,32)
+BlueprintBtn.Text = "Blueprint"
+BlueprintBtn.Font = Enum.Font.Gotham
+BlueprintBtn.TextSize = 12
+BlueprintBtn.TextColor3 = Color3.new(1,1,1)
+BlueprintBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
+
+-- Bridge create button (above bridge teleport button)
+local BridgeCreateBtn = Instance.new("TextButton", Main)
+BridgeCreateBtn.Position = UDim2.new(1,-80,1,-111)
+BridgeCreateBtn.Size = UDim2.new(0,75,0,32)
+BridgeCreateBtn.Text = "Bridge"
+BridgeCreateBtn.Font = Enum.Font.Gotham
+BridgeCreateBtn.TextSize = 12
+BridgeCreateBtn.TextColor3 = Color3.new(1,1,1)
+BridgeCreateBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
 
 -- Bridge teleport button (above AI Queen button)
 local BridgeTeleportBtn = Instance.new("TextButton", Main)
@@ -186,15 +197,15 @@ BridgeTeleportBtn.TextSize = 12
 BridgeTeleportBtn.TextColor3 = Color3.new(1,1,1)
 BridgeTeleportBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
 
--- Bridge create button (above bridge teleport button)
-local BridgeCreateBtn = Instance.new("TextButton", Main)
-BridgeCreateBtn.Position = UDim2.new(1,-80,1,-111)
-BridgeCreateBtn.Size = UDim2.new(0,75,0,32)
-BridgeCreateBtn.Text = "Bridge"
-BridgeCreateBtn.Font = Enum.Font.Gotham
-BridgeCreateBtn.TextSize = 12
-BridgeCreateBtn.TextColor3 = Color3.new(1,1,1)
-BridgeCreateBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
+-- AI_QUEEN teleport button (bottom right corner)
+local AIQueenBtn = Instance.new("TextButton", Main)
+AIQueenBtn.Position = UDim2.new(1,-80,1,-37)
+AIQueenBtn.Size = UDim2.new(0,75,0,32)
+AIQueenBtn.Text = "TP Queen"
+AIQueenBtn.Font = Enum.Font.Gotham
+AIQueenBtn.TextSize = 12
+AIQueenBtn.TextColor3 = Color3.new(1,1,1)
+AIQueenBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
 
 -- Adjust main frame height to accommodate new buttons
 Main.Size = UDim2.new(0,300,0,520)
@@ -690,13 +701,118 @@ end
 end
 
 ------------------------------------------------
--- // WEAPON PILE LOGIC
+-- // BLUEPRINT TELEPORT LOGIC
 ------------------------------------------------
-local function TeleportWeaponsToPile()
+local function TeleportBlueprints()
 	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
 		return
 		end
 	
+	local playerPosition = lp.Character.HumanoidRootPart.Position
+	local blueprintNames = {"BPAJM", "BPAKM", "BPRSASS"}
+	local blueprintCount = 0
+	local itemsPerRow = 3
+	-- Check WeaponDrops first
+	local weaponDrops = Workspace:FindFirstChild("WeaponDrops")
+	if weaponDrops then
+		for _, obj in pairs(weaponDrops:GetChildren()) do
+		if obj:IsA("Model") then
+				-- Check if already marked as teleported
+				if obj:FindFirstChild("TeleportedMarker") then
+					-- Skip this item
+	else
+					for _, blueprintName in pairs(blueprintNames) do
+						if obj.Name == blueprintName then
+							local row = math.floor(blueprintCount / itemsPerRow)
+							local col = blueprintCount % itemsPerRow
+						local offsetX = (col - (itemsPerRow - 1) / 2) * 3 -- 3 stud spacing
+						local offsetZ = (row % 4) * 3 + 3 -- 3 stud spacing between rows, start 3 studs in front
+						local offsetY = math.floor(row / 4) * 3 -- Stack upwards every 4 rows
+						local targetPosition = playerPosition + Vector3.new(offsetX, offsetY, offsetZ)
+							blueprintCount = blueprintCount + 1
+							
+						if obj:FindFirstChild("Handle") then
+							obj.Handle.CFrame = CFrame.new(targetPosition)
+						elseif obj.PrimaryPart then
+							obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+	else
+							-- If no Handle or PrimaryPart, try to move the first BasePart found
+							for _, part in pairs(obj:GetChildren()) do
+								if part:IsA("BasePart") then
+									part.CFrame = CFrame.new(targetPosition)
+									break
+	end
+	end
+end
+							
+							-- Mark as teleported
+							local marker = Instance.new("BoolValue")
+							marker.Name = "TeleportedMarker"
+							marker.Parent = obj
+					break
+	end
+end
+	end
+	end
+		end
+		end
+
+	-- Check all workspace descendants for any missed blueprints
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		if obj:IsA("Model") and obj.Parent ~= lp.Character then
+			-- Check if already marked as teleported
+			if obj:FindFirstChild("TeleportedMarker") then
+				-- Skip this item
+        else
+				for _, blueprintName in pairs(blueprintNames) do
+					if obj.Name == blueprintName then
+						-- Skip if already processed in WeaponDrops
+						if weaponDrops and obj:IsDescendantOf(weaponDrops) then
+								break
+        end
+						
+						local row = math.floor(blueprintCount / itemsPerRow)
+						local col = blueprintCount % itemsPerRow
+							local offsetX = (col - (itemsPerRow - 1) / 2) * 3 -- 3 stud spacing
+							local offsetZ = (row % 4) * 3 + 3 -- 3 stud spacing between rows, start 3 studs in front
+							local offsetY = math.floor(row / 4) * 3 -- Stack upwards every 4 rows
+							local targetPosition = playerPosition + Vector3.new(offsetX, offsetY, offsetZ)
+						blueprintCount = blueprintCount + 1
+							
+							if obj:FindFirstChild("Handle") then
+								obj.Handle.CFrame = CFrame.new(targetPosition)
+							elseif obj.PrimaryPart then
+								obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+	else
+								-- If no Handle or PrimaryPart, try to move the first BasePart found
+								for _, part in pairs(obj:GetChildren()) do
+									if part:IsA("BasePart") then
+										part.CFrame = CFrame.new(targetPosition)
+										break
+	end
+	end
+end
+
+							-- Mark as teleported
+							local marker = Instance.new("BoolValue")
+							marker.Name = "TeleportedMarker"
+							marker.Parent = obj
+						break
+	end
+end
+	end
+	end
+		end
+	end
+
+------------------------------------------------
+-- // WEAPON PILE LOGIC
+------------------------------------------------
+local function TeleportWeaponsToPile()
+	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
+                return
+            end
+
 	local playerPosition = lp.Character.HumanoidRootPart.Position
 	local weaponNames = {
 		"AgentCD", "URVolver", "MRVolver", "Avto", "ScarL", "SKSold", "SKS", "LeverShotgun", 
@@ -719,11 +835,57 @@ local function TeleportWeaponsToPile()
 				-- Check if already marked as teleported
 				if obj:FindFirstChild("TeleportedMarker") then
 					-- Skip this item
-	else
+        else
 			for _, weaponName in pairs(weaponNames) do
 				if obj.Name == weaponName then
-					-- Skip items with "BP" in the name
-					if not string.find(obj.Name, "BP") then
+					local row = math.floor(weaponCount / itemsPerRow)
+					local col = weaponCount % itemsPerRow
+					local offsetX = (col - (itemsPerRow - 1) / 2) * 3 -- 3 stud spacing
+					local offsetZ = (row % 4) * 3 + 3 -- 3 stud spacing between rows, start 3 studs in front
+					local offsetY = math.floor(row / 4) * 3 -- Stack upwards every 4 rows
+					local targetPosition = playerPosition + Vector3.new(offsetX, offsetY, offsetZ)
+					weaponCount = weaponCount + 1
+					if obj:FindFirstChild("Handle") then
+						obj.Handle.CFrame = CFrame.new(targetPosition)
+					elseif obj.PrimaryPart then
+						obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+        else
+						-- If no Handle or PrimaryPart, try to move the first BasePart found
+						for _, part in pairs(obj:GetChildren()) do
+							if part:IsA("BasePart") then
+								part.CFrame = CFrame.new(targetPosition)
+								break
+    end
+		end
+	end
+						
+						-- Mark as teleported
+						local marker = Instance.new("BoolValue")
+						marker.Name = "TeleportedMarker"
+						marker.Parent = obj
+                    end
+				break
+		end
+	end
+            end
+        end
+        end
+    end
+
+	-- Check all workspace descendants for any missed weapons
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		if obj:IsA("Model") and obj.Parent ~= lp.Character then
+			-- Check if already marked as teleported
+			if obj:FindFirstChild("TeleportedMarker") then
+				-- Skip this item
+            else
+				for _, weaponName in pairs(weaponNames) do
+					if obj.Name == weaponName then
+						-- Skip if already processed in WeaponDrops
+						if weaponDrops and obj:IsDescendantOf(weaponDrops) then
+								break
+            end
+						
 						local row = math.floor(weaponCount / itemsPerRow)
 						local col = weaponCount % itemsPerRow
 						local offsetX = (col - (itemsPerRow - 1) / 2) * 3 -- 3 stud spacing
@@ -731,6 +893,7 @@ local function TeleportWeaponsToPile()
 						local offsetY = math.floor(row / 4) * 3 -- Stack upwards every 4 rows
 						local targetPosition = playerPosition + Vector3.new(offsetX, offsetY, offsetZ)
 						weaponCount = weaponCount + 1
+						
 						if obj:FindFirstChild("Handle") then
 							obj.Handle.CFrame = CFrame.new(targetPosition)
 						elseif obj.PrimaryPart then
@@ -741,73 +904,22 @@ local function TeleportWeaponsToPile()
 								if part:IsA("BasePart") then
 									part.CFrame = CFrame.new(targetPosition)
 									break
+		end
 	end
 	end
-end
-							
-							-- Mark as teleported
-							local marker = Instance.new("BoolValue")
-							marker.Name = "TeleportedMarker"
-							marker.Parent = obj
+
+						-- Mark as teleported
+						local marker = Instance.new("BoolValue")
+						marker.Name = "TeleportedMarker"
+						marker.Parent = obj
 	end
 					break
-	end
-end
-	end
-	end
-		end
-		end
-
-	-- Check all workspace descendants for any missed weapons
-	for _, obj in pairs(Workspace:GetDescendants()) do
-		if obj:IsA("Model") and obj.Parent ~= lp.Character then
-			-- Check if already marked as teleported
-			if obj:FindFirstChild("TeleportedMarker") then
-				-- Skip this item
-        else
-				for _, weaponName in pairs(weaponNames) do
-					if obj.Name == weaponName then
-						-- Skip if already processed in WeaponDrops
-						if weaponDrops and obj:IsDescendantOf(weaponDrops) then
-								break
-        end
-						
-						-- Skip items with "BP" in the name
-						if not string.find(obj.Name, "BP") then
-							local row = math.floor(weaponCount / itemsPerRow)
-							local col = weaponCount % itemsPerRow
-							local offsetX = (col - (itemsPerRow - 1) / 2) * 3 -- 3 stud spacing
-							local offsetZ = (row % 4) * 3 + 3 -- 3 stud spacing between rows, start 3 studs in front
-							local offsetY = math.floor(row / 4) * 3 -- Stack upwards every 4 rows
-							local targetPosition = playerPosition + Vector3.new(offsetX, offsetY, offsetZ)
-							weaponCount = weaponCount + 1
-							
-							if obj:FindFirstChild("Handle") then
-								obj.Handle.CFrame = CFrame.new(targetPosition)
-							elseif obj.PrimaryPart then
-								obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
-	else
-								-- If no Handle or PrimaryPart, try to move the first BasePart found
-								for _, part in pairs(obj:GetChildren()) do
-									if part:IsA("BasePart") then
-										part.CFrame = CFrame.new(targetPosition)
-										break
-	end
-	end
-end
-
-							-- Mark as teleported
-							local marker = Instance.new("BoolValue")
-							marker.Name = "TeleportedMarker"
-							marker.Parent = obj
-	end
-						break
-	end
-end
-	end
-	end
 		end
 	end
+                    end
+		end
+	end
+            end
 ------------------------------------------------
 -- // CRATES LOGIC
 ------------------------------------------------
@@ -1147,10 +1259,12 @@ local conn17 = BridgeCreateBtn.MouseButton1Click:Connect(createBridge)
 table.insert(Connections, conn17)
 local conn18 = BridgeTeleportBtn.MouseButton1Click:Connect(teleportToBridge)
 table.insert(Connections, conn18)
+local conn19 = BlueprintBtn.MouseButton1Click:Connect(TeleportBlueprints)
+table.insert(Connections, conn19)
 ------------------------------------------------
 -- // MOUSE CLICK FOR DELETE
 ------------------------------------------------
-local conn19 = Mouse.Button1Down:Connect(function()
+local conn20 = Mouse.Button1Down:Connect(function()
 	if not deleting then return end
 	local target = Mouse.Target
 	if target and target:IsA("BasePart") and not target:IsDescendantOf(lp.Character) then
@@ -1170,11 +1284,11 @@ local conn19 = Mouse.Button1Down:Connect(function()
 		target:Destroy()
                     end
 end)
-table.insert(Connections, conn19)
+table.insert(Connections, conn20)
 ------------------------------------------------
 -- // AIM ASSIST RENDER STEPPED
 ------------------------------------------------
-local conn20 = RunService.RenderStepped:Connect(function()
+local conn21 = RunService.RenderStepped:Connect(function()
     -- AI_QUEEN freeze logic
     if aiQueenFrozen and aiQueenFrozenCFrame then
         local targetFolder = workspace:FindFirstChild("activeHostiles")
@@ -1233,11 +1347,11 @@ local conn20 = RunService.RenderStepped:Connect(function()
         lockedHead.Position + Vector3.new(0, 0.25, 0)
     )
 end)
-table.insert(Connections, conn20)
+table.insert(Connections, conn21)
 ------------------------------------------------
 -- // KEYBINDS
 ------------------------------------------------
-local conn21 = UserInputService.InputBegan:Connect(function(input,gp)
+local conn22 = UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
 	if input.KeyCode == Enum.KeyCode.B then
 		toggleCFrameWalk()
@@ -1275,4 +1389,4 @@ local conn21 = UserInputService.InputBegan:Connect(function(input,gp)
 		undoLastDelete()
 	end
 end)
-table.insert(Connections, conn21)
+table.insert(Connections, conn22)
