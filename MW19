@@ -37,6 +37,7 @@ local history = {}
 local NoClipEnabled = false
 local AutoWalkEnabled = false
 local HighlightEnabled = false
+local KeybindsEnabled = true
 
 -- Excluded models for lock-on
 local excludedModels = {"Workshop", "Quarter", "SpawnDecor", "SpawnModel", "Masters"}
@@ -167,15 +168,25 @@ local CastleBtn = button("Castle (L)",435)
 
 local CustomBtn = button("Lab (P)",475)
 
--- AI_QUEEN teleport button (bottom right corner)
-local AIQueenBtn = Instance.new("TextButton", Main)
-AIQueenBtn.Position = UDim2.new(1,-80,1,-37)
-AIQueenBtn.Size = UDim2.new(0,75,0,32)
-AIQueenBtn.Text = "TP Queen"
-AIQueenBtn.Font = Enum.Font.Gotham
-AIQueenBtn.TextSize = 12
-AIQueenBtn.TextColor3 = Color3.new(1,1,1)
-AIQueenBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
+-- Keybinds toggle button (above bridge create button)
+local KeybindsBtn = Instance.new("TextButton", Main)
+KeybindsBtn.Position = UDim2.new(1,-80,1,-148)
+KeybindsBtn.Size = UDim2.new(0,75,0,32)
+KeybindsBtn.Text = "Keys: ON"
+KeybindsBtn.Font = Enum.Font.Gotham
+KeybindsBtn.TextSize = 12
+KeybindsBtn.TextColor3 = Color3.new(1,1,1)
+KeybindsBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
+
+-- Bridge create button (above bridge teleport button)
+local BridgeCreateBtn = Instance.new("TextButton", Main)
+BridgeCreateBtn.Position = UDim2.new(1,-80,1,-111)
+BridgeCreateBtn.Size = UDim2.new(0,75,0,32)
+BridgeCreateBtn.Text = "Bridge"
+BridgeCreateBtn.Font = Enum.Font.Gotham
+BridgeCreateBtn.TextSize = 12
+BridgeCreateBtn.TextColor3 = Color3.new(1,1,1)
+BridgeCreateBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
 
 -- Bridge teleport button (above AI Queen button)
 local BridgeTeleportBtn = Instance.new("TextButton", Main)
@@ -187,15 +198,15 @@ BridgeTeleportBtn.TextSize = 12
 BridgeTeleportBtn.TextColor3 = Color3.new(1,1,1)
 BridgeTeleportBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
 
--- Bridge create button (above bridge teleport button)
-local BridgeCreateBtn = Instance.new("TextButton", Main)
-BridgeCreateBtn.Position = UDim2.new(1,-80,1,-111)
-BridgeCreateBtn.Size = UDim2.new(0,75,0,32)
-BridgeCreateBtn.Text = "Bridge"
-BridgeCreateBtn.Font = Enum.Font.Gotham
-BridgeCreateBtn.TextSize = 12
-BridgeCreateBtn.TextColor3 = Color3.new(1,1,1)
-BridgeCreateBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
+-- AI_QUEEN teleport button (bottom right corner)
+local AIQueenBtn = Instance.new("TextButton", Main)
+AIQueenBtn.Position = UDim2.new(1,-80,1,-37)
+AIQueenBtn.Size = UDim2.new(0,75,0,32)
+AIQueenBtn.Text = "TP Queen"
+AIQueenBtn.Font = Enum.Font.Gotham
+AIQueenBtn.TextSize = 12
+AIQueenBtn.TextColor3 = Color3.new(1,1,1)
+AIQueenBtn.BackgroundColor3 = Color3.fromRGB(55,40,40)
 
 -- Adjust main frame height to accommodate new buttons
 Main.Size = UDim2.new(0,300,0,520)
@@ -345,12 +356,11 @@ local function createBridge()
     -- Calculate size and position
     local x1, z1 = -18.35, -91.90
     local x2, z2 = -99.83, -62.18
-    local y = -134.68
-    
+    local y = -136.68  -- Lowered by 2 studs
     local centerX = (x1 + x2) / 2
     local centerZ = (z1 + z2) / 2
-    local sizeX = math.abs(x2 - x1)
-    local sizeZ = math.abs(z2 - z1)
+    local sizeX = math.abs(x2 - x1) + 10  -- Made wider by 10 studs
+    local sizeZ = math.abs(z2 - z1) + 10  -- Made wider by 10 studs
     
     bridgePart.Size = Vector3.new(sizeX, 2, sizeZ)
     bridgePart.Position = Vector3.new(centerX, y, centerZ)
@@ -455,6 +465,12 @@ local function toggleNoClip()
             end
 	NoClipBtn.Text = "NoClip (M): "..(NoClipEnabled and "ON" or "OFF")
         end
+
+-- Function to toggle keybinds
+local function toggleKeybinds()
+	KeybindsEnabled = not KeybindsEnabled
+	KeybindsBtn.Text = "Keys: "..(KeybindsEnabled and "ON" or "OFF")
+		end
 ------------------------------------------------
 -- // HIGHLIGHT LOGIC
 ------------------------------------------------
@@ -469,8 +485,8 @@ local function cleanupHighlights()
 	for _, gui in pairs(healthGuis) do
 		if gui then
 			gui:Destroy()
-	end
-            end
+                    end
+		end
 	healthGuis = {}
 	
 	-- Clear highlighted models tracking
@@ -478,16 +494,16 @@ local function cleanupHighlights()
 				local highlight = model:FindFirstChild("Highlight")
 				if highlight then
 					highlight:Destroy()
-				end
-			end
+	end
+            end
 	highlightedModels = {}
 	
 	-- Disconnect activeHostiles connection
 	if activeHostilesConnection then
 		activeHostilesConnection:Disconnect()
 		activeHostilesConnection = nil
-		end
-	end
+        end
+    end
 
 local function createHealthGui(character)
 	local head = character:FindFirstChild("Head")
@@ -523,14 +539,14 @@ local function createHealthGui(character)
 			local distance = (camera.CFrame.Position - head.Position).Magnitude
 			local scale = math.max(0.5, math.min(2, 50 / distance))
 			billboardGui.Size = UDim2.new(0, 120 * scale, 0, 60 * scale)
-end
-	end
+            end
+        end
 
 	updateHealth()
 	local connection = humanoid.HealthChanged:Connect(updateHealth)
 	table.insert(highlightConnections, connection)
 	table.insert(healthGuis, billboardGui)
-end
+    end
 local function addHighlightToModel(model)
 	if highlightedModels[model] then return end -- Already highlighted
 	local humanoid = model:FindFirstChildWhichIsA("Humanoid")
@@ -556,7 +572,7 @@ local function addHighlightToModel(model)
 			local existingHighlight = model:FindFirstChild("Highlight")
 			if existingHighlight then
 				existingHighlight:Destroy()
-		end
+                end
 
 			-- Remove from tracking
 			highlightedModels[model] = nil
@@ -567,17 +583,17 @@ local function addHighlightToModel(model)
 				local billboardGui = head:FindFirstChild("BillboardGui")
 				if billboardGui then
 					billboardGui:Destroy()
-end
-	end
-end
-	end)
+            end
+        end
+    end
+end)
 	table.insert(highlightConnections, healthConnection)
 	
 	-- Monitor if model gets removed
 	local ancestryConnection = model.AncestryChanged:Connect(function()
 		if not model.Parent then
 			highlightedModels[model] = nil
-						end
+		end
 	end)
 	table.insert(highlightConnections, ancestryConnection)
 	end
@@ -592,7 +608,7 @@ local function enableHighlights()
 			connection:Disconnect()
 				enableHighlights()
 		end
-		end)
+end)
 		table.insert(highlightConnections, connection)
 		return 
             end
@@ -803,6 +819,62 @@ end
 	end
 		end
 	end
+
+------------------------------------------------
+-- // SPECIAL ITEMS TELEPORT LOGIC
+------------------------------------------------
+local function TeleportSpecialItems()
+	if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
+		return
+	end
+	
+	local playerPosition = lp.Character.HumanoidRootPart.Position
+	local specialItems = {"GPan", "Yari", "Hyperlame", "MilAxe", "ESword", "DMusket", "FAxe", "HKnife", "SAxe", "GSword", "HBerd", "SHammer", "RPier", "TSpear", "BPHammer", "DStim", "SPDStim", "DEFStim", "BPExec", "BPFAXE", "BPNailed", "BPKSG", "BPScythe", "BPHook"}
+	local itemCount = 0
+	local itemsPerRow = 4
+	
+	-- Search through all workspace descendants
+	for _, obj in pairs(Workspace:GetDescendants()) do
+		if obj:IsA("Model") and obj.Parent ~= lp.Character then
+			for _, itemName in pairs(specialItems) do
+				if obj.Name == itemName then
+					-- Check if already marked as teleported
+					if not obj:FindFirstChild("TeleportedMarker") then
+						local row = math.floor(itemCount / itemsPerRow)
+						local col = itemCount % itemsPerRow
+						local offsetX = (col - (itemsPerRow - 1) / 2) * 3 -- 3 stud spacing
+						local offsetZ = (row % 4) * 3 + 3 -- 3 stud spacing between rows, start 3 studs in front
+						local offsetY = math.floor(row / 4) * 3 -- Stack upwards every 4 rows
+						local targetPosition = playerPosition + Vector3.new(offsetX, offsetY, offsetZ)
+						itemCount = itemCount + 1
+						
+						-- Try different methods to move the item
+						if obj:FindFirstChild("Handle") then
+							obj.Handle.CFrame = CFrame.new(targetPosition)
+						elseif obj.PrimaryPart then
+							obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+						else
+							-- If no Handle or PrimaryPart, try to move the first BasePart found
+							for _, part in pairs(obj:GetChildren()) do
+								if part:IsA("BasePart") then
+									part.CFrame = CFrame.new(targetPosition)
+									break
+								end
+							end
+						end
+						
+						-- Mark as teleported
+						local marker = Instance.new("BoolValue")
+						marker.Name = "TeleportedMarker"
+						marker.Parent = obj
+					end
+					break
+				end
+			end
+		end
+	end
+end
+
 ------------------------------------------------
 -- // CRATES LOGIC
 ------------------------------------------------
@@ -1142,10 +1214,12 @@ local conn17 = BridgeCreateBtn.MouseButton1Click:Connect(createBridge)
 table.insert(Connections, conn17)
 local conn18 = BridgeTeleportBtn.MouseButton1Click:Connect(teleportToBridge)
 table.insert(Connections, conn18)
+local conn19 = KeybindsBtn.MouseButton1Click:Connect(toggleKeybinds)
+table.insert(Connections, conn19)
 ------------------------------------------------
 -- // MOUSE CLICK FOR DELETE
 ------------------------------------------------
-local conn19 = Mouse.Button1Down:Connect(function()
+local conn20 = Mouse.Button1Down:Connect(function()
 	if not deleting then return end
 	local target = Mouse.Target
 	if target and target:IsA("BasePart") and not target:IsDescendantOf(lp.Character) then
@@ -1165,11 +1239,11 @@ local conn19 = Mouse.Button1Down:Connect(function()
 		target:Destroy()
                     end
 end)
-table.insert(Connections, conn19)
+table.insert(Connections, conn20)
 ------------------------------------------------
 -- // AIM ASSIST RENDER STEPPED
 ------------------------------------------------
-local conn20 = RunService.RenderStepped:Connect(function()
+local conn21 = RunService.RenderStepped:Connect(function()
     -- AI_QUEEN freeze logic
     if aiQueenFrozen and aiQueenFrozenCFrame then
         local targetFolder = workspace:FindFirstChild("activeHostiles")
@@ -1228,11 +1302,11 @@ local conn20 = RunService.RenderStepped:Connect(function()
         lockedHead.Position + Vector3.new(0, 0.25, 0)
     )
 end)
-table.insert(Connections, conn20)
+table.insert(Connections, conn21)
 ------------------------------------------------
 -- // KEYBINDS
 ------------------------------------------------
-local conn21 = UserInputService.InputBegan:Connect(function(input,gp)
+local conn22 = UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
 	if input.KeyCode == Enum.KeyCode.B then
 		toggleCFrameWalk()
@@ -1241,11 +1315,11 @@ local conn21 = UserInputService.InputBegan:Connect(function(input,gp)
 		Main.Visible = GUIVisible
 	elseif input.KeyCode == Enum.KeyCode.LeftBracket then
 		cycleMusic()
-	elseif input.KeyCode == Enum.KeyCode.N then
+	elseif input.KeyCode == Enum.KeyCode.N and KeybindsEnabled then
 		toggleFloat()
-	elseif input.KeyCode == Enum.KeyCode.H then
+	elseif input.KeyCode == Enum.KeyCode.H and KeybindsEnabled then
 		toggleDelete()
-	elseif input.KeyCode == Enum.KeyCode.M then
+	elseif input.KeyCode == Enum.KeyCode.M and KeybindsEnabled then
 		toggleNoClip()
 	elseif input.KeyCode == Enum.KeyCode.K then
 		AutoWalkToTarget(Vector3.new(346.68, -0.04, -9.71))
@@ -1257,6 +1331,8 @@ local conn21 = UserInputService.InputBegan:Connect(function(input,gp)
 		TeleportWeaponsToPile()
 	elseif input.KeyCode == Enum.KeyCode.Period then
 		TeleportAmmo()
+	elseif input.KeyCode == Enum.KeyCode.Semicolon then
+		TeleportSpecialItems()
 	elseif input.KeyCode == Enum.KeyCode.Y and aimAssistEnabled then
 		if targetLock then
 			unlock()
@@ -1266,8 +1342,8 @@ local conn21 = UserInputService.InputBegan:Connect(function(input,gp)
 		end
 	elseif input.KeyCode == Enum.KeyCode.Minus then
 		toggleAutoSwitch()
-	elseif input.KeyCode == Enum.KeyCode.Delete then
+	elseif input.KeyCode == Enum.KeyCode.Delete and KeybindsEnabled then
 		undoLastDelete()
 	end
 end)
-table.insert(Connections, conn21)
+table.insert(Connections, conn22)
