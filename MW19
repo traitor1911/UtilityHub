@@ -37,7 +37,7 @@ local history = {}
 local NoClipEnabled = false
 local AutoWalkEnabled = false
 local HighlightEnabled = false
-local KeybindsEnabled = true
+local KeybindsEnabled = false
 
 -- Excluded models for lock-on
 local excludedModels = {"Workshop", "Quarter", "SpawnDecor", "SpawnModel", "Masters"}
@@ -47,9 +47,9 @@ local excludedModels = {"Workshop", "Quarter", "SpawnDecor", "SpawnModel", "Mast
 local targetLock = false
 local lockedHead = nil
 local lockedHumanoid = nil
-local aimAssistEnabled = false
-local autoSwitchEnabled = false
-local wallLockEnabled = false
+local aimAssistEnabled = true
+local autoSwitchEnabled = true
+local wallLockEnabled = true
 
 -- Highlight storage
 local highlightConnections = {}
@@ -65,6 +65,9 @@ local distanceInFront = 5
 
 -- Bridge variables
 local bridgePart = nil
+
+-- Teleported items tracking
+local teleportedItems = {}
 ------------------------------------------------
 -- // GUI
 ------------------------------------------------
@@ -131,9 +134,9 @@ VersionLabel.Font = Enum.Font.Gotham
 VersionLabel.TextSize = 12
 
 -- Left side buttons
-local AimBtn = leftButton("Aim: OFF",35)
-local AutoBtn = leftButton("Auto: OFF",75)
-local WallBtn = leftButton("Wall: OFF",115)
+local AimBtn = leftButton("Aim: ON",35)
+local AutoBtn = leftButton("Auto: ON",75)
+local WallBtn = leftButton("Wall: ON",115)
 
 local CFrameWalkBtn = button("CFrame Walk (B): OFF",35)
 CFrameWalkBtn.Position = UDim2.new(0,110,0,35)
@@ -172,7 +175,7 @@ local CustomBtn = button("Lab (P)",475)
 local KeybindsBtn = Instance.new("TextButton", Main)
 KeybindsBtn.Position = UDim2.new(1,-80,1,-148)
 KeybindsBtn.Size = UDim2.new(0,75,0,32)
-KeybindsBtn.Text = "Keys: ON"
+KeybindsBtn.Text = "Keys: OFF"
 KeybindsBtn.Font = Enum.Font.Gotham
 KeybindsBtn.TextSize = 12
 KeybindsBtn.TextColor3 = Color3.new(1,1,1)
@@ -359,8 +362,8 @@ local function createBridge()
     local y = -136.68  -- Lowered by 2 studs
     local centerX = (x1 + x2) / 2
     local centerZ = (z1 + z2) / 2
-    local sizeX = math.abs(x2 - x1) + 10  -- Made wider by 10 studs
-    local sizeZ = math.abs(z2 - z1) + 10  -- Made wider by 10 studs
+    local sizeX = math.abs(x2 - x1) + 20  -- Made wider by 20 studs (was 10)
+    local sizeZ = math.abs(z2 - z1) + 20  -- Made wider by 20 studs (was 10)
     
     bridgePart.Size = Vector3.new(sizeX, 2, sizeZ)
     bridgePart.Position = Vector3.new(centerX, y, centerZ)
@@ -470,7 +473,12 @@ local function toggleNoClip()
 local function toggleKeybinds()
 	KeybindsEnabled = not KeybindsEnabled
 	KeybindsBtn.Text = "Keys: "..(KeybindsEnabled and "ON" or "OFF")
+	-- Disable noclip when keybinds are turned off
+	if not KeybindsEnabled and NoClipEnabled then
+	disableNoClip()
+		NoClipBtn.Text = "NoClip (M): OFF"
 		end
+	end
 ------------------------------------------------
 -- // HIGHLIGHT LOGIC
 ------------------------------------------------
@@ -546,7 +554,7 @@ local function createHealthGui(character)
 	local connection = humanoid.HealthChanged:Connect(updateHealth)
 	table.insert(highlightConnections, connection)
 	table.insert(healthGuis, billboardGui)
-    end
+        end
 local function addHighlightToModel(model)
 	if highlightedModels[model] then return end -- Already highlighted
 	local humanoid = model:FindFirstChildWhichIsA("Humanoid")
@@ -572,7 +580,7 @@ local function addHighlightToModel(model)
 			local existingHighlight = model:FindFirstChild("Highlight")
 			if existingHighlight then
 				existingHighlight:Destroy()
-                end
+    end
 
 			-- Remove from tracking
 			highlightedModels[model] = nil
@@ -583,9 +591,9 @@ local function addHighlightToModel(model)
 				local billboardGui = head:FindFirstChild("BillboardGui")
 				if billboardGui then
 					billboardGui:Destroy()
-            end
+                end
         end
-    end
+            end
 end)
 	table.insert(highlightConnections, healthConnection)
 	
@@ -612,7 +620,6 @@ end)
 		table.insert(highlightConnections, connection)
 		return 
             end
-	
 	-- Add highlights to existing models
 	for _, model in pairs(activeHostiles:GetChildren()) do
 		if model:IsA("Model") and model:FindFirstChildWhichIsA("Humanoid") then
@@ -680,9 +687,8 @@ local function TeleportAgentCD()
 		local agentCD = weaponDrops:FindFirstChild("AgentCD")
 	if not agentCD then return end
 	
-	-- Check if already marked as teleported
-	if agentCD:FindFirstChild("TeleportedMarker") then return end
-	
+	-- Check if already teleported using our tracking system
+	if teleportedItems[agentCD] then return end
 	if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
 			local playerPosition = lp.Character.HumanoidRootPart.Position
 			if agentCD:FindFirstChild("Handle") then
@@ -699,10 +705,8 @@ local function TeleportAgentCD()
 	end
 end
 		
-		-- Mark as teleported
-		local marker = Instance.new("BoolValue")
-		marker.Name = "TeleportedMarker"
-		marker.Parent = agentCD
+		-- Mark as teleported in our tracking system
+		teleportedItems[agentCD] = true
 	end
 end
 
@@ -733,8 +737,8 @@ local function TeleportWeaponsToPile()
 	if weaponDrops then
 		for _, obj in pairs(weaponDrops:GetChildren()) do
 		if obj:IsA("Model") then
-				-- Check if already marked as teleported
-				if obj:FindFirstChild("TeleportedMarker") then
+				-- Check if already teleported using our tracking system
+				if teleportedItems[obj] then
 					-- Skip this item
 	else
 			for _, weaponName in pairs(weaponNames) do
@@ -760,10 +764,8 @@ local function TeleportWeaponsToPile()
 	end
 end
 							
-							-- Mark as teleported
-							local marker = Instance.new("BoolValue")
-							marker.Name = "TeleportedMarker"
-							marker.Parent = obj
+							-- Mark as teleported in our tracking system
+							teleportedItems[obj] = true
 					break
 	end
 end
@@ -775,8 +777,8 @@ end
 	-- Check all workspace descendants for any missed weapons
 	for _, obj in pairs(Workspace:GetDescendants()) do
 		if obj:IsA("Model") and obj.Parent ~= lp.Character then
-			-- Check if already marked as teleported
-			if obj:FindFirstChild("TeleportedMarker") then
+			-- Check if already teleported using our tracking system
+			if teleportedItems[obj] then
 				-- Skip this item
         else
 				for _, weaponName in pairs(weaponNames) do
@@ -808,10 +810,8 @@ end
 	end
 end
 
-							-- Mark as teleported
-							local marker = Instance.new("BoolValue")
-							marker.Name = "TeleportedMarker"
-							marker.Parent = obj
+							-- Mark as teleported in our tracking system
+							teleportedItems[obj] = true
 						break
 	end
 end
@@ -838,8 +838,8 @@ local function TeleportSpecialItems()
 		if obj:IsA("Model") and obj.Parent ~= lp.Character then
 			for _, itemName in pairs(specialItems) do
 				if obj.Name == itemName then
-					-- Check if already marked as teleported
-					if not obj:FindFirstChild("TeleportedMarker") then
+					-- Check if already teleported using our tracking system
+					if not teleportedItems[obj] then
 						local row = math.floor(itemCount / itemsPerRow)
 						local col = itemCount % itemsPerRow
 						local offsetX = (col - (itemsPerRow - 1) / 2) * 3 -- 3 stud spacing
@@ -863,10 +863,8 @@ local function TeleportSpecialItems()
 							end
 						end
 						
-						-- Mark as teleported
-						local marker = Instance.new("BoolValue")
-						marker.Name = "TeleportedMarker"
-						marker.Parent = obj
+						-- Mark as teleported in our tracking system
+						teleportedItems[obj] = true
 					end
 					break
 				end
@@ -875,48 +873,6 @@ local function TeleportSpecialItems()
 	end
 end
 
-------------------------------------------------
--- // CRATES LOGIC
-------------------------------------------------
-local function getCharacter()
-	return lp.Character or lp.CharacterAdded:Wait()
-		end
-
-local function getNearestValidCrate()
-	local interactables = Workspace:FindFirstChild("Interactables")
-	if not interactables then return nil end
-	
-	local character = getCharacter()
-	local hrp = character:WaitForChild("HumanoidRootPart")
-	
-	local nearestCrate = nil
-	local shortestDistance = math.huge
-	for _, obj in ipairs(interactables:GetChildren()) do
-		if obj:IsA("Model") and obj.Name == "Crate" then
-			-- Must contain "Interact"
-			if obj:FindFirstChild("Interact", true) then
-				local distance = (obj:GetPivot().Position - hrp.Position).Magnitude
-				
-				if distance < shortestDistance then
-					shortestDistance = distance
-					nearestCrate = obj
-	end
-		end
-		end
-	end
-	
-	return nearestCrate
-	end
-
-local function TeleportToCrate()
-	local crate = getNearestValidCrate()
-	if not crate then return end
-	
-	local character = getCharacter()
-	local hrp = character:WaitForChild("HumanoidRootPart")
-	
-	hrp.CFrame = crate:GetPivot() * CFrame.new(0, -3, 0)
-	end
 ------------------------------------------------
 -- // AMMO TELEPORT LOGIC
 ------------------------------------------------
@@ -938,28 +894,26 @@ local function TeleportAmmo()
 				if obj.Name == ammoType then
 					if obj.PrimaryPart then
 						obj:SetPrimaryPartCFrame(CFrame.new(targetPosition))
-        else
+            else
 						-- If no PrimaryPart, try to move the first BasePart found
 						for _, part in pairs(obj:GetChildren()) do
 							if part:IsA("BasePart") then
 								part.CFrame = CFrame.new(targetPosition)
 								break
+            end
+            end
         end
-    end
-                end
 					break
-            end
+		end
+	end
+	end
             end
         end
-    end
-		end
-
+			
 ------------------------------------------------
 -- // CFRAME WALK LOGIC
 ------------------------------------------------
 local function CFrameWalkControl()
-	-- Enable noclip when CFrame walking starts
-	enableNoClip()
 	while CFrameWalkEnabled do
 		RunService.RenderStepped:Wait()
 		local character = lp.Character
@@ -969,14 +923,10 @@ local function CFrameWalkControl()
 			local moveDirection = humanoid.MoveDirection
 			if moveDirection.Magnitude > 0 then
 				rootPart.CFrame = rootPart.CFrame + moveDirection * CFrameWalkSpeed / 10
-	end
+		end
+		end
 	end
 		end
-
-	-- Disable noclip when CFrame walking stops
-	disableNoClip()
-		end
-
 local function toggleCFrameWalk()
 	CFrameWalkEnabled = not CFrameWalkEnabled
 	CFrameWalkBtn.Text = "CFrame Walk (B): "..(CFrameWalkEnabled and "ON" or "OFF")
@@ -998,7 +948,7 @@ local function cycleMusic()
 		MusicSound:Stop()
 		MusicSound:Destroy()
 			MusicSound = nil
-	end
+                    end
 		MusicBtn.Text = "Music ([): OFF"
                 return
             end
@@ -1019,7 +969,7 @@ local function cycleMusic()
 	
 	MusicEnabled = true
 	MusicBtn.Text = "Music ([): "..currentTrack.name
-    end
+        end
 
 local function toggleMusic()
 	MusicEnabled = not MusicEnabled
@@ -1028,7 +978,7 @@ local function toggleMusic()
 		-- If music index is 0 (off state), start from first track
 		if MusicIndex == 0 then
 			MusicIndex = 1
-                end
+    end
 		local currentTrack = MusicTracks[MusicIndex]
 		if not MusicSound then
 			MusicSound = Instance.new("Sound")
@@ -1036,16 +986,16 @@ local function toggleMusic()
 			MusicSound.Volume = 0.5
 			MusicSound.Looped = true
 			MusicSound.Parent = SoundService
-            end
+                end
 		MusicSound:Play()
 		MusicBtn.Text = "Music ([): "..currentTrack.name
-        else
+            else
 	if MusicSound then
 		MusicSound:Stop()
-    end
+            end
 		MusicBtn.Text = "Music ([): OFF"
-		end
-	end
+            end
+        end
 ------------------------------------------------
 -- // FLOAT LOGIC
 ------------------------------------------------
@@ -1054,8 +1004,8 @@ local function cleanupFloat()
 		if FloatBodyVelocity then
 			FloatBodyVelocity:Destroy()
 			FloatBodyVelocity = nil
-                    end
 		end
+	end
 
 local function FloatControl()
 	while FloatEnabled do
