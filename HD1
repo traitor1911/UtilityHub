@@ -1,0 +1,143 @@
+local p = game:GetService("Players").LocalPlayer
+local r = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local w = r:CreateWindow({
+    Name = "Hades RNG",
+    LoadingTitle = "Hades RNG",
+    LoadingSubtitle = "by traitor_1",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "HadesRNG",
+        FileName = "HadesRNGConfig"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "",
+        RememberJoins = false
+    },
+    KeySystem = false
+})
+
+-- =========================
+-- MAIN TAB
+-- =========================
+
+local t1 = w:CreateTab("Main", 7733747233)
+
+local autoFarm = false
+local collected = 0
+
+local function farmItems()
+    while autoFarm do
+        local m = workspace:FindFirstChild("Items") and workspace.Items:FindFirstChild("Main")
+        if m then
+            for _, v in ipairs(m:GetChildren()) do
+                if v:IsA("Model") or v:IsA("BasePart") then
+                    local part = v:IsA("Model") and v:FindFirstChildWhichIsA("BasePart") or v
+                    local char = p.Character
+
+                    if part and char and char:FindFirstChild("HumanoidRootPart") then
+                        char.HumanoidRootPart.CFrame = part.CFrame + Vector3.new(0,3,0)
+                        task.wait(0.2)
+
+                        for _, g in ipairs(v:GetDescendants()) do
+                            if g:IsA("ProximityPrompt") then
+                                g:InputHoldBegin()
+                                task.wait(0.3)
+                                g:InputHoldEnd()
+
+                                collected += 1
+
+                                r:Notify({
+                                    Title = "Item Collected",
+                                    Content = "Collected " .. collected .. " item(s)",
+                                    Duration = 2,
+                                    Image = 7734053495
+                                })
+
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end
+end
+
+t1:CreateToggle({
+    Name = "Auto Get Items",
+    CurrentValue = false,
+    Callback = function(v)
+        autoFarm = v
+        if autoFarm then
+            task.spawn(farmItems)
+        end
+    end
+})
+
+t1:CreateButton({
+    Name = "Teleport To Merchant",
+    Callback = function()
+        local m = workspace:FindFirstChild("NPC") and workspace.NPC:FindFirstChild("Merchant")
+        if m and m:FindFirstChild("Kvjesm") then
+            p.Character.HumanoidRootPart.CFrame = m.Kvjesm.Head.CFrame
+        else
+            r:Notify({
+                Title = "Error",
+                Content = "Merchant/Kvjesm not spawned",
+                Duration = 3,
+                Image = 7734021118
+            })
+        end
+    end
+})
+
+-- =========================
+-- SCRIPTS TAB
+-- =========================
+
+local t2 = w:CreateTab("Scripts", 8997387937)
+
+local antiAFK = false
+local antiAFKConnection
+
+t2:CreateToggle({
+    Name = "Anti AFK",
+    CurrentValue = false,
+    Callback = function(v)
+        antiAFK = v
+
+        if antiAFK then
+            local vu = game:GetService("VirtualUser")
+            antiAFKConnection = p.Idled:Connect(function()
+                vu:CaptureController()
+                vu:ClickButton2(Vector2.new())
+            end)
+        else
+            if antiAFKConnection then
+                antiAFKConnection:Disconnect()
+                antiAFKConnection = nil
+            end
+        end
+    end
+})
+
+t2:CreateButton({
+    Name = "Teleport to Machine",
+    Callback = function()
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            p.Character.HumanoidRootPart.CFrame = CFrame.new(-471.01, 248.34, -211.56)
+        end
+    end
+})
+
+t2:CreateButton({
+    Name = "Teleport to Koin",
+    Callback = function()
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            p.Character.HumanoidRootPart.CFrame = CFrame.new(-486.16, 225.70, -251.47)
+        end
+    end
+})
