@@ -1,4 +1,5 @@
 local p = game:GetService("Players").LocalPlayer
+local mouse = p:GetMouse()
 local r = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local w = r:CreateWindow({
@@ -101,7 +102,7 @@ t1:CreateButton({
 local t2 = w:CreateTab("Scripts", 8997387937)
 
 local antiAFKConnection
-local keepCraftOpen = false
+local clickTPConnection
 
 t2:CreateToggle({
     Name = "Anti AFK",
@@ -122,6 +123,25 @@ t2:CreateToggle({
     end
 })
 
+t2:CreateToggle({
+    Name = "Click To TP",
+    CurrentValue = false,
+    Callback = function(v)
+        if v then
+            clickTPConnection = mouse.Button1Down:Connect(function()
+                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    p.Character.HumanoidRootPart.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0,3,0))
+                end
+            end)
+        else
+            if clickTPConnection then
+                clickTPConnection:Disconnect()
+                clickTPConnection = nil
+            end
+        end
+    end
+})
+
 t2:CreateButton({
     Name = "Teleport to Machine",
     Callback = function()
@@ -136,46 +156,6 @@ t2:CreateButton({
     Callback = function()
         if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
             p.Character.HumanoidRootPart.CFrame = CFrame.new(-486.16, 225.70, -251.47)
-        end
-    end
-})
-
--- =========================
--- KEEP CRAFT GUI OPEN TOGGLE
--- =========================
-
-t2:CreateToggle({
-    Name = "Keep Craft GUI Open",
-    CurrentValue = false,
-    Callback = function(v)
-        keepCraftOpen = v
-
-        if keepCraftOpen then
-            task.spawn(function()
-                while keepCraftOpen do
-                    local craft = p:WaitForChild("PlayerGui"):FindFirstChild("Craft")
-
-                    if not craft then
-                        -- Teleport and interact to reopen it
-                        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                            p.Character.HumanoidRootPart.CFrame = CFrame.new(-486.16, 225.70, -251.47)
-                            task.wait(1)
-
-                            for _, obj in ipairs(workspace:GetDescendants()) do
-                                if obj:IsA("ProximityPrompt") then
-                                    fireproximityprompt(obj)
-                                    break
-                                end
-                            end
-                        end
-                    else
-                        craft.Enabled = true
-                        craft.ResetOnSpawn = false
-                    end
-
-                    task.wait(2)
-                end
-            end)
         end
     end
 })
