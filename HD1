@@ -100,16 +100,14 @@ t1:CreateButton({
 
 local t2 = w:CreateTab("Scripts", 8997387937)
 
-local antiAFK = false
 local antiAFKConnection
+local keepCraftOpen = false
 
 t2:CreateToggle({
     Name = "Anti AFK",
     CurrentValue = false,
     Callback = function(v)
-        antiAFK = v
-
-        if antiAFK then
+        if v then
             local vu = game:GetService("VirtualUser")
             antiAFKConnection = p.Idled:Connect(function()
                 vu:CaptureController()
@@ -138,6 +136,46 @@ t2:CreateButton({
     Callback = function()
         if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
             p.Character.HumanoidRootPart.CFrame = CFrame.new(-486.16, 225.70, -251.47)
+        end
+    end
+})
+
+-- =========================
+-- KEEP CRAFT GUI OPEN TOGGLE
+-- =========================
+
+t2:CreateToggle({
+    Name = "Keep Craft GUI Open",
+    CurrentValue = false,
+    Callback = function(v)
+        keepCraftOpen = v
+
+        if keepCraftOpen then
+            task.spawn(function()
+                while keepCraftOpen do
+                    local craft = p:WaitForChild("PlayerGui"):FindFirstChild("Craft")
+
+                    if not craft then
+                        -- Teleport and interact to reopen it
+                        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                            p.Character.HumanoidRootPart.CFrame = CFrame.new(-486.16, 225.70, -251.47)
+                            task.wait(1)
+
+                            for _, obj in ipairs(workspace:GetDescendants()) do
+                                if obj:IsA("ProximityPrompt") then
+                                    fireproximityprompt(obj)
+                                    break
+                                end
+                            end
+                        end
+                    else
+                        craft.Enabled = true
+                        craft.ResetOnSpawn = false
+                    end
+
+                    task.wait(2)
+                end
+            end)
         end
     end
 })
