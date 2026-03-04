@@ -130,7 +130,8 @@ t2:CreateToggle({
         if v then
             clickTPConnection = mouse.Button1Down:Connect(function()
                 if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    p.Character.HumanoidRootPart.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0,3,0))
+                    p.Character.HumanoidRootPart.CFrame =
+                        CFrame.new(mouse.Hit.Position + Vector3.new(0,3,0))
                 end
             end)
         else
@@ -146,16 +147,58 @@ t2:CreateButton({
     Name = "Teleport to Machine",
     Callback = function()
         if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            p.Character.HumanoidRootPart.CFrame = CFrame.new(-471.01, 248.34, -211.56)
+            p.Character.HumanoidRootPart.CFrame =
+                CFrame.new(-471.01, 248.34, -211.56)
         end
     end
 })
 
 t2:CreateButton({
-    Name = "Teleport to Koin",
+    Name = "Potion - CRAFTING",
     Callback = function()
         if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            p.Character.HumanoidRootPart.CFrame = CFrame.new(-486.16, 225.70, -251.47)
+            p.Character.HumanoidRootPart.CFrame =
+                CFrame.new(-486.16, 225.70, -251.47)
+        end
+    end
+})
+
+t2:CreateButton({
+    Name = "Potion - NIGHTLY",
+    Callback = function()
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            p.Character.HumanoidRootPart.CFrame =
+                CFrame.new(-478.47, 227.49, -315.64)
+        end
+    end
+})
+
+t2:CreateButton({
+    Name = "Gwa",
+    Callback = function()
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            p.Character.HumanoidRootPart.CFrame =
+                CFrame.new(-391.08, 247.89, -240.06)
+        end
+    end
+})
+
+t2:CreateButton({
+    Name = "Food",
+    Callback = function()
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            p.Character.HumanoidRootPart.CFrame =
+                CFrame.new(-343.37, 247.89, -262.72)
+        end
+    end
+})
+
+t2:CreateButton({
+    Name = "Pray",
+    Callback = function()
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            p.Character.HumanoidRootPart.CFrame =
+                CFrame.new(-419.1, 247.95, -323.78)
         end
     end
 })
