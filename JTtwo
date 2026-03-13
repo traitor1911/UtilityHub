@@ -11,6 +11,7 @@ local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
+
 --// Player
 local lp = Players.LocalPlayer
 local camera = workspace.CurrentCamera
@@ -20,8 +21,6 @@ local mouse = lp:GetMouse()
 -- // STATE
 ------------------------------------------------
 local HighlightEnabled = false
-local HealthBarsEnabled = false
-local FOVEnabled = false
 local LockEnabled = false
 local GUIVisible = true
 local SeriousModeEnabled = false
@@ -31,11 +30,10 @@ local NanamiREnabled = false
 local NanamiKickEnabled = false
 local MahoragaQuakeEnabled = false
 local OvertimeBlockEnabled = false
+local DeLocustEnabled = false
+local DeNanamiEnabled = false
 local LockPart = "HumanoidRootPart"
 local LockedPlayer = nil
-local DefaultFOV = camera.FieldOfView
-local CustomFOV = DefaultFOV
-
 local SeriousModeMusic = nil
 local TargetedPlayers = {}
 
@@ -58,11 +56,18 @@ local isQuakeSimulated = false
 local isBlockingF = false
 local overtimeBlockTriangle = nil
 
+-- NEW: G key mode state (65 second override)
+local gModeActive = false
+local gModeEndTime = 0
+
+-- NEW: R key cooldown state
+local rKeyCooldown = false
+local rCooldownTime = 0
+
 ------------------------------------------------
 -- // COLORS
 ------------------------------------------------
 local FriendColor = Color3.fromRGB(0,255,0)
-local AllyColor   = Color3.fromRGB(80,170,255)
 local EnemyColor  = Color3.fromRGB(255,80,80)
 local DummyColor  = Color3.fromRGB(255,255,0)
 
@@ -128,6 +133,30 @@ NanamiIndicatorLabel.TextColor3 = Color3.new(1,1,1)
 NanamiIndicatorLabel.TextStrokeTransparency = 0
 NanamiIndicatorLabel.TextStrokeColor3 = Color3.new(0,0,0)
 
+-- NEW: G Mode Timer Indicator
+local GModeIndicator = Instance.new("Frame", ScreenGui)
+GModeIndicator.Size = UDim2.new(0,150,0,50)
+GModeIndicator.Position = UDim2.new(0.5,-75,0.5,-150)
+GModeIndicator.BackgroundColor3 = Color3.fromRGB(255,165,0)
+GModeIndicator.BackgroundTransparency = 0.3
+GModeIndicator.BorderSizePixel = 2
+GModeIndicator.BorderColor3 = Color3.new(1,1,1)
+GModeIndicator.Visible = false
+
+local GModeIndicatorCorner = Instance.new("UICorner", GModeIndicator)
+GModeIndicatorCorner.CornerRadius = UDim.new(0,10)
+
+local GModeIndicatorLabel = Instance.new("TextLabel", GModeIndicator)
+GModeIndicatorLabel.Size = UDim2.new(1,0,1,0)
+GModeIndicatorLabel.Position = UDim2.new(0,0,0,0)
+GModeIndicatorLabel.BackgroundTransparency = 1
+GModeIndicatorLabel.Text = "G MODE: 65s"
+GModeIndicatorLabel.Font = Enum.Font.GothamBold
+GModeIndicatorLabel.TextSize = 16
+GModeIndicatorLabel.TextColor3 = Color3.new(1,1,1)
+GModeIndicatorLabel.TextStrokeTransparency = 0
+GModeIndicatorLabel.TextStrokeColor3 = Color3.new(0,0,0)
+
 local function label(text,y,size,parent)
 	parent = parent or Main
 	local l = Instance.new("TextLabel", parent)
@@ -139,7 +168,7 @@ local function label(text,y,size,parent)
 	l.Font = Enum.Font.GothamBold
 	l.TextSize = size
 	return l
-	end
+end
 
 local function button(text,y,parent)
 	parent = parent or Main
@@ -154,7 +183,7 @@ local function button(text,y,parent)
 	local corner = Instance.new("UICorner", b)
 	corner.CornerRadius = UDim.new(0,8)
 	return b
-	end
+end
 
 local function halfButton(text,y,isLeft,parent)
 	parent = parent or Main
@@ -169,10 +198,11 @@ local function halfButton(text,y,isLeft,parent)
 	local corner = Instance.new("UICorner", b)
 	corner.CornerRadius = UDim.new(0,8)
 	return b
-	end
+end
 
 label("Traitor Shenanigans",5,18)
 label("Target Panel",5,18,TargetGui)
+
 -- Target GUI ScrollingFrame
 local TargetScrollFrame = Instance.new("ScrollingFrame", TargetGui)
 TargetScrollFrame.Position = UDim2.new(0,10,0,35)
@@ -202,40 +232,44 @@ local TargetCloseBtnCorner = Instance.new("UICorner", TargetCloseBtn)
 TargetCloseBtnCorner.CornerRadius = UDim.new(0,8)
 
 ------------------------------------------------
--- // FOV
-------------------------------------------------
-local FOVButton = halfButton("FOV (U): OFF",65,true)
-
-local FOVBox = Instance.new("TextBox", Main)
-FOVBox.Position = UDim2.new(0.5,5,0,65)
-FOVBox.Size = UDim2.new(0.5,-10,0,32)
-FOVBox.PlaceholderText = tostring(DefaultFOV)
-FOVBox.Text = ""
-FOVBox.Font = Enum.Font.Gotham
-FOVBox.TextSize = 14
-FOVBox.BackgroundColor3 = Color3.fromRGB(45,45,45)
-FOVBox.TextColor3 = Color3.new(1,1,1)
-FOVBox.ClearTextOnFocus = false
-
-local FOVBoxCorner = Instance.new("UICorner", FOVBox)
-FOVBoxCorner.CornerRadius = UDim.new(0,8)
-
-------------------------------------------------
 -- // Buttons
 ------------------------------------------------
-local HighlightBtn = halfButton("Highlight (J): OFF",105,true)
-local HealthBarsBtn = halfButton("Health Bars: OFF",105,false)
-local LockBtn      = button("Lock On (Y): OFF",145)
-local SeriousBtn   = button("SERIOUS MODE ([): OFF",185)
-local TodoBFBtn    = button("Todo BF (T): OFF",225)
-local NanamiRBtn   = button("Nanami R: OFF",265)
-local NanamiKickBtn = button("Nanami Kick: OFF",305)
-local MahoragaQuakeBtn = button("Mahoraga Quake: OFF",345)
-local OvertimeBlockBtn = button("Overtime Block: OFF",385)
+local HighlightBtn = button("Highlight (J): OFF",65)
+local DeLocustBtn = button("DeLocust Guy: OFF",105)
+local DeNanamiBtn = button("DeNanami: OFF",145)
+local LockBtn      = button("Lock On (Y): OFF",185)
+local SeriousBtn   = button("SERIOUS MODE ([): OFF",225)
+local TodoBFBtn    = button("Todo BF (T): OFF",265)
+local NanamiRBtn   = button("Nanami R (P): OFF",305)
+local NanamiKickBtn = button("Nanami Kick: OFF",345)
+local MahoragaQuakeBtn = button("Mahoraga Quake: OFF",385)
+local OvertimeBlockBtn = button("Overtime Block: OFF",425)
+
+-- Add small text below Todo BF button
+local TodoBFSubtext = Instance.new("TextLabel", Main)
+TodoBFSubtext.Position = UDim2.new(0,10,0,297)
+TodoBFSubtext.Size = UDim2.new(1,-20,0,12)
+TodoBFSubtext.BackgroundTransparency = 1
+TodoBFSubtext.Text = "REQUIRES AHK"
+TodoBFSubtext.Font = Enum.Font.Gotham
+TodoBFSubtext.TextSize = 10
+TodoBFSubtext.TextColor3 = Color3.fromRGB(150,150,150)
+TodoBFSubtext.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Add small text below Nanami R button
+local NanamiRSubtext = Instance.new("TextLabel", Main)
+NanamiRSubtext.Position = UDim2.new(0,10,0,337)
+NanamiRSubtext.Size = UDim2.new(1,-20,0,12)
+NanamiRSubtext.BackgroundTransparency = 1
+NanamiRSubtext.Text = "REQUIRES AHK | Press G for 65s mode"
+NanamiRSubtext.Font = Enum.Font.Gotham
+NanamiRSubtext.TextSize = 10
+NanamiRSubtext.TextColor3 = Color3.fromRGB(150,150,150)
+NanamiRSubtext.TextXAlignment = Enum.TextXAlignment.Left
 
 -- Add small text below Nanami Kick button
 local NanamiKickSubtext = Instance.new("TextLabel", Main)
-NanamiKickSubtext.Position = UDim2.new(0,10,0,337)
+NanamiKickSubtext.Position = UDim2.new(0,10,0,377)
 NanamiKickSubtext.Size = UDim2.new(1,-20,0,12)
 NanamiKickSubtext.BackgroundTransparency = 1
 NanamiKickSubtext.Text = "REQUIRES AHK"
@@ -276,114 +310,288 @@ CloseBtnCorner.CornerRadius = UDim.new(0,8)
 local HighlightFolder = Instance.new("Folder", CoreGui)
 HighlightFolder.Name = "HighlightStorage"
 
-local HealthBarFolder = Instance.new("Folder", CoreGui)
-HealthBarFolder.Name = "HealthBarStorage"
-
 local TargetFolder = Instance.new("Folder", CoreGui)
 TargetFolder.Name = "TargetStorage"
 
 local DummyHealthFolder = Instance.new("Folder", CoreGui)
 DummyHealthFolder.Name = "DummyHealthStorage"
+
 ------------------------------------------------
 -- // CONNECTION STORAGE
 ------------------------------------------------
 local Connections = {}
+
+------------------------------------------------
+-- // DELOCUST LOGIC
+------------------------------------------------
+local function removeLocustAssets()
+	if not lp.Character then return end
+	
+	local setAssets = workspace.Characters:FindFirstChild(lp.Name)
+	if setAssets then
+		setAssets = setAssets:FindFirstChild("SetAssets")
+		if setAssets then
+			local heianArms = setAssets:FindFirstChild("HeianArms")
+			local locustWing = setAssets:FindFirstChild("LocustWing")
+			
+			if heianArms then
+				heianArms:Destroy()
+			end
+			if locustWing then
+				locustWing:Destroy()
+			end
+		end
+	end
+end
+
+local function applyDeLocust()
+	if DeLocustEnabled then
+		removeLocustAssets()
+	end
+end
+
+------------------------------------------------
+-- // DENANAMI LOGIC
+------------------------------------------------
+local function hasCollapseInMoveset()
+	local playerGui = lp:FindFirstChild("PlayerGui")
+	if not playerGui then return false end
+	
+	local mainGui = playerGui:FindFirstChild("Main")
+	if not mainGui then return false end
+	
+	local moveset = mainGui:FindFirstChild("Moveset")
+	if not moveset then return false end
+	
+	return moveset:FindFirstChild("Collapse") ~= nil
+end
+
+local function removeNanamiAssets()
+	if not lp.Character then return end
+	
+	local setAssets = workspace.Characters:FindFirstChild(lp.Name)
+	if setAssets then
+		setAssets = setAssets:FindFirstChild("SetAssets")
+		if setAssets then
+			local nanamiCleaver = setAssets:FindFirstChild("NanamiCleaver")
+			local nanamiTie = setAssets:FindFirstChild("NanamiTie")
+			
+			if nanamiCleaver then
+				nanamiCleaver:Destroy()
+			end
+			if nanamiTie then
+				nanamiTie:Destroy()
+			end
+			
+			-- Only remove these if Collapse is in moveset
+			if hasCollapseInMoveset() then
+				local nanamiGlove = setAssets:FindFirstChild("NanamiGlove")
+				local overtimeAure = setAssets:FindFirstChild("OvertimeAure")
+				
+				if nanamiGlove then
+					nanamiGlove:Destroy()
+				end
+				if overtimeAure then
+					overtimeAure:Destroy()
+				end
+			end
+		end
+	end
+end
+
+local function applyDeNanami()
+	if DeNanamiEnabled then
+		removeNanamiAssets()
+	end
+end
+
+------------------------------------------------
+-- // G MODE LOGIC (NEW)
+------------------------------------------------
+local function activateGMode()
+	if gModeActive then return end
+	
+	gModeActive = true
+	gModeEndTime = tick() + 65
+	GModeIndicator.Visible = true
+	
+	-- Update indicator color
+	NanamiIndicator.BackgroundColor3 = Color3.fromRGB(255,165,0)
+	NanamiIndicatorLabel.Text = "G MODE"
+	
+	-- Notification
+	game.StarterGui:SetCore("SendNotification", {
+		Title = "G Mode Activated",
+		Text = "1.7s cooldown for 65 seconds",
+		Duration = 3
+	})
+	
+	-- Start countdown
+	task.spawn(function()
+		while gModeActive and tick() < gModeEndTime do
+			local remaining = math.ceil(gModeEndTime - tick())
+			GModeIndicatorLabel.Text = "G MODE: " .. remaining .. "s"
+			task.wait(0.1)
+		end
+		
+		-- Deactivate after 65 seconds
+		gModeActive = false
+		GModeIndicator.Visible = false
+		
+		-- Reset indicator
+		if NanamiREnabled then
+			NanamiIndicator.BackgroundColor3 = Color3.fromRGB(0,255,0)
+			NanamiIndicatorLabel.Text = "0.60s"
+		end
+		
+		-- Notification
+		game.StarterGui:SetCore("SendNotification", {
+			Title = "G Mode Ended",
+			Text = "Back to normal mode",
+			Duration = 2
+		})
+	end)
+end
+
+------------------------------------------------
+-- // R KEY COOLDOWN LOGIC
+------------------------------------------------
+local function checkMovesetForRCooldown()
+	-- If G mode is active, always use 1.7s cooldown
+	if gModeActive then
+		return 1.7
+	end
+	
+	local playerGui = lp:FindFirstChild("PlayerGui")
+	if not playerGui then return 0 end
+	
+	local mainGui = playerGui:FindFirstChild("Main")
+	if not mainGui then return 0 end
+	
+	local moveset = mainGui:FindFirstChild("Moveset")
+	if not moveset then return 0 end
+	
+	-- Check for Stabilize move
+	if moveset:FindFirstChild("Stabilize") then
+		return 6.7
+	end
+	
+	-- Check for Collapse move
+	if moveset:FindFirstChild("Collapse") then
+		return 1.7
+	end
+	
+	return 0
+end
+
+local function startRCooldown(duration)
+	rKeyCooldown = true
+	rCooldownTime = duration
+	
+	task.spawn(function()
+		task.wait(duration)
+		rKeyCooldown = false
+		rCooldownTime = 0
+	end)
+end
+
 ------------------------------------------------
 -- // NANAMI KICK LOGIC
 ------------------------------------------------
 local function pressKey(key)
-    VirtualInputManager:SendKeyEvent(true, key, false, game)
+	VirtualInputManager:SendKeyEvent(true, key, false, game)
 end
 
 local function releaseKey(key)
-    VirtualInputManager:SendKeyEvent(false, key, false, game)
+	VirtualInputManager:SendKeyEvent(false, key, false, game)
 end
 
 local function smoothTurn(hrp, degrees, duration)
-    local startTime = tick()
-    local startCF = hrp.CFrame
-    local goalCF = startCF * CFrame.Angles(0, math.rad(degrees), 0)
-
-    while tick() - startTime < duration do
-        local alpha = (tick() - startTime) / duration
-        hrp.CFrame = startCF:Lerp(goalCF, alpha)
-        RunService.RenderStepped:Wait()
-    end
-
-    hrp.CFrame = goalCF
+	local startTime = tick()
+	local startCF = hrp.CFrame
+	local goalCF = startCF * CFrame.Angles(0, math.rad(degrees), 0)
+	
+	while tick() - startTime < duration do
+		local alpha = (tick() - startTime) / duration
+		hrp.CFrame = startCF:Lerp(goalCF, alpha)
+		RunService.RenderStepped:Wait()
+	end
+	
+	hrp.CFrame = goalCF
 end
 
 local function executeNanamiKick()
-    local character = lp.Character
-    if not character then return end
-
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not hrp then return end
-
-    -- Store which movement keys were being pressed
-    local wasPressingW = UserInputService:IsKeyDown(Enum.KeyCode.W)
-    local wasPressingA = UserInputService:IsKeyDown(Enum.KeyCode.A)
-    local wasPressingD = UserInputService:IsKeyDown(Enum.KeyCode.D)
-
-    -- Release movement keys if they were being pressed
-    if wasPressingW then
-        releaseKey(Enum.KeyCode.W)
-    end
-    if wasPressingA then
-        releaseKey(Enum.KeyCode.A)
-    end
-    if wasPressingD then
-        releaseKey(Enum.KeyCode.D)
-    end
-
-    -- Hold S
-    pressKey(Enum.KeyCode.S)
-
-    -- Small delay
-    local t = tick()
-    while tick() - t < keyGap do
-        RunService.RenderStepped:Wait()
-    end
-
-    -- Tap 2
-    pressKey(Enum.KeyCode.Two)
-    RunService.RenderStepped:Wait()
-    releaseKey(Enum.KeyCode.Two)
-
-    -- Disable AutoRotate so Roblox stops fighting rotation
-    local oldAutoRotate = humanoid.AutoRotate
+	local character = lp.Character
+	if not character then return end
+	
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local hrp = character:FindFirstChild("HumanoidRootPart")
+	if not humanoid or not hrp then return end
+	
+	-- Store which movement keys were being pressed
+	local wasPressingW = UserInputService:IsKeyDown(Enum.KeyCode.W)
+	local wasPressingA = UserInputService:IsKeyDown(Enum.KeyCode.A)
+	local wasPressingD = UserInputService:IsKeyDown(Enum.KeyCode.D)
+	
+	-- Release movement keys if they were being pressed
+	if wasPressingW then
+		releaseKey(Enum.KeyCode.W)
+	end
+	if wasPressingA then
+		releaseKey(Enum.KeyCode.A)
+	end
+	if wasPressingD then
+		releaseKey(Enum.KeyCode.D)
+	end
+	
+	-- Hold S
+	pressKey(Enum.KeyCode.S)
+	
+	-- Small delay
+	local t = tick()
+	while tick() - t < keyGap do
+		RunService.RenderStepped:Wait()
+	end
+	
+	-- Tap 2
+	pressKey(Enum.KeyCode.Two)
+	RunService.RenderStepped:Wait()
+	releaseKey(Enum.KeyCode.Two)
+	
+	-- Disable AutoRotate so Roblox stops fighting rotation
+	local oldAutoRotate = humanoid.AutoRotate
 	humanoid.AutoRotate = false
-
-    -- Turn 180 smoothly
-    smoothTurn(hrp, 180, turnTime)
-
-    -- Hold reversed
-    local holdStart = tick()
-    while tick() - holdStart < turnDuration do
-        RunService.RenderStepped:Wait()
+	
+	-- Turn 180 smoothly
+	smoothTurn(hrp, 180, turnTime)
+	
+	-- Hold reversed
+	local holdStart = tick()
+	while tick() - holdStart < turnDuration do
+		RunService.RenderStepped:Wait()
+	end
+	
+	-- Turn back smoothly
+	smoothTurn(hrp, -180, turnTime)
+	
+	-- Re-enable AutoRotate
+	humanoid.AutoRotate = oldAutoRotate
+	
+	-- Release S
+	releaseKey(Enum.KeyCode.S)
+	
+	-- Restore movement keys if they were being pressed
+	if wasPressingW then
+		pressKey(Enum.KeyCode.W)
+	end
+	if wasPressingA then
+		pressKey(Enum.KeyCode.A)
+	end
+	if wasPressingD then
+		pressKey(Enum.KeyCode.D)
+	end
 end
 
-    -- Turn back smoothly
-    smoothTurn(hrp, -180, turnTime)
-
-    -- Re-enable AutoRotate
-    humanoid.AutoRotate = oldAutoRotate
-
-    -- Release S
-    releaseKey(Enum.KeyCode.S)
-
-    -- Restore movement keys if they were being pressed
-    if wasPressingW then
-        pressKey(Enum.KeyCode.W)
-    end
-    if wasPressingA then
-        pressKey(Enum.KeyCode.A)
-    end
-    if wasPressingD then
-        pressKey(Enum.KeyCode.D)
-    end
-				end
 ------------------------------------------------
 -- // OVERTIME BLOCK LOGIC
 ------------------------------------------------
@@ -406,19 +614,21 @@ local function createOvertimeBlockTriangle()
 	
 	-- Rotate to make it look more triangular
 	overtimeBlockTriangle.Rotation = 0
-				end
+end
 
 local function removeOvertimeBlockTriangle()
 	if overtimeBlockTriangle then
 		overtimeBlockTriangle:Destroy()
 		overtimeBlockTriangle = nil
-			end
-		end
+	end
+end
+
 ------------------------------------------------
 -- // TARGET LOGIC
 ------------------------------------------------
 local function createTargetDecal(plr)
 	if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
+	
 	local char = plr.Character
 	local rootPart = char.HumanoidRootPart
 	
@@ -442,7 +652,7 @@ local function createTargetDecal(plr)
 	bb.StudsOffset = Vector3.new(0,4,0)
 	bb.AlwaysOnTop = true
 	bb.Parent = char
-
+	
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Size = UDim2.new(1,0,0,24)
 	textLabel.Position = UDim2.new(0,0,0,0)
@@ -454,7 +664,7 @@ local function createTargetDecal(plr)
 	textLabel.TextStrokeTransparency = 0
 	textLabel.TextStrokeColor3 = Color3.new(0,0,0)
 	textLabel.Parent = bb
-
+	
 	-- Display name label
 	local displayNameLabel = Instance.new("TextLabel")
 	displayNameLabel.Size = UDim2.new(1,0,0,18)
@@ -480,11 +690,11 @@ local function createTargetDecal(plr)
 	usernameLabel.TextStrokeTransparency = 0
 	usernameLabel.TextStrokeColor3 = Color3.new(0,0,0)
 	usernameLabel.Parent = bb
-				end
+end
 
 local function removeTargetDecal(plr)
 	if plr.Character then
-				local rootPart = plr.Character:FindFirstChild("HumanoidRootPart")
+		local rootPart = plr.Character:FindFirstChild("HumanoidRootPart")
 		if rootPart then
 			for _, decal in pairs(rootPart:GetChildren()) do
 				if decal.Name == "TargetDecal" then
@@ -496,7 +706,7 @@ local function removeTargetDecal(plr)
 		local targetLabel = plr.Character:FindFirstChild("TargetLabel")
 		if targetLabel then
 			targetLabel:Destroy()
-	end
+		end
 	end
 end
 
@@ -538,12 +748,14 @@ local function updateTargetList()
 			
 			btn.MouseButton1Click:Connect(function()
 				toggleTarget(plr)
-end)
+			end)
 		end
 	end
+	
 	-- Update scroll frame canvas size
 	TargetScrollFrame.CanvasSize = UDim2.new(0,0,0,TargetListLayout.AbsoluteContentSize.Y)
 end
+
 local function showTargetGui()
 	TargetGuiOpen = not TargetGuiOpen
 	TargetGui.Visible = TargetGuiOpen
@@ -551,6 +763,7 @@ local function showTargetGui()
 		updateTargetList()
 	end
 end
+
 ------------------------------------------------
 -- // DUMMY HEALTH DISPLAY
 ------------------------------------------------
@@ -558,11 +771,13 @@ local function createDummyHealthDisplay(dummyModel)
 	local humanoid = dummyModel:FindFirstChild("Humanoid")
 	local rootPart = dummyModel:FindFirstChild("HumanoidRootPart") or dummyModel:FindFirstChild("Torso")
 	if not humanoid or not rootPart then return end
+	
 	-- Remove existing health display
 	local existingGui = dummyModel:FindFirstChild("DummyHealthGui")
 	if existingGui then
 		existingGui:Destroy()
 	end
+	
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "DummyHealthGui"
 	bb.Adornee = rootPart
@@ -570,6 +785,7 @@ local function createDummyHealthDisplay(dummyModel)
 	bb.StudsOffset = Vector3.new(0,3,0)
 	bb.AlwaysOnTop = true
 	bb.Parent = dummyModel
+	
 	local healthText = Instance.new("TextLabel")
 	healthText.Size = UDim2.new(1,0,1,0)
 	healthText.Position = UDim2.new(0,0,0,0)
@@ -581,11 +797,11 @@ local function createDummyHealthDisplay(dummyModel)
 	healthText.TextStrokeTransparency = 0
 	healthText.TextStrokeColor3 = Color3.new(0,0,0)
 	healthText.Parent = bb
-
+	
 	-- Update health text when health changes
 	local healthConnection = humanoid.HealthChanged:Connect(function()
 		healthText.Text = math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
-end)
+	end)
 	
 	-- Clean up when dummy is destroyed
 	local destroyConnection = dummyModel.AncestryChanged:Connect(function()
@@ -594,22 +810,24 @@ end)
 			destroyConnection:Disconnect()
 		end
 	end)
-			end
+end
 
 local function updateDummyHealthDisplays()
-		for _, obj in pairs(workspace:GetDescendants()) do
+	for _, obj in pairs(workspace:GetDescendants()) do
 		if obj.Name == "Dummy" and obj:IsA("Model") and obj:FindFirstChild("Humanoid") then
 			if not obj:FindFirstChild("DummyHealthGui") then
 				createDummyHealthDisplay(obj)
-				end
 			end
 		end
-		end
+	end
+end
+
 ------------------------------------------------
 -- // HIGHLIGHT LOGIC
 ------------------------------------------------
 local function getHealthColor(humanoid)
 	if not humanoid then return Color3.fromRGB(255,255,255) end
+	
 	local healthPercent = humanoid.Health / humanoid.MaxHealth
 	
 	if healthPercent >= 0.75 then
@@ -620,33 +838,14 @@ local function getHealthColor(humanoid)
 		return HealthColors[0.5] -- Orange
 	else
 		return HealthColors[0.25] -- Red
-				end
-			end
+	end
+end
 
 local function getColor(plr)
+	-- Only friends are green, everyone else is enemy (red)
 	if lp:IsFriendsWith(plr.UserId) then
 		return FriendColor
-		end
-	local teamName = plr.Team and plr.Team.Name or ""
-	local lpTeamName = lp.Team and lp.Team.Name or ""
-	
-	-- Super teams: ORDERLY, MPT, JANITOR, MANAGEMENT, MEDICAL vs PATIENT
-	local superTeams = {ORDERLY=true, MPT=true, JANITOR=true, MANAGEMENT=true, MEDICAL=true}
-	
-	-- If both are in super teams, they're allies
-	if superTeams[teamName] and superTeams[lpTeamName] then
-		return AllyColor
-	-- If both are patients, they're allies
-	elseif teamName == "PATIENT" and lpTeamName == "PATIENT" then
-		return AllyColor
-	-- If one is super team and other is patient, they're enemies
-	elseif (superTeams[teamName] and lpTeamName == "PATIENT") or (teamName == "PATIENT" and superTeams[lpTeamName]) then
-		return EnemyColor
-	-- Same team = ally
-	elseif teamName == lpTeamName and teamName ~= "" then
-		return AllyColor
 	else
-		-- Different teams = enemy
 		return EnemyColor
 	end
 end
@@ -654,96 +853,36 @@ end
 local function clearHighlight(plr)
 	if HighlightFolder:FindFirstChild(plr.Name) then
 		HighlightFolder[plr.Name]:Destroy()
-		end
+	end
 	if plr.Character and plr.Character:FindFirstChild("HighlightTag") then
 		plr.Character.HighlightTag:Destroy()
-			end
-		end
+	end
+end
 
 local function clearDummyHighlights()
 	for _, child in pairs(HighlightFolder:GetChildren()) do
 		if child.Name:find("Dummy_") then
 			child:Destroy()
-	end
 		end
 	end
-
-local function clearHealthBar(plr)
-	if HealthBarFolder:FindFirstChild(plr.Name) then
-		HealthBarFolder[plr.Name]:Destroy()
 end
-	if plr.Character and plr.Character:FindFirstChild("HealthBarGui") then
-		plr.Character.HealthBarGui:Destroy()
-						end
-					end
-
-local function createHealthBar(plr)
-	local char = plr.Character
-	local humanoid = char and char:FindFirstChild("Humanoid")
-	local rootPart = char and char:FindFirstChild("HumanoidRootPart")
-	if not rootPart or not humanoid then return end
-	
-			clearHealthBar(plr)
-
-	local healthPercent = humanoid.Health / humanoid.MaxHealth
-	local currentHealth = math.floor(humanoid.Health)
-
-	local bb = Instance.new("BillboardGui", char)
-	bb.Name = "HealthBarGui"
-	bb.Adornee = rootPart
-	bb.Size = UDim2.new(0,4,0,100)
-	bb.StudsOffset = Vector3.new(3,0,0)
-	bb.AlwaysOnTop = true
-
-	-- Health number at top
-	local healthText = Instance.new("TextLabel", bb)
-	healthText.Size = UDim2.new(0,30,0,15)
-	healthText.Position = UDim2.new(0,-13,0,-20)
-	healthText.BackgroundTransparency = 1
-	healthText.Text = tostring(currentHealth)
-	healthText.Font = Enum.Font.GothamBold
-	healthText.TextSize = 12
-	healthText.TextStrokeTransparency = 0.3
-	healthText.TextColor3 = Color3.new(1,1,1)
-
-	-- Background bar
-	local bgBar = Instance.new("Frame", bb)
-	bgBar.Size = UDim2.new(1,0,1,0)
-	bgBar.Position = UDim2.new(0,0,0,0)
-	bgBar.BackgroundColor3 = Color3.fromRGB(30,30,30)
-	bgBar.BorderSizePixel = 1
-	bgBar.BorderColor3 = Color3.new(0,0,0)
-
-	-- Health fill bar
-	local healthBar = Instance.new("Frame", bgBar)
-	healthBar.Size = UDim2.new(1,0,healthPercent,0)
-	healthBar.Position = UDim2.new(0,0,1-healthPercent,0)
-	healthBar.BackgroundColor3 = getHealthColor(humanoid)
-	healthBar.BorderSizePixel = 0
-
-	-- Store references for updates
-	bb:SetAttribute("HealthBar", true)
-	bb:SetAttribute("PlayerName", plr.Name)
-
-	return bb
-				end
 
 local function createTag(plr, color)
 	local char = plr.Character
 	local head = char and char:FindFirstChild("Head")
 	local humanoid = char and char:FindFirstChild("Humanoid")
 	if not head then return end
-
+	
 	local bb = Instance.new("BillboardGui", char)
 	bb.Name = "HighlightTag"
 	bb.Adornee = head
 	bb.Size = UDim2.new(0,100,0,60)
 	bb.StudsOffset = Vector3.new(0,2.5,0)
 	bb.AlwaysOnTop = true
-
+	
 	local layout = Instance.new("UIListLayout", bb)
 	layout.VerticalAlignment = Enum.VerticalAlignment.Center
-
+	
 	-- Health display at top
 	if humanoid then
 		local healthLabel = Instance.new("TextLabel", bb)
@@ -754,7 +893,7 @@ local function createTag(plr, color)
 		healthLabel.TextSize = 14
 		healthLabel.TextStrokeTransparency = 0.3
 		healthLabel.TextColor3 = getHealthColor(humanoid)
-		end
+	end
 	
 	-- Display name ONLY for friends
 	if lp:IsFriendsWith(plr.UserId) then
@@ -767,7 +906,7 @@ local function createTag(plr, color)
 		name.TextStrokeTransparency = 0.4
 		name.TextColor3 = color
 	end
-
+	
 	-- Team name always
 	if plr.Team then
 		local team = Instance.new("TextLabel", bb)
@@ -778,8 +917,8 @@ local function createTag(plr, color)
 		team.TextSize = 10
 		team.TextStrokeTransparency = 0.5
 		team.TextColor3 = color
-			end
-		end
+	end
+end
 
 local function applyHighlight(plr)
 	if not HighlightEnabled or plr == lp or not plr.Character then return end
@@ -787,10 +926,11 @@ local function applyHighlight(plr)
 	-- Check if player is dead
 	local humanoid = plr.Character:FindFirstChild("Humanoid")
 	if humanoid and humanoid.Health <= 0 then return end
-			clearHighlight(plr)
-
+	
+	clearHighlight(plr)
+	
 	local color = getColor(plr)
-
+	
 	local h = Instance.new("Highlight")
 	h.Name = plr.Name
 	h.Adornee = plr.Character
@@ -798,17 +938,19 @@ local function applyHighlight(plr)
 	h.FillTransparency = 0.6
 	h.OutlineColor = Color3.new(1,1,1)
 	h.Parent = HighlightFolder
-
+	
 	createTag(plr, color)
 end
 
 local function applyDummyHighlights()
 	if not HighlightEnabled then return end
-		clearDummyHighlights()
-		for _, obj in pairs(workspace:GetDescendants()) do
-            if obj.Name == "Dummy" and obj:FindFirstChild("Humanoid") then
+	
+	clearDummyHighlights()
+	
+	for _, obj in pairs(workspace:GetDescendants()) do
+		if obj.Name == "Dummy" and obj:FindFirstChild("Humanoid") then
 			local humanoid = obj:FindFirstChild("Humanoid")
-					if humanoid and humanoid.Health > 0 then
+			if humanoid and humanoid.Health > 0 then
 				local h = Instance.new("Highlight")
 				h.Name = "Dummy_" .. obj:GetDebugId()
 				h.Adornee = obj
@@ -816,50 +958,10 @@ local function applyDummyHighlights()
 				h.FillTransparency = 0.6
 				h.OutlineColor = Color3.new(1,1,1)
 				h.Parent = HighlightFolder
-						end
-					end
-				end
 			end
-
-local function applyHealthBar(plr)
-	if not HealthBarsEnabled or plr == lp or not plr.Character then return end
-	
-	-- Check if player is dead
-	local humanoid = plr.Character:FindFirstChild("Humanoid")
-	if humanoid and humanoid.Health <= 0 then return end
-	
-	createHealthBar(plr)
 		end
-
-local function updateHealthBar(plr)
-	if not HealthBarsEnabled or plr == lp or not plr.Character then return end
-	
-	local char = plr.Character
-	local humanoid = char and char:FindFirstChild("Humanoid")
-	local healthBarGui = char and char:FindFirstChild("HealthBarGui")
-	
-	if not humanoid or not healthBarGui then return end
-	
-	local healthPercent = humanoid.Health / humanoid.MaxHealth
-	local currentHealth = math.floor(humanoid.Health)
-	
-	-- Update health text
-	local healthText = healthBarGui:FindFirstChild("TextLabel")
-	if healthText then
-		healthText.Text = tostring(currentHealth)
-						end
-	
-	-- Update health bar
-	local bgBar = healthBarGui:FindFirstChild("Frame")
-	if bgBar then
-		local healthBar = bgBar:FindFirstChild("Frame")
-		if healthBar then
-			healthBar.Size = UDim2.new(1,0,healthPercent,0)
-			healthBar.Position = UDim2.new(0,0,1-healthPercent,0)
-			healthBar.BackgroundColor3 = getHealthColor(humanoid)
-					end
-				end
-			end
+	end
+end
 
 local function updateHighlightTag(plr)
 	if not HighlightEnabled or plr == lp or not plr.Character then return end
@@ -867,7 +969,6 @@ local function updateHighlightTag(plr)
 	local char = plr.Character
 	local humanoid = char and char:FindFirstChild("Humanoid")
 	local highlightTag = char and char:FindFirstChild("HighlightTag")
-	
 	if not humanoid or not highlightTag then return end
 	
 	-- Update health display in tag
@@ -875,8 +976,8 @@ local function updateHighlightTag(plr)
 	if healthLabel then
 		healthLabel.Text = math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
 		healthLabel.TextColor3 = getHealthColor(humanoid)
-		end
-				end
+	end
+end
 
 local function updateHighlight(plr)
 	if not HighlightEnabled or plr == lp or not plr.Character then return end
@@ -884,9 +985,9 @@ local function updateHighlight(plr)
 	local char = plr.Character
 	local humanoid = char and char:FindFirstChild("Humanoid")
 	if not humanoid or humanoid.Health <= 0 then 
-			clearHighlight(plr)
+		clearHighlight(plr)
 		return 
-		end
+	end
 	
 	local color = getColor(plr)
 	local highlight = HighlightFolder:FindFirstChild(plr.Name)
@@ -904,16 +1005,17 @@ local function updateHighlight(plr)
 		if healthLabel then
 			healthLabel.Text = math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
 			healthLabel.TextColor3 = getHealthColor(humanoid)
-	end
-
+		end
+		
 		-- Update team/name colors
 		for _, child in pairs(highlightTag:GetChildren()) do
 			if child:IsA("TextLabel") and child ~= healthLabel then
 				child.TextColor3 = color
-				end
+			end
 		end
 	end
-				end
+end
+
 ------------------------------------------------
 -- // PLAYER UPDATES
 ------------------------------------------------
@@ -922,46 +1024,55 @@ local function hookPlayer(plr)
 		task.wait(0.4)
 		if HighlightEnabled then
 			applyHighlight(plr)
-						end
-		if HealthBarsEnabled then
-			applyHealthBar(plr)
-						end
+		end
 		if TargetedPlayers[plr.Name] then
-					createTargetDecal(plr)
-				end
-end)
+			createTargetDecal(plr)
+		end
+		-- Apply DeLocust when character respawns
+		if DeLocustEnabled and plr == lp then
+			task.wait(0.5)
+			applyDeLocust()
+		end
+		-- Apply DeNanami when character respawns
+		if DeNanamiEnabled and plr == lp then
+			task.wait(0.5)
+			applyDeNanami()
+		end
+	end)
 	table.insert(Connections, conn1)
+	
 	local conn2 = plr:GetPropertyChangedSignal("Team"):Connect(function()
 		task.wait(0.1) -- Small delay to ensure team change is processed
 		if HighlightEnabled then
 			updateHighlight(plr)
 		end
-end)
+	end)
 	table.insert(Connections, conn2)
+	
 	-- Hook health changes for real-time updates
 	local conn3 = plr.CharacterAdded:Connect(function(char)
 		local humanoid = char:WaitForChild("Humanoid")
+		
 		local conn4 = humanoid.HealthChanged:Connect(function()
 			if HighlightEnabled then
 				updateHighlight(plr)
 			end
-			if HealthBarsEnabled then
-				updateHealthBar(plr)
-			end
 		end)
 		table.insert(Connections, conn4)
+		
 		local conn5 = humanoid.Died:Connect(function()
 			clearHighlight(plr)
-			clearHealthBar(plr)
 			removeTargetDecal(plr)
 		end)
 		table.insert(Connections, conn5)
 	end)
 	table.insert(Connections, conn3)
 end
+
 for _,p in ipairs(Players:GetPlayers()) do
 	if p ~= lp then hookPlayer(p) end
 end
+
 local conn6 = Players.PlayerAdded:Connect(function(plr)
 	hookPlayer(plr)
 	if TargetGuiOpen then
@@ -969,9 +1080,9 @@ local conn6 = Players.PlayerAdded:Connect(function(plr)
 	end
 end)
 table.insert(Connections, conn6)
+
 local conn7 = Players.PlayerRemoving:Connect(function(plr)
 	clearHighlight(plr)
-	clearHealthBar(plr)
 	removeTargetDecal(plr)
 	TargetedPlayers[plr.Name] = nil
 	if TargetGuiOpen then
@@ -979,12 +1090,14 @@ local conn7 = Players.PlayerRemoving:Connect(function(plr)
 	end
 end)
 table.insert(Connections, conn7)
+
 ------------------------------------------------
 -- // TOGGLES
 ------------------------------------------------
 local function toggleHighlight()
 	HighlightEnabled = not HighlightEnabled
 	HighlightBtn.Text = "Highlight (J): "..(HighlightEnabled and "ON" or "OFF")
+	
 	for _,p in ipairs(Players:GetPlayers()) do
 		if HighlightEnabled then
 			applyHighlight(p)
@@ -992,6 +1105,7 @@ local function toggleHighlight()
 			clearHighlight(p)
 		end
 	end
+	
 	if HighlightEnabled then
 		applyDummyHighlights()
 		updateDummyHealthDisplays()
@@ -1000,25 +1114,21 @@ local function toggleHighlight()
 	end
 end
 
-local function toggleHealthBars()
-	HealthBarsEnabled = not HealthBarsEnabled
-	HealthBarsBtn.Text = "Health Bars: "..(HealthBarsEnabled and "ON" or "OFF")
-	for _,p in ipairs(Players:GetPlayers()) do
-		if HealthBarsEnabled then
-			applyHealthBar(p)
-		else
-			clearHealthBar(p)
-		end
+local function toggleDeLocust()
+	DeLocustEnabled = not DeLocustEnabled
+	DeLocustBtn.Text = "DeLocust Guy: "..(DeLocustEnabled and "ON" or "OFF")
+	
+	if DeLocustEnabled then
+		applyDeLocust()
 	end
 end
 
-local function toggleFOV()
-	FOVEnabled = not FOVEnabled
-	FOVButton.Text = "FOV (U): "..(FOVEnabled and "ON" or "OFF")
-	if FOVEnabled then
-		camera.FieldOfView = CustomFOV
-	else
-		camera.FieldOfView = DefaultFOV
+local function toggleDeNanami()
+	DeNanamiEnabled = not DeNanamiEnabled
+	DeNanamiBtn.Text = "DeNanami: "..(DeNanamiEnabled and "ON" or "OFF")
+	
+	if DeNanamiEnabled then
+		applyDeNanami()
 	end
 end
 
@@ -1033,12 +1143,15 @@ end
 local function toggleTodoBF()
 	TodoBFEnabled = not TodoBFEnabled
 	TodoBFBtn.Text = "Todo BF (T): "..(TodoBFEnabled and "ON" or "OFF")
-		end
+end
 
 local function updateNanamiIndicator()
-		if NanamiREnabled then
+	if NanamiREnabled then
 		NanamiIndicator.Visible = true
-		if delayTime == 0.60 then
+		if gModeActive then
+			NanamiIndicator.BackgroundColor3 = Color3.fromRGB(255,165,0)
+			NanamiIndicatorLabel.Text = "G MODE"
+		elseif delayTime == 0.60 then
 			NanamiIndicator.BackgroundColor3 = Color3.fromRGB(0,255,0)
 			NanamiIndicatorLabel.Text = "0.60s"
 		else
@@ -1047,14 +1160,14 @@ local function updateNanamiIndicator()
 		end
 	else
 		NanamiIndicator.Visible = false
-		end
-		end
+	end
+end
 
 local function toggleNanamiR()
 	NanamiREnabled = not NanamiREnabled
-	NanamiRBtn.Text = "Nanami R: "..(NanamiREnabled and "ON" or "OFF")
+	NanamiRBtn.Text = "Nanami R (P): "..(NanamiREnabled and "ON" or "OFF")
 	updateNanamiIndicator()
-				end
+end
 
 local function toggleNanamiKick()
 	NanamiKickEnabled = not NanamiKickEnabled
@@ -1064,7 +1177,7 @@ end
 local function toggleMahoragaQuake()
 	MahoragaQuakeEnabled = not MahoragaQuakeEnabled
 	MahoragaQuakeBtn.Text = "Mahoraga Quake: "..(MahoragaQuakeEnabled and "ON" or "OFF")
-		end
+end
 
 local function toggleOvertimeBlock()
 	OvertimeBlockEnabled = not OvertimeBlockEnabled
@@ -1074,6 +1187,7 @@ end
 local function toggleSeriousMode()
 	SeriousModeEnabled = not SeriousModeEnabled
 	SeriousBtn.Text = "SERIOUS MODE ([): "..(SeriousModeEnabled and "ON" or "OFF")
+	
 	-- Send notification
 	game.StarterGui:SetCore("SendNotification", {
 		Title = "SERIOUS MODE",
@@ -1098,120 +1212,114 @@ local function toggleSeriousMode()
 		end
 	end
 end
+
 ------------------------------------------------
 -- // BUTTON CONNECTIONS
 ------------------------------------------------
 local conn8 = HighlightBtn.MouseButton1Click:Connect(toggleHighlight)
 table.insert(Connections, conn8)
-local conn29 = HealthBarsBtn.MouseButton1Click:Connect(toggleHealthBars)
-table.insert(Connections, conn29)
-local conn9 = FOVButton.MouseButton1Click:Connect(toggleFOV)
-table.insert(Connections, conn9)
+
+local conn38 = DeLocustBtn.MouseButton1Click:Connect(toggleDeLocust)
+table.insert(Connections, conn38)
+
+local conn39 = DeNanamiBtn.MouseButton1Click:Connect(toggleDeNanami)
+table.insert(Connections, conn39)
+
 local conn10 = LockBtn.MouseButton1Click:Connect(toggleLock)
 table.insert(Connections, conn10)
+
 local conn15 = SeriousBtn.MouseButton1Click:Connect(toggleSeriousMode)
 table.insert(Connections, conn15)
+
 local conn32 = TodoBFBtn.MouseButton1Click:Connect(toggleTodoBF)
 table.insert(Connections, conn32)
+
 local conn33 = NanamiRBtn.MouseButton1Click:Connect(toggleNanamiR)
 table.insert(Connections, conn33)
+
 local conn37 = NanamiKickBtn.MouseButton1Click:Connect(toggleNanamiKick)
 table.insert(Connections, conn37)
+
 local conn34 = MahoragaQuakeBtn.MouseButton1Click:Connect(toggleMahoragaQuake)
 table.insert(Connections, conn34)
+
 local conn36 = OvertimeBlockBtn.MouseButton1Click:Connect(toggleOvertimeBlock)
 table.insert(Connections, conn36)
-local conn16 = FOVBox.FocusLost:Connect(function()
-	local n = tonumber(FOVBox.Text)
-	if n and n >= 40 and n <= 200 then
-		CustomFOV = n
-		if FOVEnabled then
-			camera.FieldOfView = CustomFOV
-		end
-		FOVBox.Text = tostring(n)
-	else
-		FOVBox.Text = tostring(CustomFOV)
-	end
-end)
-table.insert(Connections, conn16)
+
 -- Target button connection
 local conn30 = TargetBtn.MouseButton1Click:Connect(showTargetGui)
 table.insert(Connections, conn30)
+
 -- Target GUI close button connection
 local conn31 = TargetCloseBtn.MouseButton1Click:Connect(function()
 	TargetGui.Visible = false
 	TargetGuiOpen = false
 end)
 table.insert(Connections, conn31)
+
 local conn17 = CloseBtn.MouseButton1Click:Connect(function()
 	-- Reset all states
-	FOVEnabled = false
 	LockEnabled = false
 	HighlightEnabled = false
-	HealthBarsEnabled = false
 	SeriousModeEnabled = false
 	TodoBFEnabled = false
 	NanamiREnabled = false
 	NanamiKickEnabled = false
 	MahoragaQuakeEnabled = false
 	OvertimeBlockEnabled = false
-	-- Reset camera FOV
-	camera.FieldOfView = DefaultFOV
-	-- Remove highlights and health bars
+	DeLocustEnabled = false
+	DeNanamiEnabled = false
+	gModeActive = false
+	
+	-- Remove highlights
 	for _,p in ipairs(Players:GetPlayers()) do
 		clearHighlight(p)
-		clearHealthBar(p)
 		removeTargetDecal(p)
 	end
-
+	
 	-- Clear dummy highlights
 	clearDummyHighlights()
-
+	
 	-- Remove overtime block triangle
 	removeOvertimeBlockTriangle()
-
+	
 	-- Stop music
 	if SeriousModeMusic then
 		SeriousModeMusic:Destroy()
 	end
-
+	
 	-- Disconnect all connections
 	for _, connection in ipairs(Connections) do
 		if connection then
 			connection:Disconnect()
 		end
 	end
-
+	
 	-- Disconnect main loop
 	if RenderSteppedConn then
 		RenderSteppedConn:Disconnect()
 	end
-
+	
 	-- Disconnect refresh loop
 	if RefreshLoop then
 		RefreshLoop:Disconnect()
 	end
-
+	
 	-- Destroy highlight folder
 	if HighlightFolder then
 		HighlightFolder:Destroy()
 	end
-
-	-- Destroy health bar folder
-	if HealthBarFolder then
-		HealthBarFolder:Destroy()
-	end
-
+	
 	-- Destroy target folder
 	if TargetFolder then
 		TargetFolder:Destroy()
 	end
-
+	
 	-- Destroy dummy health folder
 	if DummyHealthFolder then
 		DummyHealthFolder:Destroy()
 	end
-
+	
 	-- Destroy GUI
 	ScreenGui:Destroy()
 end)
@@ -1222,69 +1330,68 @@ table.insert(Connections, conn17)
 ------------------------------------------------
 -- Millisecond-accurate wait
 local function preciseWait(duration)
-    local start = os.clock()
-    while os.clock() - start < duration do
-        task.wait()
-		end
+	local start = os.clock()
+	while os.clock() - start < duration do
+		task.wait()
 	end
+end
 
 local function pressKeyOld(keyCode, holdTime)
-    VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
-    preciseWait(holdTime)
-    VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
-	end
+	VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+	preciseWait(holdTime)
+	VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+end
 
 local function pressR()
-    isSimulated = true
-    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.R, false, game)
-    preciseWait(0.01)
-    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.R, false, game)
-    isSimulated = false
+	isSimulated = true
+	VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.R, false, game)
+	preciseWait(0.01)
+	VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.R, false, game)
+	isSimulated = false
 end
 
 local function tweenRotationAsync(part, targetCFrame, duration)
-    local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(part, tweenInfo, {CFrame = targetCFrame})
-    tween:Play()
-				end
+	local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	local tween = TweenService:Create(part, tweenInfo, {CFrame = targetCFrame})
+	tween:Play()
+end
 
 local function executeTodoBF()
 	local character = lp.Character or lp.CharacterAdded:Wait()
 	local humanoid = character:WaitForChild("Humanoid")
 	local hrp = character:WaitForChild("HumanoidRootPart")
-
 	character.PrimaryPart = hrp
-
+	
 	-- Disable rotation control
 	local originalAutoRotate = humanoid.AutoRotate
 	humanoid.AutoRotate = false
-
+	
 	local originalCFrame = hrp.CFrame
 	local flippedCFrame = originalCFrame * CFrame.Angles(0, math.rad(180), 0)
-
+	
 	-- Smooth flip
 	tweenRotationAsync(hrp, flippedCFrame, 0.15)
-
+	
 	-- === AHK EXACT TIMING ===
 	-- 3
 	pressKeyOld(Enum.KeyCode.Three, 0.159)
 	preciseWait(0.743)
-
+	
 	-- R
 	pressKeyOld(Enum.KeyCode.R, 0.192)
-
+	
 	-- 🔥 Restore movement immediately after R
 	humanoid.AutoRotate = originalAutoRotate
-
+	
 	-- Start turning back visually (non-blocking)
 	tweenRotationAsync(hrp, originalCFrame, 0.12)
-
+	
 	preciseWait(0.260)
-
+	
 	-- First 2
 	pressKeyOld(Enum.KeyCode.Two, 0.136)
 	preciseWait(0.500)
-
+	
 	-- Second 2 (exact 500ms delay preserved)
 	pressKeyOld(Enum.KeyCode.Two, 0.001)
 end
@@ -1311,6 +1418,7 @@ local function checkAutoNanamiSwitch()
 	if not NanamiREnabled then return end
 	
 	local closestPlayer = getClosestPlayerToMouse()
+	
 	-- Check player only
 	if closestPlayer and closestPlayer.Character then
 		local humanoid = closestPlayer.Character:FindFirstChild("Humanoid")
@@ -1330,64 +1438,99 @@ local function checkAutoNanamiSwitch()
 				threshold = 50
 			else
 				threshold = maxHealth * 0.76 -- Default to 76% for other values
-		end
+			end
 			
 			if currentHealth < threshold then
-			if delayTime ~= 0.45 then
-				delayTime = 0.45
-				fastMode = true
-				updateNanamiIndicator()
-	end
-			return
+				if delayTime ~= 0.45 then
+					delayTime = 0.45
+					fastMode = true
+					updateNanamiIndicator()
+				end
+				return
+			end
 		end
 	end
-	end
-
+	
 	-- Default to slow mode if no low-health targets
 	if delayTime ~= 0.60 then
 		delayTime = 0.60
 		fastMode = false
-			updateNanamiIndicator()
-				end
-		end
+		updateNanamiIndicator()
+	end
+end
 
 local conn18 = UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
+	
 	if input.KeyCode == Enum.KeyCode.J then
 		toggleHighlight()
-	elseif input.KeyCode == Enum.KeyCode.U then
-		toggleFOV()
 	elseif input.KeyCode == Enum.KeyCode.Y then
 		toggleLock()
 	elseif input.KeyCode == Enum.KeyCode.LeftBracket then
 		toggleSeriousMode()
 		-- Highlight dummies
 		for _, obj in pairs(workspace:GetDescendants()) do
-            if obj.Name == "Dummy" and obj:FindFirstChild("Humanoid") then
-                local highlight = Instance.new("Highlight")
-                highlight.Parent = obj
-	end
-				end
+			if obj.Name == "Dummy" and obj:FindFirstChild("Humanoid") then
+				local highlight = Instance.new("Highlight")
+				highlight.Parent = obj
+			end
+		end
+	elseif input.KeyCode == Enum.KeyCode.G then
+		-- NEW: Activate G Mode for 65 seconds
+		if NanamiREnabled then
+			activateGMode()
+		end
 	elseif input.KeyCode == Enum.KeyCode.T then
-	if NanamiREnabled then
+		if NanamiREnabled then
 			fastMode = not fastMode
 			delayTime = fastMode and 0.45 or 0.60
 			updateNanamiIndicator()
 			print("R delay set to:", delayTime)
 		elseif TodoBFEnabled then
 			executeTodoBF()
-	end
+		end
 	elseif input.KeyCode == Enum.KeyCode.Five then
 		if NanamiKickEnabled then
 			executeNanamiKick()
 		end
-	elseif input.KeyCode == Enum.KeyCode.R then
-		if NanamiREnabled and not isSimulated then
+elseif input.KeyCode == Enum.KeyCode.P then
+	-- NEW: P key triggers Nanami R with proper cooldown
+	if NanamiREnabled and not isSimulated and not rKeyCooldown then
+		-- Get the appropriate cooldown duration
+		local cooldownDuration = checkMovesetForRCooldown()
+		
+		if cooldownDuration > 0 then
+			-- Start cooldown immediately
+			startRCooldown(cooldownDuration)
+			
+			-- Check if we should use fast mode based on enemy health
 			checkAutoNanamiSwitch()
-task.spawn(function()
-				preciseWait(delayTime)
+			
+			-- Execute FIRST R press immediately
+			task.spawn(function()
 				pressR()
-end)
+				
+				-- Wait the delay time (0.60s or 0.45s based on enemy health)
+				preciseWait(delayTime)
+				
+				-- Execute SECOND R press
+				pressR()
+			end)
+		end
+	end
+	elseif input.KeyCode == Enum.KeyCode.R then
+		-- NEW: R key cooldown based on moveset (blocks R input during cooldown)
+		if rKeyCooldown then
+			-- Block the R key input by consuming the event
+			return
+		end
+		
+		-- Only apply cooldown if not simulated by Nanami R
+		if not isSimulated then
+			local cooldownDuration = checkMovesetForRCooldown()
+			if cooldownDuration > 0 then
+				startRCooldown(cooldownDuration)
+			end
 		end
 	elseif input.KeyCode == Enum.KeyCode.Three then
 		if MahoragaQuakeEnabled and not isQuakeSimulated then
@@ -1411,11 +1554,13 @@ end)
 		GUIVisible = not GUIVisible
 		Main.Visible = GUIVisible
 		TargetGui.Visible = GUIVisible and TargetGuiOpen
-		end
+	end
 end)
 table.insert(Connections, conn18)
+
 local conn35 = UserInputService.InputEnded:Connect(function(input, gp)
 	if gp then return end
+	
 	if input.KeyCode == Enum.KeyCode.Three and MahoragaQuakeEnabled then
 		isHolding = false
 	elseif input.KeyCode == Enum.KeyCode.F and OvertimeBlockEnabled then
@@ -1424,8 +1569,9 @@ local conn35 = UserInputService.InputEnded:Connect(function(input, gp)
 	end
 end)
 table.insert(Connections, conn35)
+
 ------------------------------------------------
--- // LOCK CAMERA + FOV LOOP
+-- // LOCK CAMERA LOOP
 ------------------------------------------------
 local function getClosestPlayer()
 	local closest, shortest = nil, math.huge
@@ -1449,12 +1595,9 @@ local RenderSteppedConn
 RenderSteppedConn = RunService.RenderStepped:Connect(function()
 	-- LOCK CAMERA
 	if LockEnabled then
-		if not LockedPlayer 
-		   or not LockedPlayer.Character 
-		   or not LockedPlayer.Character:FindFirstChild(LockPart) then
+		if not LockedPlayer or not LockedPlayer.Character or not LockedPlayer.Character:FindFirstChild(LockPart) then
 			LockedPlayer = getClosestPlayer()
 		end
-
 		if LockedPlayer and LockedPlayer.Character then
 			local part = LockedPlayer.Character:FindFirstChild(LockPart)
 			if part then
@@ -1462,24 +1605,29 @@ RenderSteppedConn = RunService.RenderStepped:Connect(function()
 			end
 		end
 	end
-
-	-- FOV enforcement - improved to handle scoped weapons
-	if FOVEnabled then
-		if camera.FieldOfView ~= CustomFOV then
-			camera.FieldOfView = CustomFOV
-		end
-	end
-
+	
 	-- Auto Nanami R switch check
-	if NanamiREnabled then
+	if NanamiREnabled and not gModeActive then
 		checkAutoNanamiSwitch()
 	end
+	
+	-- Apply DeLocust continuously
+	if DeLocustEnabled then
+		applyDeLocust()
+	end
+	
+	-- Apply DeNanami continuously
+	if DeNanamiEnabled then
+		applyDeNanami()
+	end
 end)
+
 -- Periodic highlight and health bar refresh
 local RefreshLoop
 RefreshLoop = task.spawn(function()
 	while true do
 		task.wait(5) -- Refresh every 5 seconds
+		
 		if HighlightEnabled then
 			for _,p in ipairs(Players:GetPlayers()) do
 				if p ~= lp and p.Character then
@@ -1492,24 +1640,14 @@ RefreshLoop = task.spawn(function()
 					end
 				end
 			end
+			
 			-- Refresh dummy highlights
 			applyDummyHighlights()
+			
 			-- Refresh dummy health displays
 			updateDummyHealthDisplays()
 		end
-		if HealthBarsEnabled then
-			for _,p in ipairs(Players:GetPlayers()) do
-				if p ~= lp and p.Character then
-					local humanoid = p.Character:FindFirstChild("Humanoid")
-					if humanoid and humanoid.Health > 0 then
-						-- Only refresh if health bar is missing
-						if not p.Character:FindFirstChild("HealthBarGui") then
-							applyHealthBar(p)
-						end
-					end
-				end
-			end
-		end
+		
 		-- Refresh target decals
 		for playerName, _ in pairs(TargetedPlayers) do
 			local plr = Players:FindFirstChild(playerName)
@@ -1522,6 +1660,7 @@ RefreshLoop = task.spawn(function()
 		end
 	end
 end)
+
 ------------------------------------------------
 -- // LOAD SOUND NOTIFICATION
 ------------------------------------------------
@@ -1530,7 +1669,7 @@ task.spawn(function()
 	notifSound.SoundId = "rbxassetid://92381587575059"
 	notifSound.Volume = 0.15
 	notifSound.PlaybackSpeed = 1
-    notifSound:Play()
+	notifSound:Play()
 	
 	game.StarterGui:SetCore("SendNotification", {
 		Title = "Traitor Shenanigans",
