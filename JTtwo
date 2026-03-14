@@ -1201,7 +1201,7 @@ local function toggleSeriousMode()
 			SeriousModeMusic:Destroy()
 		end
 		SeriousModeMusic = Instance.new("Sound", workspace)
-		SeriousModeMusic.SoundId = "rbxassetid://117967615144125"
+		SeriousModeMusic.SoundId = "rbxassetid://129827447835246"
 		SeriousModeMusic.Volume = 0.5
 		SeriousModeMusic.Looped = true
 		SeriousModeMusic:Play()
