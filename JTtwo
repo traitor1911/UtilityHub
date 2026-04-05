@@ -27,11 +27,13 @@ local SeriousModeEnabled = false
 local TargetGuiOpen = false
 local TodoBFEnabled = false
 local NanamiREnabled = false
+local NanamiRVisualsEnabled = true -- NEW: visuals toggle, on by default
 local NanamiKickEnabled = false
 local MahoragaQuakeEnabled = false
 local OvertimeBlockEnabled = false
 local DeLocustEnabled = false
 local DeNanamiEnabled = false
+local ItemESPEnabled = false -- NEW: item ESP toggle
 local LockPart = "HumanoidRootPart"
 local LockedPlayer = nil
 local SeriousModeMusic = nil
@@ -56,13 +58,26 @@ local isQuakeSimulated = false
 local isBlockingF = false
 local overtimeBlockTriangle = nil
 
--- NEW: G key mode state (65 second override)
+-- G key mode state
 local gModeActive = false
 local gModeEndTime = 0
+local gModeMusic = nil
 
--- NEW: R key cooldown state
+-- R key cooldown state
 local rKeyCooldown = false
 local rCooldownTime = 0
+
+-- Item ESP storage
+local ItemESPFolder = Instance.new("Folder", CoreGui)
+ItemESPFolder.Name = "ItemESPStorage"
+
+-- Item ESP config
+local ItemESPConfig = {
+	["Jet Black"]     = Color3.fromRGB(128, 0, 128),   -- Purple
+	["Playful Cloud"] = Color3.fromRGB(180, 0, 30),    -- Crimson
+	["Naginata"]      = Color3.fromRGB(255, 105, 180), -- Pink
+	["Sniper"]        = Color3.fromRGB(255, 255, 0),   -- Yellow
+}
 
 ------------------------------------------------
 -- // COLORS
@@ -71,12 +86,11 @@ local FriendColor = Color3.fromRGB(0,255,0)
 local EnemyColor  = Color3.fromRGB(255,80,80)
 local DummyColor  = Color3.fromRGB(255,255,0)
 
--- Health-based colors
 local HealthColors = {
-	[1] = Color3.fromRGB(0,255,0), -- Green (100% health)
-	[0.75] = Color3.fromRGB(255,255,0), -- Yellow (75% health)
-	[0.5] = Color3.fromRGB(255,165,0), -- Orange (50% health)
-	[0.25] = Color3.fromRGB(255,80,80) -- Red (25% health)
+	[1] = Color3.fromRGB(0,255,0),
+	[0.75] = Color3.fromRGB(255,255,0),
+	[0.5] = Color3.fromRGB(255,165,0),
+	[0.25] = Color3.fromRGB(255,80,80)
 }
 
 ------------------------------------------------
@@ -87,8 +101,8 @@ ScreenGui.Name = "TraitorShenanigans"
 ScreenGui.ResetOnSpawn = false
 
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0,360,0,600)
-Main.Position = UDim2.new(0.5,-180,0.5,-300)
+Main.Size = UDim2.new(0,360,0,660)
+Main.Position = UDim2.new(0.5,-180,0.5,-330)
 Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
 Main.Active = true
 Main.Draggable = true
@@ -97,7 +111,7 @@ Main.BorderSizePixel = 0
 local MainCorner = Instance.new("UICorner", Main)
 MainCorner.CornerRadius = UDim.new(0,12)
 
--- Target GUI (side panel)
+-- Target GUI
 local TargetGui = Instance.new("Frame", ScreenGui)
 TargetGui.Size = UDim2.new(0,300,0,400)
 TargetGui.Position = UDim2.new(0.5,180,0.5,-200)
@@ -133,7 +147,7 @@ NanamiIndicatorLabel.TextColor3 = Color3.new(1,1,1)
 NanamiIndicatorLabel.TextStrokeTransparency = 0
 NanamiIndicatorLabel.TextStrokeColor3 = Color3.new(0,0,0)
 
--- NEW: G Mode Timer Indicator
+-- G Mode Timer Indicator
 local GModeIndicator = Instance.new("Frame", ScreenGui)
 GModeIndicator.Size = UDim2.new(0,150,0,50)
 GModeIndicator.Position = UDim2.new(0.5,-75,0.5,-150)
@@ -232,22 +246,18 @@ local TargetCloseBtnCorner = Instance.new("UICorner", TargetCloseBtn)
 TargetCloseBtnCorner.CornerRadius = UDim.new(0,8)
 
 ------------------------------------------------
--- // Buttons
+-- // Buttons (y positions shifted to fit new buttons)
 ------------------------------------------------
-local HighlightBtn = button("Highlight (J): OFF",65)
-local DeLocustBtn = button("DeLocust Guy: OFF",105)
-local DeNanamiBtn = button("DeNanami: OFF",145)
-local LockBtn      = button("Lock On (Y): OFF",185)
-local SeriousBtn   = button("SERIOUS MODE ([): OFF",225)
-local TodoBFBtn    = button("Todo BF (T): OFF",265)
-local NanamiRBtn   = button("Nanami R (P): OFF",305)
-local NanamiKickBtn = button("Nanami Kick: OFF",345)
-local MahoragaQuakeBtn = button("Mahoraga Quake: OFF",385)
-local OvertimeBlockBtn = button("Overtime Block: OFF",425)
+local HighlightBtn    = button("Highlight (J): OFF", 65)
+local ItemESPBtn      = button("Item ESP: OFF", 105)        -- NEW
+local DeLocustBtn     = button("DeLocust Guy: OFF", 145)
+local DeNanamiBtn     = button("DeNanami: OFF", 185)
+local LockBtn         = button("Lock On (Y): OFF", 225)
+local SeriousBtn      = button("SERIOUS MODE ([): OFF", 265)
+local TodoBFBtn       = button("Todo BF (T): OFF", 305)
 
--- Add small text below Todo BF button
 local TodoBFSubtext = Instance.new("TextLabel", Main)
-TodoBFSubtext.Position = UDim2.new(0,10,0,297)
+TodoBFSubtext.Position = UDim2.new(0,10,0,337)
 TodoBFSubtext.Size = UDim2.new(1,-20,0,12)
 TodoBFSubtext.BackgroundTransparency = 1
 TodoBFSubtext.Text = "REQUIRES AHK"
@@ -256,9 +266,11 @@ TodoBFSubtext.TextSize = 10
 TodoBFSubtext.TextColor3 = Color3.fromRGB(150,150,150)
 TodoBFSubtext.TextXAlignment = Enum.TextXAlignment.Left
 
--- Add small text below Nanami R button
+local NanamiRBtn      = button("Nanami R (P): OFF", 349)
+local NanamiRVisualsBtn = button("R Visuals: ON", 389)      -- NEW visuals toggle
+
 local NanamiRSubtext = Instance.new("TextLabel", Main)
-NanamiRSubtext.Position = UDim2.new(0,10,0,337)
+NanamiRSubtext.Position = UDim2.new(0,10,0,421)
 NanamiRSubtext.Size = UDim2.new(1,-20,0,12)
 NanamiRSubtext.BackgroundTransparency = 1
 NanamiRSubtext.Text = "REQUIRES AHK | Press G for 65s mode"
@@ -267,9 +279,10 @@ NanamiRSubtext.TextSize = 10
 NanamiRSubtext.TextColor3 = Color3.fromRGB(150,150,150)
 NanamiRSubtext.TextXAlignment = Enum.TextXAlignment.Left
 
--- Add small text below Nanami Kick button
+local NanamiKickBtn   = button("Nanami Kick: OFF", 433)
+
 local NanamiKickSubtext = Instance.new("TextLabel", Main)
-NanamiKickSubtext.Position = UDim2.new(0,10,0,377)
+NanamiKickSubtext.Position = UDim2.new(0,10,0,465)
 NanamiKickSubtext.Size = UDim2.new(1,-20,0,12)
 NanamiKickSubtext.BackgroundTransparency = 1
 NanamiKickSubtext.Text = "REQUIRES AHK"
@@ -277,6 +290,9 @@ NanamiKickSubtext.Font = Enum.Font.Gotham
 NanamiKickSubtext.TextSize = 10
 NanamiKickSubtext.TextColor3 = Color3.fromRGB(150,150,150)
 NanamiKickSubtext.TextXAlignment = Enum.TextXAlignment.Left
+
+local MahoragaQuakeBtn = button("Mahoraga Quake: OFF", 477)
+local OvertimeBlockBtn = button("Overtime Block: OFF", 517)
 
 -- Target button
 local TargetBtn = Instance.new("TextButton", Main)
@@ -322,24 +338,143 @@ DummyHealthFolder.Name = "DummyHealthStorage"
 local Connections = {}
 
 ------------------------------------------------
+-- // ITEM ESP LOGIC
+------------------------------------------------
+local ItemESPConfig = {
+	["Jet Black"]     = Color3.fromRGB(128, 0, 128),
+	["Playful Cloud"] = Color3.fromRGB(180, 0, 30),
+	["Naginata"]      = Color3.fromRGB(255, 105, 180),
+	["Sniper"]        = Color3.fromRGB(255, 255, 0),
+}
+
+local itemESPConnections = {}
+
+local function applyItemESPToObject(item, color)
+	-- only apply to the top-level named object, not its children
+	if item:FindFirstChild("ItemESPHighlight") then return end
+
+	-- get adornee: for models use primary/first basepart, for parts use itself
+	local rootPart
+	if item:IsA("Model") then
+		rootPart = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart")
+	elseif item:IsA("BasePart") then
+		rootPart = item
+	else
+		return -- not something we can adorn
+	end
+
+	if not rootPart then return end
+
+	local h = Instance.new("Highlight")
+	h.Name = "ItemESPHighlight"
+	h.Adornee = item
+	h.FillColor = color
+	h.FillTransparency = 0.5
+	h.OutlineColor = color
+	h.Parent = item
+
+	local bb = Instance.new("BillboardGui")
+	bb.Name = "ItemESPLabel"
+	bb.Adornee = rootPart
+	bb.Size = UDim2.new(0,120,0,30)
+	bb.StudsOffset = Vector3.new(0,3,0)
+	bb.AlwaysOnTop = true
+	bb.Parent = item
+
+	local lbl = Instance.new("TextLabel", bb)
+	lbl.Size = UDim2.new(1,0,1,0)
+	lbl.BackgroundTransparency = 1
+	lbl.Text = item.Name
+	lbl.Font = Enum.Font.GothamBold
+	lbl.TextSize = 14
+	lbl.TextColor3 = color
+	lbl.TextStrokeTransparency = 0
+	lbl.TextStrokeColor3 = Color3.new(0,0,0)
+end
+
+local function removeItemESPFromObject(item)
+	local h = item:FindFirstChild("ItemESPHighlight")
+	if h then h:Destroy() end
+	local bb = item:FindFirstChild("ItemESPLabel")
+	if bb then bb:Destroy() end
+end
+
+local function clearItemESP()
+	for _, c in ipairs(itemESPConnections) do
+		c:Disconnect()
+	end
+	itemESPConnections = {}
+
+	local items = workspace:FindFirstChild("Items")
+	if items then
+		for _, item in pairs(items:GetChildren()) do
+			removeItemESPFromObject(item)
+		end
+	end
+end
+
+local function startItemESPWatcher()
+	local items = workspace:FindFirstChild("Items")
+	if not items then
+		local c = workspace.ChildAdded:Connect(function(child)
+			if child.Name == "Items" then
+				startItemESPWatcher()
+			end
+		end)
+		table.insert(itemESPConnections, c)
+		return
+	end
+
+	-- apply to all existing direct children of Items
+	for _, item in pairs(items:GetChildren()) do
+		local color = ItemESPConfig[item.Name]
+		if color then
+			applyItemESPToObject(item, color)
+		end
+	end
+
+	-- watch for new DIRECT children only (not descendants)
+	local c1 = items.ChildAdded:Connect(function(item)
+		if not ItemESPEnabled then return end
+		local color = ItemESPConfig[item.Name]
+		if color then
+			task.wait(0.1) -- let the object fully load
+			applyItemESPToObject(item, color)
+		end
+	end)
+	table.insert(itemESPConnections, c1)
+
+	local c2 = items.ChildRemoved:Connect(function(item)
+		removeItemESPFromObject(item)
+	end)
+	table.insert(itemESPConnections, c2)
+end
+
+local function toggleItemESP()
+	ItemESPEnabled = not ItemESPEnabled
+	ItemESPBtn.Text = "Item ESP: "..(ItemESPEnabled and "ON" or "OFF")
+
+	if ItemESPEnabled then
+		startItemESPWatcher()
+	else
+		clearItemESP()
+	end
+end
+
+------------------------------------------------
 -- // DELOCUST LOGIC
 ------------------------------------------------
 local function removeLocustAssets()
 	if not lp.Character then return end
-	
+
 	local setAssets = workspace.Characters:FindFirstChild(lp.Name)
 	if setAssets then
 		setAssets = setAssets:FindFirstChild("SetAssets")
 		if setAssets then
 			local heianArms = setAssets:FindFirstChild("HeianArms")
 			local locustWing = setAssets:FindFirstChild("LocustWing")
-			
-			if heianArms then
-				heianArms:Destroy()
-			end
-			if locustWing then
-				locustWing:Destroy()
-			end
+			if heianArms then heianArms:Destroy() end
+			if locustWing then locustWing:Destroy() end
 		end
 	end
 end
@@ -356,44 +491,30 @@ end
 local function hasCollapseInMoveset()
 	local playerGui = lp:FindFirstChild("PlayerGui")
 	if not playerGui then return false end
-	
 	local mainGui = playerGui:FindFirstChild("Main")
 	if not mainGui then return false end
-	
 	local moveset = mainGui:FindFirstChild("Moveset")
 	if not moveset then return false end
-	
 	return moveset:FindFirstChild("Collapse") ~= nil
 end
 
 local function removeNanamiAssets()
 	if not lp.Character then return end
-	
+
 	local setAssets = workspace.Characters:FindFirstChild(lp.Name)
 	if setAssets then
 		setAssets = setAssets:FindFirstChild("SetAssets")
 		if setAssets then
 			local nanamiCleaver = setAssets:FindFirstChild("NanamiCleaver")
 			local nanamiTie = setAssets:FindFirstChild("NanamiTie")
-			
-			if nanamiCleaver then
-				nanamiCleaver:Destroy()
-			end
-			if nanamiTie then
-				nanamiTie:Destroy()
-			end
-			
-			-- Only remove these if Collapse is in moveset
+			if nanamiCleaver then nanamiCleaver:Destroy() end
+			if nanamiTie then nanamiTie:Destroy() end
+
 			if hasCollapseInMoveset() then
 				local nanamiGlove = setAssets:FindFirstChild("NanamiGlove")
 				local overtimeAure = setAssets:FindFirstChild("OvertimeAure")
-				
-				if nanamiGlove then
-					nanamiGlove:Destroy()
-				end
-				if overtimeAure then
-					overtimeAure:Destroy()
-				end
+				if nanamiGlove then nanamiGlove:Destroy() end
+				if overtimeAure then overtimeAure:Destroy() end
 			end
 		end
 	end
@@ -406,45 +527,73 @@ local function applyDeNanami()
 end
 
 ------------------------------------------------
--- // G MODE LOGIC (NEW)
+-- // G MODE LOGIC
 ------------------------------------------------
 local function activateGMode()
 	if gModeActive then return end
-	
+
 	gModeActive = true
 	gModeEndTime = tick() + 65
-	GModeIndicator.Visible = true
-	
-	-- Update indicator color
-	NanamiIndicator.BackgroundColor3 = Color3.fromRGB(255,165,0)
-	NanamiIndicatorLabel.Text = "G MODE"
-	
-	-- Notification
+	if NanamiRVisualsEnabled then
+		GModeIndicator.Visible = true
+		NanamiIndicator.BackgroundColor3 = Color3.fromRGB(255,165,0)
+		NanamiIndicatorLabel.Text = "G MODE"
+	end
+
+	-- Delete OvertimeAura music and play client-side music
+	if lp.Character then
+		local setAssets = workspace.Characters:FindFirstChild(lp.Name)
+		if setAssets then
+			setAssets = setAssets:FindFirstChild("SetAssets")
+			if setAssets then
+				local overtimeAura = setAssets:FindFirstChild("OvertimeAura")
+				if overtimeAura then
+					local music = overtimeAura:FindFirstChild("Music")
+					if music and music:IsA("Sound") then
+						music:Stop()
+						music:Destroy()
+					end
+				end
+			end
+		end
+	end
+
+	-- Create client-side music
+	gModeMusic = Instance.new("Sound", workspace)
+	gModeMusic.SoundId = "rbxassetid://129827447835246"
+	gModeMusic.Volume = 0.5
+	gModeMusic.Looped = true
+	gModeMusic:Play()
+
 	game.StarterGui:SetCore("SendNotification", {
 		Title = "G Mode Activated",
 		Text = "1.7s cooldown for 65 seconds",
 		Duration = 3
 	})
-	
-	-- Start countdown
+
 	task.spawn(function()
 		while gModeActive and tick() < gModeEndTime do
 			local remaining = math.ceil(gModeEndTime - tick())
-			GModeIndicatorLabel.Text = "G MODE: " .. remaining .. "s"
+			if NanamiRVisualsEnabled then
+				GModeIndicatorLabel.Text = "G MODE: " .. remaining .. "s"
+			end
 			task.wait(0.1)
 		end
-		
-		-- Deactivate after 65 seconds
+
 		gModeActive = false
 		GModeIndicator.Visible = false
-		
-		-- Reset indicator
-		if NanamiREnabled then
+
+		if gModeMusic then
+			gModeMusic:Stop()
+			gModeMusic:Destroy()
+			gModeMusic = nil
+		end
+
+		if NanamiREnabled and NanamiRVisualsEnabled then
 			NanamiIndicator.BackgroundColor3 = Color3.fromRGB(0,255,0)
 			NanamiIndicatorLabel.Text = "0.60s"
 		end
-		
-		-- Notification
+
 		game.StarterGui:SetCore("SendNotification", {
 			Title = "G Mode Ended",
 			Text = "Back to normal mode",
@@ -457,37 +606,24 @@ end
 -- // R KEY COOLDOWN LOGIC
 ------------------------------------------------
 local function checkMovesetForRCooldown()
-	-- If G mode is active, always use 1.7s cooldown
-	if gModeActive then
-		return 1.7
-	end
-	
+	if gModeActive then return 1.7 end
+
 	local playerGui = lp:FindFirstChild("PlayerGui")
 	if not playerGui then return 0 end
-	
 	local mainGui = playerGui:FindFirstChild("Main")
 	if not mainGui then return 0 end
-	
 	local moveset = mainGui:FindFirstChild("Moveset")
 	if not moveset then return 0 end
-	
-	-- Check for Stabilize move
-	if moveset:FindFirstChild("Stabilize") then
-		return 6.7
-	end
-	
-	-- Check for Collapse move
-	if moveset:FindFirstChild("Collapse") then
-		return 1.7
-	end
-	
+
+	if moveset:FindFirstChild("Stabilize") then return 6.7 end
+	if moveset:FindFirstChild("Collapse") then return 1.7 end
+
 	return 0
 end
 
 local function startRCooldown(duration)
 	rKeyCooldown = true
 	rCooldownTime = duration
-	
 	task.spawn(function()
 		task.wait(duration)
 		rKeyCooldown = false
@@ -510,86 +646,61 @@ local function smoothTurn(hrp, degrees, duration)
 	local startTime = tick()
 	local startCF = hrp.CFrame
 	local goalCF = startCF * CFrame.Angles(0, math.rad(degrees), 0)
-	
+
 	while tick() - startTime < duration do
 		local alpha = (tick() - startTime) / duration
 		hrp.CFrame = startCF:Lerp(goalCF, alpha)
 		RunService.RenderStepped:Wait()
 	end
-	
+
 	hrp.CFrame = goalCF
 end
 
 local function executeNanamiKick()
 	local character = lp.Character
 	if not character then return end
-	
+
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	local hrp = character:FindFirstChild("HumanoidRootPart")
 	if not humanoid or not hrp then return end
-	
-	-- Store which movement keys were being pressed
+
 	local wasPressingW = UserInputService:IsKeyDown(Enum.KeyCode.W)
 	local wasPressingA = UserInputService:IsKeyDown(Enum.KeyCode.A)
 	local wasPressingD = UserInputService:IsKeyDown(Enum.KeyCode.D)
-	
-	-- Release movement keys if they were being pressed
-	if wasPressingW then
-		releaseKey(Enum.KeyCode.W)
-	end
-	if wasPressingA then
-		releaseKey(Enum.KeyCode.A)
-	end
-	if wasPressingD then
-		releaseKey(Enum.KeyCode.D)
-	end
-	
-	-- Hold S
+
+	if wasPressingW then releaseKey(Enum.KeyCode.W) end
+	if wasPressingA then releaseKey(Enum.KeyCode.A) end
+	if wasPressingD then releaseKey(Enum.KeyCode.D) end
+
 	pressKey(Enum.KeyCode.S)
-	
-	-- Small delay
+
 	local t = tick()
 	while tick() - t < keyGap do
 		RunService.RenderStepped:Wait()
 	end
-	
-	-- Tap 2
+
 	pressKey(Enum.KeyCode.Two)
 	RunService.RenderStepped:Wait()
 	releaseKey(Enum.KeyCode.Two)
-	
-	-- Disable AutoRotate so Roblox stops fighting rotation
+
 	local oldAutoRotate = humanoid.AutoRotate
 	humanoid.AutoRotate = false
-	
-	-- Turn 180 smoothly
+
 	smoothTurn(hrp, 180, turnTime)
-	
-	-- Hold reversed
+
 	local holdStart = tick()
 	while tick() - holdStart < turnDuration do
 		RunService.RenderStepped:Wait()
 	end
-	
-	-- Turn back smoothly
+
 	smoothTurn(hrp, -180, turnTime)
-	
-	-- Re-enable AutoRotate
+
 	humanoid.AutoRotate = oldAutoRotate
-	
-	-- Release S
 	releaseKey(Enum.KeyCode.S)
-	
-	-- Restore movement keys if they were being pressed
-	if wasPressingW then
-		pressKey(Enum.KeyCode.W)
-	end
-	if wasPressingA then
-		pressKey(Enum.KeyCode.A)
-	end
-	if wasPressingD then
-		pressKey(Enum.KeyCode.D)
-	end
+
+	if wasPressingW then pressKey(Enum.KeyCode.W) end
+	if wasPressingA then pressKey(Enum.KeyCode.A) end
+	if wasPressingD then pressKey(Enum.KeyCode.D) end
 end
 
 ------------------------------------------------
@@ -597,7 +708,7 @@ end
 ------------------------------------------------
 local function createOvertimeBlockTriangle()
 	if overtimeBlockTriangle then return end
-	
+
 	overtimeBlockTriangle = Instance.new("Frame", ScreenGui)
 	overtimeBlockTriangle.Name = "OvertimeBlockTriangle"
 	overtimeBlockTriangle.Size = UDim2.new(0,100,0,100)
@@ -607,12 +718,9 @@ local function createOvertimeBlockTriangle()
 	overtimeBlockTriangle.BorderSizePixel = 4
 	overtimeBlockTriangle.BorderColor3 = Color3.new(1,1,1)
 	overtimeBlockTriangle.ZIndex = 1000
-	
-	-- Create triangle shape using UICorner and rotation
+
 	local corner = Instance.new("UICorner", overtimeBlockTriangle)
 	corner.CornerRadius = UDim.new(0,10)
-	
-	-- Rotate to make it look more triangular
 	overtimeBlockTriangle.Rotation = 0
 end
 
@@ -628,23 +736,20 @@ end
 ------------------------------------------------
 local function createTargetDecal(plr)
 	if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then return end
-	
+
 	local char = plr.Character
 	local rootPart = char.HumanoidRootPart
-	
-	-- Create decal
+
 	local decal = Instance.new("Decal")
 	decal.Name = "TargetDecal"
 	decal.Texture = "rbxassetid://12555314308"
 	decal.Face = Enum.NormalId.Front
 	decal.Parent = rootPart
-	
-	-- Create back decal
+
 	local backDecal = decal:Clone()
 	backDecal.Face = Enum.NormalId.Back
 	backDecal.Parent = rootPart
-	
-	-- Create billboard GUI for text
+
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "TargetLabel"
 	bb.Adornee = rootPart
@@ -652,7 +757,7 @@ local function createTargetDecal(plr)
 	bb.StudsOffset = Vector3.new(0,4,0)
 	bb.AlwaysOnTop = true
 	bb.Parent = char
-	
+
 	local textLabel = Instance.new("TextLabel")
 	textLabel.Size = UDim2.new(1,0,0,24)
 	textLabel.Position = UDim2.new(0,0,0,0)
@@ -664,8 +769,7 @@ local function createTargetDecal(plr)
 	textLabel.TextStrokeTransparency = 0
 	textLabel.TextStrokeColor3 = Color3.new(0,0,0)
 	textLabel.Parent = bb
-	
-	-- Display name label
+
 	local displayNameLabel = Instance.new("TextLabel")
 	displayNameLabel.Size = UDim2.new(1,0,0,18)
 	displayNameLabel.Position = UDim2.new(0,0,0,24)
@@ -677,8 +781,7 @@ local function createTargetDecal(plr)
 	displayNameLabel.TextStrokeTransparency = 0
 	displayNameLabel.TextStrokeColor3 = Color3.new(0,0,0)
 	displayNameLabel.Parent = bb
-	
-	-- Username label
+
 	local usernameLabel = Instance.new("TextLabel")
 	usernameLabel.Size = UDim2.new(1,0,0,16)
 	usernameLabel.Position = UDim2.new(0,0,0,42)
@@ -702,11 +805,8 @@ local function removeTargetDecal(plr)
 				end
 			end
 		end
-		
 		local targetLabel = plr.Character:FindFirstChild("TargetLabel")
-		if targetLabel then
-			targetLabel:Destroy()
-		end
+		if targetLabel then targetLabel:Destroy() end
 	end
 end
 
@@ -722,14 +822,10 @@ local function toggleTarget(plr)
 end
 
 local function updateTargetList()
-	-- Clear existing buttons
 	for _, child in pairs(TargetScrollFrame:GetChildren()) do
-		if child:IsA("TextButton") then
-			child:Destroy()
-		end
+		if child:IsA("TextButton") then child:Destroy() end
 	end
-	
-	-- Create new buttons for each player
+
 	for _, plr in pairs(Players:GetPlayers()) do
 		if plr ~= lp then
 			local btn = Instance.new("TextButton")
@@ -742,26 +838,23 @@ local function updateTargetList()
 			btn.TextSize = 14
 			btn.TextXAlignment = Enum.TextXAlignment.Left
 			btn.Parent = TargetScrollFrame
-			
+
 			local btnCorner = Instance.new("UICorner", btn)
 			btnCorner.CornerRadius = UDim.new(0,6)
-			
+
 			btn.MouseButton1Click:Connect(function()
 				toggleTarget(plr)
 			end)
 		end
 	end
-	
-	-- Update scroll frame canvas size
+
 	TargetScrollFrame.CanvasSize = UDim2.new(0,0,0,TargetListLayout.AbsoluteContentSize.Y)
 end
 
 local function showTargetGui()
 	TargetGuiOpen = not TargetGuiOpen
 	TargetGui.Visible = TargetGuiOpen
-	if TargetGuiOpen then
-		updateTargetList()
-	end
+	if TargetGuiOpen then updateTargetList() end
 end
 
 ------------------------------------------------
@@ -771,13 +864,10 @@ local function createDummyHealthDisplay(dummyModel)
 	local humanoid = dummyModel:FindFirstChild("Humanoid")
 	local rootPart = dummyModel:FindFirstChild("HumanoidRootPart") or dummyModel:FindFirstChild("Torso")
 	if not humanoid or not rootPart then return end
-	
-	-- Remove existing health display
+
 	local existingGui = dummyModel:FindFirstChild("DummyHealthGui")
-	if existingGui then
-		existingGui:Destroy()
-	end
-	
+	if existingGui then existingGui:Destroy() end
+
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "DummyHealthGui"
 	bb.Adornee = rootPart
@@ -785,7 +875,7 @@ local function createDummyHealthDisplay(dummyModel)
 	bb.StudsOffset = Vector3.new(0,3,0)
 	bb.AlwaysOnTop = true
 	bb.Parent = dummyModel
-	
+
 	local healthText = Instance.new("TextLabel")
 	healthText.Size = UDim2.new(1,0,1,0)
 	healthText.Position = UDim2.new(0,0,0,0)
@@ -797,13 +887,11 @@ local function createDummyHealthDisplay(dummyModel)
 	healthText.TextStrokeTransparency = 0
 	healthText.TextStrokeColor3 = Color3.new(0,0,0)
 	healthText.Parent = bb
-	
-	-- Update health text when health changes
+
 	local healthConnection = humanoid.HealthChanged:Connect(function()
 		healthText.Text = math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
 	end)
-	
-	-- Clean up when dummy is destroyed
+
 	local destroyConnection = dummyModel.AncestryChanged:Connect(function()
 		if not dummyModel.Parent then
 			healthConnection:Disconnect()
@@ -827,27 +915,16 @@ end
 ------------------------------------------------
 local function getHealthColor(humanoid)
 	if not humanoid then return Color3.fromRGB(255,255,255) end
-	
 	local healthPercent = humanoid.Health / humanoid.MaxHealth
-	
-	if healthPercent >= 0.75 then
-		return HealthColors[1] -- Green
-	elseif healthPercent >= 0.5 then
-		return HealthColors[0.75] -- Yellow
-	elseif healthPercent >= 0.25 then
-		return HealthColors[0.5] -- Orange
-	else
-		return HealthColors[0.25] -- Red
-	end
+	if healthPercent >= 0.75 then return HealthColors[1]
+	elseif healthPercent >= 0.5 then return HealthColors[0.75]
+	elseif healthPercent >= 0.25 then return HealthColors[0.5]
+	else return HealthColors[0.25] end
 end
 
 local function getColor(plr)
-	-- Only friends are green, everyone else is enemy (red)
-	if lp:IsFriendsWith(plr.UserId) then
-		return FriendColor
-	else
-		return EnemyColor
-	end
+	if lp:IsFriendsWith(plr.UserId) then return FriendColor end
+	return EnemyColor
 end
 
 local function clearHighlight(plr)
@@ -861,9 +938,7 @@ end
 
 local function clearDummyHighlights()
 	for _, child in pairs(HighlightFolder:GetChildren()) do
-		if child.Name:find("Dummy_") then
-			child:Destroy()
-		end
+		if child.Name:find("Dummy_") then child:Destroy() end
 	end
 end
 
@@ -872,18 +947,17 @@ local function createTag(plr, color)
 	local head = char and char:FindFirstChild("Head")
 	local humanoid = char and char:FindFirstChild("Humanoid")
 	if not head then return end
-	
+
 	local bb = Instance.new("BillboardGui", char)
 	bb.Name = "HighlightTag"
 	bb.Adornee = head
 	bb.Size = UDim2.new(0,100,0,60)
 	bb.StudsOffset = Vector3.new(0,2.5,0)
 	bb.AlwaysOnTop = true
-	
+
 	local layout = Instance.new("UIListLayout", bb)
 	layout.VerticalAlignment = Enum.VerticalAlignment.Center
-	
-	-- Health display at top
+
 	if humanoid then
 		local healthLabel = Instance.new("TextLabel", bb)
 		healthLabel.Size = UDim2.new(1,0,0,16)
@@ -894,8 +968,7 @@ local function createTag(plr, color)
 		healthLabel.TextStrokeTransparency = 0.3
 		healthLabel.TextColor3 = getHealthColor(humanoid)
 	end
-	
-	-- Display name ONLY for friends
+
 	if lp:IsFriendsWith(plr.UserId) then
 		local name = Instance.new("TextLabel", bb)
 		name.Size = UDim2.new(1,0,0,14)
@@ -906,8 +979,7 @@ local function createTag(plr, color)
 		name.TextStrokeTransparency = 0.4
 		name.TextColor3 = color
 	end
-	
-	-- Team name always
+
 	if plr.Team then
 		local team = Instance.new("TextLabel", bb)
 		team.Size = UDim2.new(1,0,0,12)
@@ -922,15 +994,10 @@ end
 
 local function applyHighlight(plr)
 	if not HighlightEnabled or plr == lp or not plr.Character then return end
-	
-	-- Check if player is dead
 	local humanoid = plr.Character:FindFirstChild("Humanoid")
 	if humanoid and humanoid.Health <= 0 then return end
-	
 	clearHighlight(plr)
-	
 	local color = getColor(plr)
-	
 	local h = Instance.new("Highlight")
 	h.Name = plr.Name
 	h.Adornee = plr.Character
@@ -938,15 +1005,12 @@ local function applyHighlight(plr)
 	h.FillTransparency = 0.6
 	h.OutlineColor = Color3.new(1,1,1)
 	h.Parent = HighlightFolder
-	
 	createTag(plr, color)
 end
 
 local function applyDummyHighlights()
 	if not HighlightEnabled then return end
-	
 	clearDummyHighlights()
-	
 	for _, obj in pairs(workspace:GetDescendants()) do
 		if obj.Name == "Dummy" and obj:FindFirstChild("Humanoid") then
 			local humanoid = obj:FindFirstChild("Humanoid")
@@ -963,51 +1027,23 @@ local function applyDummyHighlights()
 	end
 end
 
-local function updateHighlightTag(plr)
-	if not HighlightEnabled or plr == lp or not plr.Character then return end
-	
-	local char = plr.Character
-	local humanoid = char and char:FindFirstChild("Humanoid")
-	local highlightTag = char and char:FindFirstChild("HighlightTag")
-	if not humanoid or not highlightTag then return end
-	
-	-- Update health display in tag
-	local healthLabel = highlightTag:FindFirstChild("TextLabel")
-	if healthLabel then
-		healthLabel.Text = math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
-		healthLabel.TextColor3 = getHealthColor(humanoid)
-	end
-end
-
 local function updateHighlight(plr)
 	if not HighlightEnabled or plr == lp or not plr.Character then return end
-	
 	local char = plr.Character
 	local humanoid = char and char:FindFirstChild("Humanoid")
-	if not humanoid or humanoid.Health <= 0 then 
-		clearHighlight(plr)
-		return 
-	end
-	
+	if not humanoid or humanoid.Health <= 0 then clearHighlight(plr) return end
+
 	local color = getColor(plr)
 	local highlight = HighlightFolder:FindFirstChild(plr.Name)
-	
-	-- Update highlight color if it exists
-	if highlight then
-		highlight.FillColor = color
-	end
-	
-	-- Update tag colors and health
+	if highlight then highlight.FillColor = color end
+
 	local highlightTag = char:FindFirstChild("HighlightTag")
 	if highlightTag then
-		-- Update health display
 		local healthLabel = highlightTag:FindFirstChild("TextLabel")
 		if healthLabel then
 			healthLabel.Text = math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth)
 			healthLabel.TextColor3 = getHealthColor(humanoid)
 		end
-		
-		-- Update team/name colors
 		for _, child in pairs(highlightTag:GetChildren()) do
 			if child:IsA("TextLabel") and child ~= healthLabel then
 				child.TextColor3 = color
@@ -1022,44 +1058,27 @@ end
 local function hookPlayer(plr)
 	local conn1 = plr.CharacterAdded:Connect(function(char)
 		task.wait(0.4)
-		if HighlightEnabled then
-			applyHighlight(plr)
-		end
-		if TargetedPlayers[plr.Name] then
-			createTargetDecal(plr)
-		end
-		-- Apply DeLocust when character respawns
-		if DeLocustEnabled and plr == lp then
-			task.wait(0.5)
-			applyDeLocust()
-		end
-		-- Apply DeNanami when character respawns
-		if DeNanamiEnabled and plr == lp then
-			task.wait(0.5)
-			applyDeNanami()
-		end
+		if HighlightEnabled then applyHighlight(plr) end
+		if TargetedPlayers[plr.Name] then createTargetDecal(plr) end
+		if DeLocustEnabled and plr == lp then task.wait(0.5) applyDeLocust() end
+		if DeNanamiEnabled and plr == lp then task.wait(0.5) applyDeNanami() end
 	end)
 	table.insert(Connections, conn1)
-	
+
 	local conn2 = plr:GetPropertyChangedSignal("Team"):Connect(function()
-		task.wait(0.1) -- Small delay to ensure team change is processed
-		if HighlightEnabled then
-			updateHighlight(plr)
-		end
+		task.wait(0.1)
+		if HighlightEnabled then updateHighlight(plr) end
 	end)
 	table.insert(Connections, conn2)
-	
-	-- Hook health changes for real-time updates
+
 	local conn3 = plr.CharacterAdded:Connect(function(char)
 		local humanoid = char:WaitForChild("Humanoid")
-		
+
 		local conn4 = humanoid.HealthChanged:Connect(function()
-			if HighlightEnabled then
-				updateHighlight(plr)
-			end
+			if HighlightEnabled then updateHighlight(plr) end
 		end)
 		table.insert(Connections, conn4)
-		
+
 		local conn5 = humanoid.Died:Connect(function()
 			clearHighlight(plr)
 			removeTargetDecal(plr)
@@ -1075,9 +1094,7 @@ end
 
 local conn6 = Players.PlayerAdded:Connect(function(plr)
 	hookPlayer(plr)
-	if TargetGuiOpen then
-		updateTargetList()
-	end
+	if TargetGuiOpen then updateTargetList() end
 end)
 table.insert(Connections, conn6)
 
@@ -1085,9 +1102,7 @@ local conn7 = Players.PlayerRemoving:Connect(function(plr)
 	clearHighlight(plr)
 	removeTargetDecal(plr)
 	TargetedPlayers[plr.Name] = nil
-	if TargetGuiOpen then
-		updateTargetList()
-	end
+	if TargetGuiOpen then updateTargetList() end
 end)
 table.insert(Connections, conn7)
 
@@ -1097,15 +1112,9 @@ table.insert(Connections, conn7)
 local function toggleHighlight()
 	HighlightEnabled = not HighlightEnabled
 	HighlightBtn.Text = "Highlight (J): "..(HighlightEnabled and "ON" or "OFF")
-	
 	for _,p in ipairs(Players:GetPlayers()) do
-		if HighlightEnabled then
-			applyHighlight(p)
-		else
-			clearHighlight(p)
-		end
+		if HighlightEnabled then applyHighlight(p) else clearHighlight(p) end
 	end
-	
 	if HighlightEnabled then
 		applyDummyHighlights()
 		updateDummyHealthDisplays()
@@ -1117,26 +1126,18 @@ end
 local function toggleDeLocust()
 	DeLocustEnabled = not DeLocustEnabled
 	DeLocustBtn.Text = "DeLocust Guy: "..(DeLocustEnabled and "ON" or "OFF")
-	
-	if DeLocustEnabled then
-		applyDeLocust()
-	end
+	if DeLocustEnabled then applyDeLocust() end
 end
 
 local function toggleDeNanami()
 	DeNanamiEnabled = not DeNanamiEnabled
 	DeNanamiBtn.Text = "DeNanami: "..(DeNanamiEnabled and "ON" or "OFF")
-	
-	if DeNanamiEnabled then
-		applyDeNanami()
-	end
+	if DeNanamiEnabled then applyDeNanami() end
 end
 
 local function toggleLock()
 	LockEnabled = not LockEnabled
-	if not LockEnabled then
-		LockedPlayer = nil
-	end
+	if not LockEnabled then LockedPlayer = nil end
 	LockBtn.Text = "Lock On (Y): "..(LockEnabled and "ON" or "OFF")
 end
 
@@ -1146,7 +1147,7 @@ local function toggleTodoBF()
 end
 
 local function updateNanamiIndicator()
-	if NanamiREnabled then
+	if NanamiREnabled and NanamiRVisualsEnabled then
 		NanamiIndicator.Visible = true
 		if gModeActive then
 			NanamiIndicator.BackgroundColor3 = Color3.fromRGB(255,165,0)
@@ -1160,12 +1161,20 @@ local function updateNanamiIndicator()
 		end
 	else
 		NanamiIndicator.Visible = false
+		GModeIndicator.Visible = false
 	end
 end
 
 local function toggleNanamiR()
 	NanamiREnabled = not NanamiREnabled
 	NanamiRBtn.Text = "Nanami R (P): "..(NanamiREnabled and "ON" or "OFF")
+	updateNanamiIndicator()
+end
+
+-- NEW: Toggle visuals separately
+local function toggleNanamiRVisuals()
+	NanamiRVisualsEnabled = not NanamiRVisualsEnabled
+	NanamiRVisualsBtn.Text = "R Visuals: "..(NanamiRVisualsEnabled and "ON" or "OFF")
 	updateNanamiIndicator()
 end
 
@@ -1187,19 +1196,16 @@ end
 local function toggleSeriousMode()
 	SeriousModeEnabled = not SeriousModeEnabled
 	SeriousBtn.Text = "SERIOUS MODE ([): "..(SeriousModeEnabled and "ON" or "OFF")
-	
-	-- Send notification
+
 	game.StarterGui:SetCore("SendNotification", {
 		Title = "SERIOUS MODE",
 		Text = SeriousModeEnabled and "ON" or "OFF",
 		Image = "rbxassetid://9368762755",
 		Duration = 2
 	})
-	
+
 	if SeriousModeEnabled then
-		if SeriousModeMusic then
-			SeriousModeMusic:Destroy()
-		end
+		if SeriousModeMusic then SeriousModeMusic:Destroy() end
 		SeriousModeMusic = Instance.new("Sound", workspace)
 		SeriousModeMusic.SoundId = "rbxassetid://129827447835246"
 		SeriousModeMusic.Volume = 0.5
@@ -1219,6 +1225,9 @@ end
 local conn8 = HighlightBtn.MouseButton1Click:Connect(toggleHighlight)
 table.insert(Connections, conn8)
 
+local connItemESP = ItemESPBtn.MouseButton1Click:Connect(toggleItemESP)
+table.insert(Connections, connItemESP)
+
 local conn38 = DeLocustBtn.MouseButton1Click:Connect(toggleDeLocust)
 table.insert(Connections, conn38)
 
@@ -1237,6 +1246,9 @@ table.insert(Connections, conn32)
 local conn33 = NanamiRBtn.MouseButton1Click:Connect(toggleNanamiR)
 table.insert(Connections, conn33)
 
+local connNanamiVis = NanamiRVisualsBtn.MouseButton1Click:Connect(toggleNanamiRVisuals)
+table.insert(Connections, connNanamiVis)
+
 local conn37 = NanamiKickBtn.MouseButton1Click:Connect(toggleNanamiKick)
 table.insert(Connections, conn37)
 
@@ -1246,11 +1258,9 @@ table.insert(Connections, conn34)
 local conn36 = OvertimeBlockBtn.MouseButton1Click:Connect(toggleOvertimeBlock)
 table.insert(Connections, conn36)
 
--- Target button connection
 local conn30 = TargetBtn.MouseButton1Click:Connect(showTargetGui)
 table.insert(Connections, conn30)
 
--- Target GUI close button connection
 local conn31 = TargetCloseBtn.MouseButton1Click:Connect(function()
 	TargetGui.Visible = false
 	TargetGuiOpen = false
@@ -1258,7 +1268,6 @@ end)
 table.insert(Connections, conn31)
 
 local conn17 = CloseBtn.MouseButton1Click:Connect(function()
-	-- Reset all states
 	LockEnabled = false
 	HighlightEnabled = false
 	SeriousModeEnabled = false
@@ -1269,58 +1278,33 @@ local conn17 = CloseBtn.MouseButton1Click:Connect(function()
 	OvertimeBlockEnabled = false
 	DeLocustEnabled = false
 	DeNanamiEnabled = false
+	ItemESPEnabled = false
 	gModeActive = false
-	
-	-- Remove highlights
+
+	if gModeMusic then gModeMusic:Stop() gModeMusic:Destroy() end
+
 	for _,p in ipairs(Players:GetPlayers()) do
 		clearHighlight(p)
 		removeTargetDecal(p)
 	end
-	
-	-- Clear dummy highlights
+
 	clearDummyHighlights()
-	
-	-- Remove overtime block triangle
+	clearItemESP()
 	removeOvertimeBlockTriangle()
-	
-	-- Stop music
-	if SeriousModeMusic then
-		SeriousModeMusic:Destroy()
-	end
-	
-	-- Disconnect all connections
+
+	if SeriousModeMusic then SeriousModeMusic:Destroy() end
+
 	for _, connection in ipairs(Connections) do
-		if connection then
-			connection:Disconnect()
-		end
+		if connection then connection:Disconnect() end
 	end
-	
-	-- Disconnect main loop
-	if RenderSteppedConn then
-		RenderSteppedConn:Disconnect()
-	end
-	
-	-- Disconnect refresh loop
-	if RefreshLoop then
-		RefreshLoop:Disconnect()
-	end
-	
-	-- Destroy highlight folder
-	if HighlightFolder then
-		HighlightFolder:Destroy()
-	end
-	
-	-- Destroy target folder
-	if TargetFolder then
-		TargetFolder:Destroy()
-	end
-	
-	-- Destroy dummy health folder
-	if DummyHealthFolder then
-		DummyHealthFolder:Destroy()
-	end
-	
-	-- Destroy GUI
+
+	if RenderSteppedConn then RenderSteppedConn:Disconnect() end
+	if RefreshLoop then RefreshLoop:Disconnect() end
+	if HighlightFolder then HighlightFolder:Destroy() end
+	if TargetFolder then TargetFolder:Destroy() end
+	if DummyHealthFolder then DummyHealthFolder:Destroy() end
+	if ItemESPFolder then ItemESPFolder:Destroy() end
+
 	ScreenGui:Destroy()
 end)
 table.insert(Connections, conn17)
@@ -1328,7 +1312,6 @@ table.insert(Connections, conn17)
 ------------------------------------------------
 -- // KEYBINDS
 ------------------------------------------------
--- Millisecond-accurate wait
 local function preciseWait(duration)
 	local start = os.clock()
 	while os.clock() - start < duration do
@@ -1361,38 +1344,25 @@ local function executeTodoBF()
 	local humanoid = character:WaitForChild("Humanoid")
 	local hrp = character:WaitForChild("HumanoidRootPart")
 	character.PrimaryPart = hrp
-	
-	-- Disable rotation control
+
 	local originalAutoRotate = humanoid.AutoRotate
 	humanoid.AutoRotate = false
-	
+
 	local originalCFrame = hrp.CFrame
 	local flippedCFrame = originalCFrame * CFrame.Angles(0, math.rad(180), 0)
-	
-	-- Smooth flip
+
 	tweenRotationAsync(hrp, flippedCFrame, 0.15)
-	
-	-- === AHK EXACT TIMING ===
-	-- 3
+
 	pressKeyOld(Enum.KeyCode.Three, 0.159)
 	preciseWait(0.743)
-	
-	-- R
 	pressKeyOld(Enum.KeyCode.R, 0.192)
-	
-	-- 🔥 Restore movement immediately after R
+
 	humanoid.AutoRotate = originalAutoRotate
-	
-	-- Start turning back visually (non-blocking)
 	tweenRotationAsync(hrp, originalCFrame, 0.12)
-	
 	preciseWait(0.260)
-	
-	-- First 2
+
 	pressKeyOld(Enum.KeyCode.Two, 0.136)
 	preciseWait(0.500)
-	
-	-- Second 2 (exact 500ms delay preserved)
 	pressKeyOld(Enum.KeyCode.Two, 0.001)
 end
 
@@ -1416,30 +1386,22 @@ end
 
 local function checkAutoNanamiSwitch()
 	if not NanamiREnabled then return end
-	
+
 	local closestPlayer = getClosestPlayerToMouse()
-	
-	-- Check player only
+
 	if closestPlayer and closestPlayer.Character then
 		local humanoid = closestPlayer.Character:FindFirstChild("Humanoid")
 		if humanoid then
 			local maxHealth = humanoid.MaxHealth
 			local currentHealth = humanoid.Health
 			local threshold
-			
-			-- Determine threshold based on max health
-			if maxHealth == 85 then
-				threshold = 62
-			elseif maxHealth == 100 then
-				threshold = 76
-			elseif maxHealth == 90 then
-				threshold = 69
-			elseif maxHealth == 70 then
-				threshold = 50
-			else
-				threshold = maxHealth * 0.76 -- Default to 76% for other values
-			end
-			
+
+			if maxHealth == 85 then threshold = 62
+			elseif maxHealth == 100 then threshold = 76
+			elseif maxHealth == 90 then threshold = 69
+			elseif maxHealth == 70 then threshold = 50
+			else threshold = maxHealth * 0.76 end
+
 			if currentHealth < threshold then
 				if delayTime ~= 0.45 then
 					delayTime = 0.45
@@ -1450,8 +1412,7 @@ local function checkAutoNanamiSwitch()
 			end
 		end
 	end
-	
-	-- Default to slow mode if no low-health targets
+
 	if delayTime ~= 0.60 then
 		delayTime = 0.60
 		fastMode = false
@@ -1461,14 +1422,13 @@ end
 
 local conn18 = UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
-	
+
 	if input.KeyCode == Enum.KeyCode.J then
 		toggleHighlight()
 	elseif input.KeyCode == Enum.KeyCode.Y then
 		toggleLock()
 	elseif input.KeyCode == Enum.KeyCode.LeftBracket then
 		toggleSeriousMode()
-		-- Highlight dummies
 		for _, obj in pairs(workspace:GetDescendants()) do
 			if obj.Name == "Dummy" and obj:FindFirstChild("Humanoid") then
 				local highlight = Instance.new("Highlight")
@@ -1476,7 +1436,6 @@ local conn18 = UserInputService.InputBegan:Connect(function(input,gp)
 			end
 		end
 	elseif input.KeyCode == Enum.KeyCode.G then
-		-- NEW: Activate G Mode for 65 seconds
 		if NanamiREnabled then
 			activateGMode()
 		end
@@ -1485,7 +1444,6 @@ local conn18 = UserInputService.InputBegan:Connect(function(input,gp)
 			fastMode = not fastMode
 			delayTime = fastMode and 0.45 or 0.60
 			updateNanamiIndicator()
-			print("R delay set to:", delayTime)
 		elseif TodoBFEnabled then
 			executeTodoBF()
 		end
@@ -1493,39 +1451,21 @@ local conn18 = UserInputService.InputBegan:Connect(function(input,gp)
 		if NanamiKickEnabled then
 			executeNanamiKick()
 		end
-elseif input.KeyCode == Enum.KeyCode.P then
-	-- NEW: P key triggers Nanami R with proper cooldown
-	if NanamiREnabled and not isSimulated and not rKeyCooldown then
-		-- Get the appropriate cooldown duration
-		local cooldownDuration = checkMovesetForRCooldown()
-		
-		if cooldownDuration > 0 then
-			-- Start cooldown immediately
-			startRCooldown(cooldownDuration)
-			
-			-- Check if we should use fast mode based on enemy health
-			checkAutoNanamiSwitch()
-			
-			-- Execute FIRST R press immediately
-			task.spawn(function()
-				pressR()
-				
-				-- Wait the delay time (0.60s or 0.45s based on enemy health)
-				preciseWait(delayTime)
-				
-				-- Execute SECOND R press
-				pressR()
-			end)
+	elseif input.KeyCode == Enum.KeyCode.P then
+		if NanamiREnabled and not isSimulated and not rKeyCooldown then
+			local cooldownDuration = checkMovesetForRCooldown()
+			if cooldownDuration > 0 then
+				startRCooldown(cooldownDuration)
+				checkAutoNanamiSwitch()
+				task.spawn(function()
+					pressR()
+					preciseWait(delayTime)
+					pressR()
+				end)
+			end
 		end
-	end
 	elseif input.KeyCode == Enum.KeyCode.R then
-		-- NEW: R key cooldown based on moveset (blocks R input during cooldown)
-		if rKeyCooldown then
-			-- Block the R key input by consuming the event
-			return
-		end
-		
-		-- Only apply cooldown if not simulated by Nanami R
+		if rKeyCooldown then return end
 		if not isSimulated then
 			local cooldownDuration = checkMovesetForRCooldown()
 			if cooldownDuration > 0 then
@@ -1560,7 +1500,6 @@ table.insert(Connections, conn18)
 
 local conn35 = UserInputService.InputEnded:Connect(function(input, gp)
 	if gp then return end
-	
 	if input.KeyCode == Enum.KeyCode.Three and MahoragaQuakeEnabled then
 		isHolding = false
 	elseif input.KeyCode == Enum.KeyCode.F and OvertimeBlockEnabled then
@@ -1574,7 +1513,8 @@ table.insert(Connections, conn35)
 -- // LOCK CAMERA LOOP
 ------------------------------------------------
 local function getClosestPlayer()
-	local closest, shortest = nil, math.huge
+	local closest, shortest = nil, math.
+huge
 	for _,p in ipairs(Players:GetPlayers()) do
 		if p ~= lp and p.Character then
 			local part = p.Character:FindFirstChild(LockPart)
@@ -1605,49 +1545,44 @@ RenderSteppedConn = RunService.RenderStepped:Connect(function()
 			end
 		end
 	end
-	
+
 	-- Auto Nanami R switch check
 	if NanamiREnabled and not gModeActive then
 		checkAutoNanamiSwitch()
 	end
-	
+
 	-- Apply DeLocust continuously
 	if DeLocustEnabled then
 		applyDeLocust()
 	end
-	
+
 	-- Apply DeNanami continuously
 	if DeNanamiEnabled then
 		applyDeNanami()
 	end
 end)
 
--- Periodic highlight and health bar refresh
+-- Periodic refresh loop
 local RefreshLoop
 RefreshLoop = task.spawn(function()
 	while true do
-		task.wait(5) -- Refresh every 5 seconds
-		
+		task.wait(5)
+
 		if HighlightEnabled then
 			for _,p in ipairs(Players:GetPlayers()) do
 				if p ~= lp and p.Character then
 					local humanoid = p.Character:FindFirstChild("Humanoid")
 					if humanoid and humanoid.Health > 0 then
-						-- Only refresh if highlight is missing
 						if not HighlightFolder:FindFirstChild(p.Name) then
 							applyHighlight(p)
 						end
 					end
 				end
 			end
-			
-			-- Refresh dummy highlights
 			applyDummyHighlights()
-			
-			-- Refresh dummy health displays
 			updateDummyHealthDisplays()
 		end
-		
+
 		-- Refresh target decals
 		for playerName, _ in pairs(TargetedPlayers) do
 			local plr = Players:FindFirstChild(playerName)
@@ -1670,7 +1605,7 @@ task.spawn(function()
 	notifSound.Volume = 0.15
 	notifSound.PlaybackSpeed = 1
 	notifSound:Play()
-	
+
 	game.StarterGui:SetCore("SendNotification", {
 		Title = "Traitor Shenanigans",
 		Text = "Utilities loaded successfully!\nMade by traitor_1",
